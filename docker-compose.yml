@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  soft-clinic-vue:
+    container_name: soft-clinic-vue
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+
