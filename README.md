@@ -1,4 +1,4 @@
-# soft-clinic-front
+# rh-front
 
 This template should help get you started developing with Vue 3 in Vite.
 
@@ -117,15 +117,15 @@ Se não estiver usando Docker Compose, pode rodar manualmente com:
 
 - Desenvolvimento:
 ```sh
-docker build -f Dockerfile.dev -t soft-clinic-dev .
+docker build -f Dockerfile.dev -t rh-dev .
 ```
 ```sh
-docker run -it -p 5173:5173 -v $(pwd):/app -v /app/node_modules soft-clinic-dev
+docker run -it -p 5173:5173 -v $(pwd):/app -v /app/node_modules rh-dev
 ```
 - Produção:
 ```sh
-docker build -t soft-clinic-prod .
+docker build -t rh-prod .
 ```
 ```sh
-docker run -p 8080:80 soft-clinic-prod
+docker run -p 8080:80 rh-prod
 ```
