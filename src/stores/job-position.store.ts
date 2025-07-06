@@ -1,12 +1,12 @@
-import { getServices, saveService } from '@/services/services.service';
+import { getJobPositions, saveJobPosition } from '@/services/job-position.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
-import type ServicePayload from '@/types/service/service-payload.type';
-import type ServiceResponsePagination from '@/types/service/service-response-pagination.type';
-import type Service from '@/types/service/service.type';
 import { defineStore } from 'pinia';
+import type JobPosition from '@/types/jobPosition/job-position.type';
+import type JobPositionPayload from '@/types/jobPosition/job-position-payload.type';
+import type JobPositionResponsePagination from '@/types/jobPosition/job-position-response-pagination.type';
 
-interface ServiceStoreState {
-  services: Service[] | null;
+interface JobPositionStoreState {
+  job_positions: JobPosition[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -18,9 +18,9 @@ interface ServiceStoreState {
   search_term?: string;
 }
 
-export const useServiceStore = defineStore('service', {
-  state: (): ServiceStoreState => ({
-    services: null,
+export const useJobPositionStore = defineStore('jobPosition', {
+  state: (): JobPositionStoreState => ({
+    job_positions: null,
     loading: false,
     error: null,
     total: 0,
@@ -35,31 +35,30 @@ export const useServiceStore = defineStore('service', {
   getters: {},
 
   actions: {
-    async saveService(service: ServicePayload, uuid?: string) {
+    async saveJobPosition(jobPosition: JobPositionPayload, uuid?: string) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res: { uuid: string } = await saveService(service, uuid);
-        if(!this.services) this.services = [];
-        const serviceSaved = {
+        const res: { uuid: string } = await saveJobPosition(jobPosition, uuid);
+        if(!this.job_positions) this.job_positions = [];
+        const jobPositionSaved = {
           uuid: res.uuid,
-          name: service.name,
-          description: service.description,
-          price: service.price ?? '0.00',
-          systemModule: service.systemModule
-            ? { uuid: service.systemModule.uuid, name: service.systemModule.name }
-            : { uuid: '', name: '' }
+          name: jobPosition.name,
+          description: jobPosition.description,
+          levelsGroup: jobPosition.levelsGroup
+            ? { uuid: jobPosition.levelsGroup.uuid, name: jobPosition.levelsGroup.name, levels: jobPosition.levelsGroup.levels }
+            : { uuid: '', name: '', levels: [] }
         }
         if(uuid) {
-          const index = this.services.findIndex(x => x.uuid === uuid);
+          const index = this.job_positions.findIndex(x => x.uuid === uuid);
           if (index !== -1) {
-            this.services.splice(index, 1, serviceSaved);
+            this.job_positions.splice(index, 1, jobPositionSaved);
           } else {
             console.error('UUID: '+uuid+' não encontrado para atualizar localmente.')
           }
         } else {
-          this.services.unshift(serviceSaved);
+          this.job_positions.unshift(jobPositionSaved);
         }
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar atualizar serviço.';
@@ -69,13 +68,13 @@ export const useServiceStore = defineStore('service', {
       }
     },
 
-    async getServices(params: DataTableFilterParams) {
+    async getJobPositions(params: DataTableFilterParams) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res: ServiceResponsePagination = await getServices(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
-        this.services = res.data;
+        const res: JobPositionResponsePagination = await getJobPositions(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+        this.job_positions = res.data;
         this.total = res.total;
         this.page = res.page;
         this.limit = res.limit;
@@ -93,13 +92,13 @@ export const useServiceStore = defineStore('service', {
 
     async setPage(page: number) {
       this.page = page;
-      await this.getServices({ page: this.page, limit: this.limit });
+      await this.getJobPositions({ page: this.page, limit: this.limit });
     },
 
     async setItemsPerPage(limit: number) {
       this.limit = limit;
       this.page = 1;
-      await this.getServices({ page: this.page, limit: this.limit });
+      await this.getJobPositions({ page: this.page, limit: this.limit });
     }
   }
 });

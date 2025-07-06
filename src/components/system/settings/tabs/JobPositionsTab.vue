@@ -1,49 +1,49 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useServiceStore } from '@/stores/service.store';
-import { useSystemModuleStore } from '@/stores/system-module.store';
-import type Service from '@/types/service/service.type';
-import ServiceModal from '../services/ServiceModal.vue';
+import { useJobPositionStore } from '../../../../stores/job-position.store';
+import { useLevelsGroupStore } from '../../../../stores/levels-group.store';
 import loadItems from '@/utils/loadItems.util';
+import type JobPosition from '@/types/jobPosition/job-position.type';
+import JobPositionModal from '../services/JobPositionModal.vue';
 
-const serviceStore = useServiceStore();
-const systemModuleStore = useSystemModuleStore();
+const jobPositionStore = useJobPositionStore();
+const levelsGroupeStore = useLevelsGroupStore();
 
 const dialog = ref(false);
-const selectedService = ref<Service | null>(null);
+const selectedJobPosition = ref<JobPosition | null>(null);
 
-const currentPage = ref(serviceStore.page);
-const itemsPerPage = ref(serviceStore.limit);
-const searchTerm = ref(serviceStore.search_term || '');
-const sortBy = ref(serviceStore.sort_column ? [{ key: serviceStore.sort_column, order: serviceStore.sort_order }] : []);
+const currentPage = ref(jobPositionStore.page);
+const itemsPerPage = ref(jobPositionStore.limit);
+const searchTerm = ref(jobPositionStore.search_term || '');
+const sortBy = ref(jobPositionStore.sort_column ? [{ key: jobPositionStore.sort_column, order: jobPositionStore.sort_order }] : []);
 
-const openDialog = (item?: Service) => {
-  selectedService.value = item || null;
+const openDialog = (item?: JobPosition) => {
+  selectedJobPosition.value = item || null;
   dialog.value = true;
 }
 
-async function getServices() {
-  await serviceStore.getServices({ page: currentPage.value, limit: itemsPerPage.value });
+async function getJobPositions() {
+  await jobPositionStore.getJobPositions({ page: currentPage.value, limit: itemsPerPage.value });
 }
 
-async function getSystemModules() {
-  await systemModuleStore.getSystemModules();
+async function getLevelsGroups() {
+  await levelsGroupeStore.getLevelsGroups();
 }
 
-getServices();
-getSystemModules()
+getJobPositions();
+getLevelsGroups()
 
 const loadServices = async () => {
   await loadItems(
     { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
     searchTerm.value,
-    serviceStore,
-    'getServices',
-    'services'
+    jobPositionStore,
+    'getJobPositions',
+    'job_positions'
   );
 
-  currentPage.value = serviceStore.page;
-  itemsPerPage.value = serviceStore.limit;
+  currentPage.value = jobPositionStore.page;
+  itemsPerPage.value = jobPositionStore.limit;
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -78,7 +78,7 @@ onMounted(async () => {
 
       <v-btn color="primary" class="w-md-auto w-100" @click="openDialog">
         <v-icon start>mdi-plus</v-icon>
-        Adicionar serviço
+        Adicionar cargo
       </v-btn>
     </div>
 
@@ -89,20 +89,16 @@ onMounted(async () => {
         { title: 'Valor (R$)', value: 'price', align: 'end' },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
-      :items="serviceStore.services || []"
+      :items="jobPositionStore.job_positions || []"
       item-value="uuid"
       :items-per-page="itemsPerPage"
       :items-per-page-options="[{title: '10', value: 10}, {title: '25', value: 25}, {title: '50', value: 50}, {title: '100', value: 100}]"
-      :items-length="serviceStore.total"
-      :loading="serviceStore.loading"
+      :items-length="jobPositionStore.total"
+      :loading="jobPositionStore.loading"
       :page="currentPage"
       mobile-breakpoint="md"
       @update:options="loadServices"
     >
-      <template v-slot:[`item.price`]="{ item }">
-        R$ {{ item.price }}
-      </template>
-
       <template v-slot:[`item.actions`]="{ item }">
         <div>
           <v-btn icon @click="openDialog(item)">
@@ -115,6 +111,6 @@ onMounted(async () => {
       </template>
     </v-data-table>
 
-    <ServiceModal v-model="dialog" :selectedService="selectedService" />
+    <JobPositionModal v-model="dialog" :selectedService="selectedJobPosition" />
   </div>
 </template>

@@ -121,31 +121,31 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach(async (to, from, next) => {
-  const userStore = useUserStore();
+// router.beforeEach(async (to, from, next) => {
+//   const userStore = useUserStore();
 
-  if (!userStore.user && to.name != 'gloogleAuthCallback') {
-    try {
-      await userStore.fetchUser();
-    } catch (error) {
-      console.error('[AuthMiddleware] Falha ao carregar usuário via token:', error);
-      if(to.name != 'login') userStore.logout();
-    }
-  }
+//   if (!userStore.user && to.name != 'gloogleAuthCallback') {
+//     try {
+//       await userStore.fetchUser();
+//     } catch (error) {
+//       console.error('[AuthMiddleware] Falha ao carregar usuário via token:', error);
+//       if(to.name != 'login') userStore.logout();
+//     }
+//   }
 
-  const isPublic = to.meta.isPublic;
-  const isLoggedIn = userStore.user;
+//   const isPublic = to.meta.isPublic;
+//   const isLoggedIn = userStore.user;
 
-  if (!isPublic && !isLoggedIn) {
-    next({ name: 'login', query: { redirect: to.fullPath } });
-  } else if (isLoggedIn && isPublic) {
-    next({ name: 'dashboard' });
-  } else {
-    next();
-  }
+//   if (!isPublic && !isLoggedIn) {
+//     next({ name: 'login', query: { redirect: to.fullPath } });
+//   } else if (isLoggedIn && isPublic) {
+//     next({ name: 'dashboard' });
+//   } else {
+//     next();
+//   }
 
-  const defaultTitle = SISTEM_NAME;
-  document.title = (to.meta.title ? `${to.meta.title} | ${defaultTitle}` : defaultTitle) as string;
-});
+//   const defaultTitle = SISTEM_NAME;
+//   document.title = (to.meta.title ? `${to.meta.title} | ${defaultTitle}` : defaultTitle) as string;
+// });
 
 export default router
