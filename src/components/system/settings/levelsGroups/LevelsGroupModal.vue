@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
-import { Form, Field } from '@/plugins/vee-validate';
+import { Form, Field } from 'vee-validate';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import type LevelsGroupPayload from '@/types/levelsGroup/levels-group-payload.type';
 import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
 import { useLevelsGroupStore } from '@/stores/levels-group.store';
+import type Level from '@/types/level/level.type';
 
 const levelsGroupStore = useLevelsGroupStore();
 const snackbarStore = useSnackbarStore();
@@ -18,24 +19,50 @@ const emit = defineEmits(['update:modelValue']);
 
 const close = () => emit('update:modelValue', false);
 
-let levelsGroup = reactive<LevelsGroupPayload>({
-  uuid: props.selectedLevelsGroup?.uuid || undefined,
-  name: props.selectedLevelsGroup?.name || '',
-  levels: props.selectedLevelsGroup?.levels || undefined
-})
+const levelsGroup = reactive<LevelsGroupPayload & { levels: Level[] }>({
+  uuid: undefined,
+  name: '',
+  levels: [{ name: '', amount: undefined }]
+});
 
 watch(() => props.selectedLevelsGroup, (val) => {
-  levelsGroup = {
-    name: props.selectedLevelsGroup?.name || '',
-    levels: props.selectedLevelsGroup?.levels || undefined
+  levelsGroup.uuid = val?.uuid || undefined;
+  levelsGroup.name = val?.name || '';
+  levelsGroup.levels = (val?.levels && val.levels.length > 0)
+    ? val.levels.map(level => ({ name: level.name, amount: level.amount || undefined }))
+    : [{ name: '', amount: undefined }];
+}, { immediate: true });
+
+const addLevel = () => {
+  levelsGroup.levels.push({ name: '', amount: undefined });
+};
+
+const removeLevel = (index: number) => {
+  if (levelsGroup.levels.length > 1) {
+    levelsGroup.levels.splice(index, 1);
+  } else {
+    snackbarStore.show('Não é possível remover todos os níveis. Adicione um novo para poder remover este.', 'warning');
   }
-})
+};
 
 async function onSubmit(formValues: Record<string, any>) {
-  const levelsGroup: LevelsGroupPayload = formValues as LevelsGroupPayload;
+  const filteredLevels = levelsGroup.levels.filter(level =>
+    level.name.trim() !== '' || (level.amount !== null && level.amount !== 0)
+  );
+
+  if (filteredLevels.length === 0) {
+    snackbarStore.show('Adicione pelo menos um nível de cargo e remuneração válidos.', 'error');
+    return;
+  }
+
+  const payload: LevelsGroupPayload = {
+    uuid: levelsGroup.uuid,
+    name: formValues.name,
+    levels: filteredLevels
+  };
 
   try {
-    await levelsGroupStore.saveLevelsGroup(levelsGroup, props.selectedLevelsGroup?.uuid);
+    await levelsGroupStore.saveLevelsGroup(payload, payload.uuid);
     snackbarStore.show('Níveis do Cargo salvo com sucesso!', 'success');
     close();
   } catch (err: any) {
@@ -46,17 +73,17 @@ async function onSubmit(formValues: Record<string, any>) {
 </script>
 
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" max-width="500px">
+  <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" max-width="600px">
     <Form @submit="onSubmit" :initial-values="levelsGroup">
       <v-card>
         <v-card-title class="text-h6">
           {{ !!selectedLevelsGroup ? 'Editar Níveis do Cargo' : 'Novo Níveis do Cargo' }}
         </v-card-title>
         <v-card-text>
-          <Field name="name" rules="required" v-slot="{ field, errorMessage }">
+          <Field name="name" label="nome" rules="required" v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
-              label="Nome"
+              label="Nome do Grupo de Níveis"
               variant="solo-filled"
               density="compact"
               :persistent-placeholder="!!props.selectedLevelsGroup?.name"
@@ -65,26 +92,60 @@ async function onSubmit(formValues: Record<string, any>) {
               class="mb-3"
             />
           </Field>
-          <Field name="systemModule" rules="required" v-slot="{ field, errorMessage }">
-            <v-select
-              v-bind="field"
-              label="Módulo do Sistema"
-              :items="levelsGroupStore.levelsGroupsOptions"
-              item-value="value"
-              item-title="title"
-              item-props="disabled"
-              :return-object="false"
-              variant="solo-filled"
-              density="compact"
-              persistent-placeholder
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
+
+          <v-divider class="my-4" />
+
+          <h3 class="text-subtitle-1 mb-3">Níveis de Cargo e Remuneração</h3>
+
+          <div v-for="(level, index) in levelsGroup.levels" :key="index" class="d-flex align-center mb-4">
+            <div class="d-flex gap-2 flex-grow-1">
+              <Field :name="`levels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
+                <v-text-field
+                  v-bind="field"
+                  v-model="level.name" :label="`Nível ${index + 1}`"
+                  variant="outlined"
+                  density="compact"
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                  class="mb-1 w-100"
+                />
+              </Field>
+              <Field :name="`levels[${index}].amount`" :label="'remuneração do nível '+(index+1)" rules="required|min_value:0" v-slot="{ field, errorMessage }">
+                <v-text-field
+                  v-bind="field"
+                  v-model.number="level.amount" :label="`Remuneração nível ${index + 1}`"
+                  variant="outlined"
+                  density="compact"
+                  type="number"
+                  prefix="R$"
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                  class="mb-1 w-100"
+                />
+              </Field>
+            </div>
+            <v-btn
+              v-if="levelsGroup.levels.length > 1" icon
+              variant="text"
+              color="error"
+              @click="removeLevel(index)"
+              size="small"
+              class="ml-2"
             >
-              <template v-slot:item="{ item, props: itemProps }">
-                <v-list-item v-bind="itemProps" :title="item.title" :disabled="item.raw.disabled" />
-              </template>
-            </v-select>
-          </Field>
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+          </div>
+
+          <v-btn
+            color="primary"
+            variant="outlined"
+            @click="addLevel"
+            block
+            class="mt-4"
+          >
+            <v-icon left>mdi-plus</v-icon> Adicionar Nível
+          </v-btn>
+
         </v-card-text>
         <v-card-actions>
           <v-spacer />

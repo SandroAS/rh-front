@@ -2,9 +2,8 @@
 import { onMounted, ref, watch } from 'vue'
 import { useLevelsGroupStore } from '../../../../stores/levels-group.store';
 import loadItems from '@/utils/loadItems.util';
-import type JobPosition from '@/types/jobPosition/job-position.type';
-import JobPositionModal from '../jobPositions/JobPositionModal.vue';
 import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
+import LevelsGroupModal from '../levelsGroups/LevelsGroupModal.vue';
 
 const levelsGroupStore = useLevelsGroupStore();
 
@@ -27,7 +26,7 @@ async function getLevelsGroups() {
 
 getLevelsGroups()
 
-const loadServices = async () => {
+const leadLevelsGrupos = async () => {
   await loadItems(
     { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
     searchTerm.value,
@@ -46,12 +45,12 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadServices();
+    leadLevelsGrupos();
   }, 300);
 });
 
 onMounted(async () => {
-  loadServices();
+  leadLevelsGrupos();
 });
 </script>
 
@@ -91,7 +90,7 @@ onMounted(async () => {
       :loading="levelsGroupStore.loading"
       :page="currentPage"
       mobile-breakpoint="md"
-      @update:options="loadServices"
+      @update:options="leadLevelsGrupos"
     >
       <template v-slot:[`item.actions`]="{ item }">
         <div>
@@ -105,6 +104,6 @@ onMounted(async () => {
       </template>
     </v-data-table>
 
-    <JobPositionModal v-model="dialog" :selectedLevelsGroup="selectedLevelsGroup" />
+    <LevelsGroupModal v-model="dialog" :selectedLevelsGroup="selectedLevelsGroup" />
   </div>
 </template>

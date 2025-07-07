@@ -1,5 +1,5 @@
 export default interface Level {
-  uuid: string;
+  uuid?: string;
   name: string;
-  amount: number;
+  amount?: number;
 }
