@@ -3,7 +3,8 @@ import UsersTab from '@/components/system/settings/tabs/UsersTab.vue'
 import RolePermissionsTab from '@/components/system/settings/tabs/RolePermissionsTab.vue'
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import ServicesTab from '@/components/system/settings/tabs/ServicesTab.vue'
+import JobPositionsTab from '@/components/system/settings/tabs/JobPositionsTab.vue'
+import LevelsGroupsTab from '@/components/system/settings/tabs/LevelsGroupsTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -11,7 +12,8 @@ const router = useRouter()
 const tabs = [
   { name: 'Usuários', value: 'usuarios' },
   { name: 'Permissões', value: 'permissoes' },
-  { name: 'Cargos', value: 'job-positions' }
+  { name: 'Cargos', value: 'job-positions' },
+  { name: 'Níves de Cargos', value: 'levels-groups' }
 ];
 
 const selectedTab = ref(route.query.tab || 'usuarios');
@@ -47,7 +49,11 @@ watch(selectedTab, (newTab) => {
         </v-tabs-window-item>
 
         <v-tabs-window-item value="job-positions">
-          <ServicesTab />
+          <JobPositionsTab />
+        </v-tabs-window-item>
+
+        <v-tabs-window-item value="levels-groups">
+          <LevelsGroupsTab />
         </v-tabs-window-item>
       </v-tabs-window>
     </v-container>

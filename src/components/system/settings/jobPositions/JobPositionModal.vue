@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue';
+import { reactive, watch } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
-import type Service from '@/types/jobPosition/job-position.type';
-import type ServicePayload from '@/types/jobPosition/job-position-payload.type';
-import { useSystemModuleStore } from '@/stores/system-module.store';
+import type JobPositionPayload from '@/types/jobPosition/job-position-payload.type';
+import type JobPosition from '@/types/jobPosition/job-position.type';
+import { useLevelsGroupStore } from '@/stores/levels-group.store';
 
 const jobPositionStore = useJobPositionStore();
 const snackbarStore = useSnackbarStore();
-const levelsGroupStore = useSystemModuleStore()
+const levelsGroupStore = useLevelsGroupStore()
 
 const props = defineProps<{
   modelValue: boolean,
-  selectedJobPosition?: Service | null
+  selectedJobPosition?: JobPosition | null
 }>();
 
 const emit = defineEmits(['update:modelValue'])
 
 const close = () => emit('update:modelValue', false)
 
-let service = reactive<ServicePayload>({
+let jobPosition = reactive<JobPositionPayload>({
   uuid: props.selectedJobPosition?.uuid || undefined,
   name: props.selectedJobPosition?.name || '',
   description: props.selectedJobPosition?.description || '',
@@ -28,7 +28,7 @@ let service = reactive<ServicePayload>({
 })
 
 watch(() => props.selectedJobPosition, (val) => {
-  service = {
+  jobPosition = {
     name: props.selectedJobPosition?.name || '',
     description: props.selectedJobPosition?.description || '',
     levelsGroup: props.selectedJobPosition?.levelsGroup || undefined
@@ -36,25 +36,25 @@ watch(() => props.selectedJobPosition, (val) => {
 })
 
 async function onSubmit(formValues: Record<string, any>) {
-  const service: ServicePayload = formValues as ServicePayload;
+  const jobPosition: JobPositionPayload = formValues as JobPositionPayload;
 
   try {
-    await jobPositionStore.saveJobPosition(service, props.selectedJobPosition?.uuid);
-    snackbarStore.show('Serviço salvo com sucesso!', 'success');
+    await jobPositionStore.saveJobPosition(jobPosition, props.selectedJobPosition?.uuid);
+    snackbarStore.show('Cargo salvo com sucesso!', 'success');
     close();
   } catch (err: any) {
     console.error('Erro no registro:', err);
-    snackbarStore.show(jobPositionStore.error || 'Falha ao salvar serviço.', 'error');
+    snackbarStore.show(jobPositionStore.error || 'Falha ao salvar cargo.', 'error');
   }
 };
 </script>
 
 <template>
   <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" max-width="500px">
-    <Form @submit="onSubmit" :initial-values="service">
+    <Form @submit="onSubmit" :initial-values="jobPosition">
       <v-card>
         <v-card-title class="text-h6">
-          {{ !!selectedJobPosition ? 'Editar Serviço' : 'Novo Serviço' }}
+          {{ !!selectedJobPosition ? 'Editar Cargo' : 'Novo Cargo' }}
         </v-card-title>
         <v-card-text>
           <Field name="name" rules="required" v-slot="{ field, errorMessage }">
@@ -84,8 +84,8 @@ async function onSubmit(formValues: Record<string, any>) {
           <Field name="systemModule" rules="required" v-slot="{ field, errorMessage }">
             <v-select
               v-bind="field"
-              label="Módulo do Sistema"
-              :items="levelsGroupStore.systemModulesOptions"
+              label="Níveis do Cargo"
+              :items="levelsGroupStore.levelsGroupsOptions"
               item-value="value"
               item-title="title"
               item-props="disabled"

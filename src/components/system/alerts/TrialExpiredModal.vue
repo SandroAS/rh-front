@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user.store';
-import { defineProps, defineEmits } from 'vue';
-import { useRouter } from 'vue-router'; // Importe useRouter para navegação
+import { useRouter } from 'vue-router';
 
 const props = defineProps<{
   modelValue: boolean;

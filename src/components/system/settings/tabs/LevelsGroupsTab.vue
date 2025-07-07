@@ -1,49 +1,43 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useJobPositionStore } from '../../../../stores/job-position.store';
 import { useLevelsGroupStore } from '../../../../stores/levels-group.store';
 import loadItems from '@/utils/loadItems.util';
 import type JobPosition from '@/types/jobPosition/job-position.type';
 import JobPositionModal from '../jobPositions/JobPositionModal.vue';
+import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
 
-const jobPositionStore = useJobPositionStore();
-const levelsGroupeStore = useLevelsGroupStore();
+const levelsGroupStore = useLevelsGroupStore();
 
 const dialog = ref(false);
-const selectedJobPosition = ref<JobPosition | null>(null);
+const selectedLevelsGroup = ref<LevelsGroup | null>(null);
 
-const currentPage = ref(jobPositionStore.page);
-const itemsPerPage = ref(jobPositionStore.limit);
-const searchTerm = ref(jobPositionStore.search_term || '');
-const sortBy = ref(jobPositionStore.sort_column ? [{ key: jobPositionStore.sort_column, order: jobPositionStore.sort_order }] : []);
+const currentPage = ref(levelsGroupStore.page);
+const itemsPerPage = ref(levelsGroupStore.limit);
+const searchTerm = ref(levelsGroupStore.search_term || '');
+const sortBy = ref(levelsGroupStore.sort_column ? [{ key: levelsGroupStore.sort_column, order: levelsGroupStore.sort_order }] : []);
 
-const openDialog = (item?: JobPosition) => {
-  selectedJobPosition.value = item || null;
+const openDialog = (item?: LevelsGroup) => {
+  selectedLevelsGroup.value = item || null;
   dialog.value = true;
 }
 
-async function getJobPositions() {
-  await jobPositionStore.getJobPositions({ page: currentPage.value, limit: itemsPerPage.value });
-}
-
 async function getLevelsGroups() {
-  await levelsGroupeStore.getLevelsGroups();
+  await levelsGroupStore.getLevelsGroupsPagination({ page: currentPage.value, limit: itemsPerPage.value });
 }
 
-getJobPositions();
 getLevelsGroups()
 
 const loadServices = async () => {
   await loadItems(
     { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
     searchTerm.value,
-    jobPositionStore,
-    'getJobPositions',
-    'job_positions'
+    levelsGroupStore,
+    'getLevelsGroupsPagination',
+    'levels_groups'
   );
 
-  currentPage.value = jobPositionStore.page;
-  itemsPerPage.value = jobPositionStore.limit;
+  currentPage.value = levelsGroupStore.page;
+  itemsPerPage.value = levelsGroupStore.limit;
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -66,7 +60,7 @@ onMounted(async () => {
     <div class="flex-column flex-md-row d-flex justify-space-between mb-4 mt-2 align-center">
       <v-text-field
         v-model="searchTerm"
-        label="Buscar usuário"
+        label="Buscar grupo de níveis de cargo"
         prepend-inner-icon="mdi-magnify"
         variant="outlined"
         density="compact"
@@ -78,23 +72,23 @@ onMounted(async () => {
 
       <v-btn color="primary" class="w-md-auto w-100" @click="openDialog">
         <v-icon start>mdi-plus</v-icon>
-        Adicionar cargo
+        Adicionar níveis de cargo
       </v-btn>
     </div>
 
     <v-data-table
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
-        { title: 'Descrição', value: 'description', sortable: true },
-        { title: 'Valor (R$)', value: 'price', align: 'end' },
+        { title: 'Criado por', value: 'created_by_user', align: 'end' },
+        { title: 'Criado em', value: 'created_at', align: 'end', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
-      :items="jobPositionStore.job_positions || []"
+      :items="levelsGroupStore.levels_groups || []"
       item-value="uuid"
       :items-per-page="itemsPerPage"
       :items-per-page-options="[{title: '10', value: 10}, {title: '25', value: 25}, {title: '50', value: 50}, {title: '100', value: 100}]"
-      :items-length="jobPositionStore.total"
-      :loading="jobPositionStore.loading"
+      :items-length="levelsGroupStore.total"
+      :loading="levelsGroupStore.loading"
       :page="currentPage"
       mobile-breakpoint="md"
       @update:options="loadServices"
@@ -111,6 +105,6 @@ onMounted(async () => {
       </template>
     </v-data-table>
 
-    <JobPositionModal v-model="dialog" :selectedJobPosition="selectedJobPosition" />
+    <JobPositionModal v-model="dialog" :selectedLevelsGroup="selectedLevelsGroup" />
   </div>
 </template>

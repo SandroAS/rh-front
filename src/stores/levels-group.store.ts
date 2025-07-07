@@ -1,4 +1,7 @@
-import { getLevelsGroups } from '@/services/levels-group.service';
+import { getLevelsGroups, getLevelsGroupsPagination, saveLevelsGroup } from '@/services/levels-group.service';
+import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
+import type LevelsGroupPayload from '@/types/levelsGroup/levels-group-payload.type';
+import type LevelsGroupResponsePagination from '@/types/levelsGroup/levels-group-response-pagination.type';
 import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
 import { defineStore } from 'pinia';
 
@@ -6,13 +9,27 @@ interface LevelsGroupStoreState {
   levels_groups: LevelsGroup[] | null;
   loading: boolean;
   error: string | null;
+  total: number;
+  page: number;
+  last_page: number;
+  limit: number;
+  sort_column?: string;
+  sort_order?: 'asc' | 'desc';
+  search_term?: string;
 }
 
 export const useLevelsGroupStore = defineStore('levelsGroup', {
   state: (): LevelsGroupStoreState => ({
     levels_groups: null,
     loading: false,
-    error: null
+    error: null,
+    total: 0,
+    page: 1,
+    last_page: 1,
+    limit: 10,
+    sort_column: undefined,
+    sort_order: undefined,
+    search_term: undefined
   }),
 
   getters: {
@@ -41,6 +58,71 @@ export const useLevelsGroupStore = defineStore('levelsGroup', {
       } finally {
         this.loading = false;
       }
+    },
+
+    async saveLevelsGroup(levelsGroup: LevelsGroupPayload, uuid?: string) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: { uuid: string } = await saveLevelsGroup(levelsGroup, uuid);
+        if(!this.levels_groups) this.levels_groups = [];
+        const levelsGroupSaved = {
+          uuid: res.uuid,
+          name: levelsGroup.name,
+          levels: levelsGroup.levels
+            ? levelsGroup.levels.map(level => ({ uuid: level.uuid, name: level.name, amount: level.amount }))
+            : [{ uuid: '', name: '', amount: 0 }]
+        }
+        if(uuid) {
+          const index = this.levels_groups.findIndex(x => x.uuid === uuid);
+          if (index !== -1) {
+            this.levels_groups.splice(index, 1, levelsGroupSaved);
+          } else {
+            console.error('UUID: '+uuid+' não encontrado para atualizar localmente.')
+          }
+        } else {
+          this.levels_groups.unshift(levelsGroupSaved);
+        }
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar atualizar serviço.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getLevelsGroupsPagination(params: DataTableFilterParams) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: LevelsGroupResponsePagination = await getLevelsGroupsPagination(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+        this.levels_groups = res.data;
+        this.total = res.total;
+        this.page = res.page;
+        this.limit = res.limit;
+        this.last_page = res.last_page;
+        this.sort_column = params.sort_column;
+        this.sort_order = params.sort_order;
+        this.search_term = params.search_term;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar grupos de níveis de cargos.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async setPage(page: number) {
+      this.page = page;
+      await this.getLevelsGroupsPagination({ page: this.page, limit: this.limit });
+    },
+
+    async setItemsPerPage(limit: number) {
+      this.limit = limit;
+      this.page = 1;
+      await this.getLevelsGroupsPagination({ page: this.page, limit: this.limit });
     }
   }
 });
