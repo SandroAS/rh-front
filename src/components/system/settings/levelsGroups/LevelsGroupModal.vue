@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { Form, Field } from 'vee-validate';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import type LevelsGroupPayload from '@/types/levelsGroup/levels-group-payload.type';
@@ -70,6 +70,60 @@ async function onSubmit(formValues: Record<string, any>) {
     snackbarStore.show(levelsGroupStore.error || 'Falha ao salvar níveis do cargo.', 'error');
   }
 };
+
+function formatAmountDisplay(index: number) {
+  if(props?.selectedLevelsGroup?.levels && props?.selectedLevelsGroup?.levels.length) {
+    const valueAsNumber = parseFloat(String(props.selectedLevelsGroup?.levels[index] || '0.00').replace(',', '.'));
+    
+    if (isNaN(valueAsNumber) || valueAsNumber === null) {
+      return '0,00';
+    }
+  
+    return valueAsNumber.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: true,
+    });
+  }
+
+  return '0,00';
+};
+
+function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number | null, onChange: (value: any) => void, index: number) {
+  const key = event.key;
+  
+  let currentInCentsString = '';
+  if (currentValue !== null && currentValue !== undefined) {
+    currentInCentsString = String(currentValue).replace(/\D/g, '');
+  }
+
+  if (!/^\d$/.test(key) && key !== 'Backspace') {
+    event.preventDefault();
+    return;
+  }
+
+  let newPriceString = currentInCentsString;
+
+  if (key === 'Backspace') {
+    newPriceString = newPriceString.slice(0, -1);
+    if (newPriceString.length === 0) {
+      newPriceString = '0';
+    }
+  } else {
+    newPriceString += key;
+  }
+
+  newPriceString = newPriceString.replace(/^0+(?=\d)/, '');
+
+  const newPriceValueInCents = newPriceString === '' ? null : parseFloat(newPriceString);
+  
+  const valueForVeeValidate = newPriceValueInCents !== null 
+    ? (newPriceValueInCents / 100).toFixed(2) 
+    : null;
+
+  onChange(valueForVeeValidate);
+  levelsGroup!.levels[index].amount = Number(valueForVeeValidate);
+}
 </script>
 
 <template>
@@ -110,17 +164,19 @@ async function onSubmit(formValues: Record<string, any>) {
                   class="mb-1 w-100"
                 />
               </Field>
-              <Field :name="`levels[${index}].amount`" :label="'remuneração do nível '+(index+1)" rules="required|min_value:0" v-slot="{ field, errorMessage }">
+              <Field :name="`levels[${index}].amount`" :label="'remuneração do nível '+(index+1)" rules="required|min_value:0" v-slot="{ field, errorMessage, value }">
                 <v-text-field
                   v-bind="field"
-                  v-model.number="level.amount" :label="`Remuneração nível ${index + 1}`"
+                  :label="`Remuneração nível ${index + 1}`"
+                  :model-value="formatAmountDisplay(index)"
                   variant="outlined"
                   density="compact"
-                  type="number"
+                  type="text"
                   prefix="R$"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
-                  class="mb-1 w-100"
+                  class="mb-1 w-100 text-right"
+                  @keydown.prevent="handleAmountKeydown($event, value, field.onChange, index)"
                 />
               </Field>
             </div>
@@ -156,3 +212,9 @@ async function onSubmit(formValues: Record<string, any>) {
     </Form>
   </v-dialog>
 </template>
+
+<style scoped>
+.v-text-field.text-right :deep(.v-field__input) {
+  text-align: right;
+}
+</style>
