@@ -17,8 +17,9 @@ export interface AuthUser {
   role_id: number;
   password?: string;
   role: UserRole;
-  userMetas: UserMeta[]
+  userMetas: UserMeta[];
   companies?: Company[];
+  team: { uuid: string; name: string; members: { uuid: string; name: string; email: string; profile_img_url?: string | null;}[] };
   created_at: string;
   updated_at: string;
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import SideBarSchedule from '@/components/system/sidebar/SideBarSchedule.vue';
+import SideBarMyTeam from './SideBarMyTeam.vue';
 
 const props = defineProps<{
   isMobile: boolean
@@ -53,6 +53,6 @@ const menuItems = [
       </v-list-item>
     </v-list>
 
-    <SideBarSchedule :rail="rail"/>
+    <SideBarMyTeam :rail="rail"/>
   </v-navigation-drawer>
 </template>
