@@ -10,7 +10,7 @@ import Register from '@/pages/auth/Register.vue'
 import Dashboard from '@/pages/system/Dashboard.vue'
 import MyAccount from '@/pages/system/MyAccount.vue'
 import Settings from '@/pages/system/Settings.vue'
-import Patients from '@/pages/system/Patients.vue'
+import DRDs from '@/pages/system/DRDs.vue'
 import PatientRecord from '@/components/system/patient/PatientRecord.vue'
 import Budgets from '@/pages/system/Budgets.vue'
 import Appointments from '@/pages/system/Appointments.vue'
@@ -82,10 +82,10 @@ const routes: RouteRecordRaw[] = [
         meta: { isPublic: false, title: 'Configurações - '+SISTEM_NAME }
       },
       {
-        path: 'pacientes',
-        name: 'patients',
-        component: Patients,
-        meta: { isPublic: false, title: 'Pacientes - '+SISTEM_NAME }
+        path: 'drds',
+        name: 'drds',
+        component: DRDs,
+        meta: { isPublic: false, title: 'DRDs - '+SISTEM_NAME }
       },
       {
         path: 'pacientes/:id',

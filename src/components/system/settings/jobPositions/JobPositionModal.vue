@@ -57,7 +57,7 @@ async function onSubmit(formValues: Record<string, any>) {
           {{ !!selectedJobPosition ? 'Editar Cargo' : 'Novo Cargo' }}
         </v-card-title>
         <v-card-text>
-          <Field name="name" rules="required" v-slot="{ field, errorMessage }">
+          <Field name="name" label="nome" rules="required" v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
               label="Nome"
@@ -69,7 +69,7 @@ async function onSubmit(formValues: Record<string, any>) {
               class="mb-3"
             />
           </Field>
-          <Field name="description" rules="required" v-slot="{ field, errorMessage }">
+          <Field name="description" label="descrição" rules="required" v-slot="{ field, errorMessage }">
             <v-textarea
               v-bind="field"
               label="Descrição"
@@ -81,7 +81,7 @@ async function onSubmit(formValues: Record<string, any>) {
               class="mb-3"
             />
           </Field>
-          <Field name="systemModule" rules="required" v-slot="{ field, errorMessage }">
+          <Field name="levelGroup" label="nível do cargo" rules="required" v-slot="{ field, errorMessage }">
             <v-select
               v-bind="field"
               label="Níveis do Cargo"

@@ -5,4 +5,5 @@ export default interface JobPosition {
   name: string;
   description: string;
   levelsGroup: LevelsGroup;
+  drd_uuid: string;
 }

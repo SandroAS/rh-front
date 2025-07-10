@@ -10,6 +10,7 @@ import { saveUserCompany, saveUserPassword, updateUserPersonalInformation } from
 import type { ProfileCompany } from '@/types/profile/profile-company.type';
 import type ProfileCompanyResponse from '@/types/profile/profile-company-response.type';
 import type ProfilePassword from '@/types/profile/profile-password.type';
+import type User from '@/types/user/user.type';
 
 interface UserStoreState {
   user: AuthUser | null;
@@ -31,6 +32,12 @@ export const useUserStore = defineStore('user', {
     userProfileImageUrl: (state): string | null | undefined => state.user?.profile_img_url,
     userPermissions: (state): string[] => state.user?.role?.permissions || [],
     currentUser: (state): AuthUser | null => state.user,
+    currentUserSample: (state): User => ({
+      name: state.user?.name || '',
+      email: state.user!.email || '',
+      cellphone: state.user?.cellphone || '',
+      profile_img_url: state.user?.profile_img_url || ''
+    })
   },
 
   actions: {

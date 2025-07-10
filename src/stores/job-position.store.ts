@@ -32,7 +32,19 @@ export const useJobPositionStore = defineStore('jobPosition', {
     search_term: undefined
   }),
 
-  getters: {},
+  getters: {
+    jobPositionsOptions(): { value: JobPosition, title: string, disabled: boolean }[] | [] {
+          if(!this.job_positions) return [];
+          const jobPositionsMapped = this.job_positions.map(job_positions => {
+            return {
+              value: job_positions,
+              title: job_positions.name,
+              disabled: !!job_positions.drd_uuid
+            }
+          });
+          return jobPositionsMapped;
+        }
+  },
 
   actions: {
     async saveJobPosition(jobPosition: JobPositionPayload, uuid?: string) {
@@ -48,7 +60,8 @@ export const useJobPositionStore = defineStore('jobPosition', {
           description: jobPosition.description,
           levelsGroup: jobPosition.levelsGroup
             ? { uuid: jobPosition.levelsGroup.uuid, name: jobPosition.levelsGroup.name, levels: jobPosition.levelsGroup.levels }
-            : { uuid: '', name: '', levels: [] }
+            : { uuid: '', name: '', levels: [] },
+          drd_uuid: ''
         }
         if(uuid) {
           const index = this.job_positions.findIndex(x => x.uuid === uuid);
