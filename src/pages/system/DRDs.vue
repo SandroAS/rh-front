@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useDRDStore } from '@/stores/drd.store';
 import loadItems from '@/utils/loadItems.util';
 import type DRD from '@/types/drd/drd.type';
+import DRDModal from '@/components/system/drd/DRDModal.vue';
 
 const DRDStore = useDRDStore();
 
@@ -55,10 +56,11 @@ onMounted(async () => {
 
 <template>
   <v-container fluid>
+    <h2 class="mb-6">Descritivo de Resultado e Desempenho</h2>
     <div class="flex-column flex-md-row d-flex justify-space-between mb-4 mt-2 align-center">
       <v-text-field
         v-model="searchTerm"
-        label="Buscar usuário"
+        label="Buscar DRD"
         prepend-inner-icon="mdi-magnify"
         variant="outlined"
         density="compact"
@@ -70,7 +72,7 @@ onMounted(async () => {
 
       <v-btn color="primary" class="w-md-auto w-100" @click="openDialog">
         <v-icon start>mdi-plus</v-icon>
-        Adicionar cargo
+        Adicionar DRD
       </v-btn>
     </div>
 

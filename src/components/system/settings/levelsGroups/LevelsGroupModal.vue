@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue';
-import { Form, Field } from 'vee-validate';
+import { reactive, watch } from 'vue';
+import { Form, Field } from '@/plugins/vee-validate';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import type LevelsGroupPayload from '@/types/levelsGroup/levels-group-payload.type';
 import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
@@ -151,7 +151,7 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
 
           <h3 class="text-subtitle-1 mb-3">Níveis de Cargo e Remuneração</h3>
 
-          <div v-for="(level, index) in levelsGroup.levels" :key="index" class="d-flex align-center mb-4">
+          <div v-for="(level, index) in levelsGroup.levels" :key="index" class="d-flex mb-4">
             <div class="d-flex gap-2 flex-grow-1">
               <Field :name="`levels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field

@@ -1,4 +1,4 @@
 export default interface DRDTopicItem {
-  uuid: string;
+  uuid?: string;
   name: string;
 }

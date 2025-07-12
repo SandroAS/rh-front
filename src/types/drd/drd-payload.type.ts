@@ -7,7 +7,7 @@ export default interface DRDPayload {
   uuid?: string;
   rate: number;
   jobPosition?: JobPosition;
-  drdTopics?: DRDTopic[];
-  drdMetrics?: DRDMetric[];
+  drdTopics: DRDTopic[];
+  drdMetrics: DRDMetric[];
   createdByUser: User;
 }

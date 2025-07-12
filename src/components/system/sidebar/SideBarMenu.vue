@@ -19,10 +19,10 @@ const drawer = computed({
 
 const menuItems = [
   { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/system/dashboard' },
-  { title: 'DRDs', icon: 'mdi-account', to: '/system/pacientes' },
-  { title: 'Planos de Carreira', icon: 'mdi-file-document-outline', to: '/system/orcamentos' },
-  { title: 'Avaliações', icon: 'mdi-account-heart', to: '/system/atendimentos' },
-  { title: 'PDIs', icon: 'mdi-calendar-account', to: '/system/agendamentos' },
+  { title: 'DRDs', icon: 'mdi-account', to: '/system/drds' },
+  { title: 'Planos de Carreira', icon: 'mdi-file-document-outline', to: '/system/career-plans' },
+  { title: 'Avaliações', icon: 'mdi-account-heart', to: '/system/evaluation' },
+  { title: 'PDIs', icon: 'mdi-calendar-account', to: '/system/pdis' },
 ]
 </script>
 

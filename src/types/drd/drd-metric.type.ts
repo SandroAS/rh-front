@@ -1,5 +1,5 @@
 export default interface DRDMetric {
-  uuid: string;
+  uuid?: string;
   name: string;
   classification: string;
   type: string;

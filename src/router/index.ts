@@ -11,10 +11,6 @@ import Dashboard from '@/pages/system/Dashboard.vue'
 import MyAccount from '@/pages/system/MyAccount.vue'
 import Settings from '@/pages/system/Settings.vue'
 import DRDs from '@/pages/system/DRDs.vue'
-import PatientRecord from '@/components/system/patient/PatientRecord.vue'
-import Budgets from '@/pages/system/Budgets.vue'
-import Appointments from '@/pages/system/Appointments.vue'
-import Schedules from '@/pages/system/Schedules.vue'
 import GoogleAuthCallback from '@/pages/auth/GoogleAuthCallback.vue'
 import { useUserStore } from '@/stores/user.store'
 
@@ -86,31 +82,6 @@ const routes: RouteRecordRaw[] = [
         name: 'drds',
         component: DRDs,
         meta: { isPublic: false, title: 'DRDs - '+SISTEM_NAME }
-      },
-      {
-        path: 'pacientes/:id',
-        name: 'patientRecord',
-        component: PatientRecord,
-        props: true,
-        meta: { isPublic: false, title: 'Ficha de Paciente - '+SISTEM_NAME }
-      },
-      {
-        path: 'orcamentos',
-        name: 'budgets',
-        component: Budgets,
-        meta: { isPublic: false, title: 'Orçamentos - '+SISTEM_NAME }
-      },
-      {
-        path: 'atendimentos',
-        name: 'appointments',
-        component: Appointments,
-        meta: { isPublic: false, title: 'Atendimentos - '+SISTEM_NAME }
-      },
-      {
-        path: 'agendamentos',
-        name: 'schedules',
-        component: Schedules,
-        meta: { isPublic: false, title: 'Agendamentos - '+SISTEM_NAME }
       }
     ]
   },

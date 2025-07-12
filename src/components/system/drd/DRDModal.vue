@@ -22,24 +22,59 @@ const emit = defineEmits(['update:modelValue'])
 
 const close = () => emit('update:modelValue', false)
 
-let drd = reactive<DRDPayload>({
+const drd = reactive<DRDPayload>({
   uuid: props.selectedDRD?.uuid || undefined,
   rate: props.selectedDRD?.rate || 0,
   jobPosition: props.selectedDRD?.jobPosition || undefined,
-  drdTopics: props.selectedDRD?.drdTopics || undefined,
-  drdMetrics: props.selectedDRD?.drdMetrics || undefined,
-  createdByUser: userStore.currentUserSample
-})
-
-watch(() => props.selectedDRD, (val) => {
-  drd = {
-    rate: props.selectedDRD?.rate || 0,
-    jobPosition: props.selectedDRD?.jobPosition || undefined,
-    drdTopics: props.selectedDRD?.drdTopics || undefined,
-    drdMetrics: props.selectedDRD?.drdMetrics || undefined,
-    createdByUser: userStore.currentUserSample
+  drdTopics: props.selectedDRD?.drdTopics || [{
+    uuid: undefined,
+    name: '',
+    drdTopicItems: [{uuid: undefined, name: ''}]
+  }],
+  drdMetrics: props.selectedDRD?.drdMetrics || [{
+    uuid: undefined,
+    name: '',
+    classification: '',
+    type: ''
+  }],
+  createdByUser: {
+    name: userStore.user?.name || '',
+    email: userStore.user?.email || '',
+    cellphone: userStore.user?.cellphone || '',
+    profile_img_url: userStore.user?.profile_img_url || ''
   }
 })
+
+const addDRDTopic = () => {
+  drd.drdTopics.push({
+    uuid: undefined,
+    name: '',
+    drdTopicItems: [{uuid: undefined, name: ''}]
+  });
+};
+
+const removeDRDTopic = (index: number) => {
+  if (drd.drdTopics.length > 1) {
+    drd.drdTopics.splice(index, 1);
+  } else {
+    snackbarStore.show('Não é possível remover todos os tópicos de drd. Adicione um novo para poder remover este.', 'warning');
+  }
+};
+
+const addDRDTopicItem = (index: number) => {
+  drd.drdTopics[index].drdTopicItems.push({
+    uuid: undefined,
+    name: ''
+  });
+};
+
+const removeDRDTopicItem = (index: number, indexTopicItem: number) => {
+  if (drd.drdTopics[index].drdTopicItems.length > 1) {
+    drd.drdTopics[index].drdTopicItems.splice(indexTopicItem, 1);
+  } else {
+    snackbarStore.show('Não é possível remover todos os items do tópico de drd. Adicione um novo para poder remover este.', 'warning');
+  }
+};
 
 async function onSubmit(formValues: Record<string, any>) {
   const drd: DRDPayload = formValues as DRDPayload;
@@ -60,7 +95,7 @@ async function onSubmit(formValues: Record<string, any>) {
     <Form @submit="onSubmit" :initial-values="drd">
       <v-card>
         <v-card-title class="text-h6">
-          {{ !!selectedDRD ? 'Editar Cargo' : 'Novo Cargo' }}
+          {{ !!selectedDRD ? 'Editar DRD' : 'Novo DRD' }}
         </v-card-title>
         <v-card-text>
           <Field name="jobPosition" label="Cargo" rules="required" v-slot="{ field, errorMessage }">
@@ -83,6 +118,85 @@ async function onSubmit(formValues: Record<string, any>) {
               </template>
             </v-select>
           </Field>
+
+          <v-divider class="my-4" />
+
+          <h3 class="text-subtitle-1 mb-3">Tópicos do DRD</h3>
+
+          <div v-for="(drdTopic, index) in drd.drdTopics" :key="index" class="d-flex mb-4">
+            <div class="flex-grow-1">
+              <Field :name="`drdTopics[${index}].name`" :label="'tópico '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
+                <v-text-field
+                  v-bind="field"
+                  v-model="drdTopic.name" :label="`Tópico ${index + 1}`"
+                  variant="outlined"
+                  density="compact"
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                  class="mb-1 w-100"
+                />
+              </Field>
+
+              <h3 class="text-subtitle-2 mb-3">Items do tópico do DRD</h3>
+
+              <div v-for="(drdTopicItem, drdTopicItemIndex) in drdTopic.drdTopicItems" :key="drdTopicItemIndex" class="d-flex ml-4">
+                <div class="d-flex gap-2 flex-grow-1">
+                  <Field :name="`drdTopics[${drdTopicItemIndex}].name`" :label="'item '+(drdTopicItemIndex+1)" rules="required" v-slot="{ field, errorMessage }">
+                    <v-text-field
+                      v-bind="field"
+                      v-model="drdTopicItem.name" :label="`Item ${drdTopicItemIndex + 1}`"
+                      variant="outlined"
+                      density="compact"
+                      :error="!!errorMessage"
+                      :error-messages="errorMessage"
+                      class="mb-1 w-100"
+                    />
+                  </Field>
+                </div>
+                <v-btn
+                  v-if="drdTopic.drdTopicItems.length > 1" icon
+                  variant="text"
+                  color="error"
+                  @click="removeDRDTopicItem(index, drdTopicItemIndex)"
+                  size="small"
+                  class="ml-2"
+                >
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
+              </div>
+
+              <v-btn
+                color="primary"
+                variant="outlined"
+                @click="addDRDTopicItem(index)"
+                class="mt-4 ml-4"
+              >
+                <v-icon left>mdi-plus</v-icon> Adicionar Item
+              </v-btn>
+            </div>
+
+            <v-btn
+              v-if="drd.drdTopics.length > 1" icon
+              variant="text"
+              color="error"
+              @click="removeDRDTopic(index)"
+              size="small"
+              class="ml-2"
+            >
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+          </div>
+
+          <v-btn
+            color="primary"
+            variant="outlined"
+            @click="addDRDTopic"
+            block
+            class="mt-4"
+          >
+            <v-icon left>mdi-plus</v-icon> Adicionar Tópico
+          </v-btn>
+
         </v-card-text>
         <v-card-actions>
           <v-spacer />
