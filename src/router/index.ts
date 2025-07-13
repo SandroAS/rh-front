@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useUserStore } from '@/stores/user.store'
 
 import LayoutSite from '@/layouts/LayoutSite.vue'
 import LayoutAuth from '@/layouts/LayoutAuth.vue'
@@ -12,7 +13,7 @@ import MyAccount from '@/pages/system/MyAccount.vue'
 import Settings from '@/pages/system/Settings.vue'
 import DRDs from '@/pages/system/DRDs.vue'
 import GoogleAuthCallback from '@/pages/auth/GoogleAuthCallback.vue'
-import { useUserStore } from '@/stores/user.store'
+import CareerPlans from '@/pages/system/CareerPlans.vue'
 
 const SISTEM_NAME = 'Soft Clinic';
 
@@ -82,9 +83,15 @@ const routes: RouteRecordRaw[] = [
         name: 'drds',
         component: DRDs,
         meta: { isPublic: false, title: 'DRDs - '+SISTEM_NAME }
+      },
+      {
+        path: 'planos-de-carreira',
+        name: 'career-plans',
+        component: CareerPlans,
+        meta: { isPublic: false, title: 'Planos de Carreira - '+SISTEM_NAME }
       }
     ]
-  },
+  }
 ]
 
 const router = createRouter({

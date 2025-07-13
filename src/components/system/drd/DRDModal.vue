@@ -45,6 +45,29 @@ const drd = reactive<DRDPayload>({
   }
 })
 
+watch(() => props.selectedDRD, (val) => {
+  drd.uuid = val?.uuid || undefined;
+  drd.rate = val?.rate || 0;
+  drd.jobPosition = val?.jobPosition || undefined;
+  drd.drdTopics = val?.drdTopics || [{
+    uuid: undefined,
+    name: '',
+    drdTopicItems: [{uuid: undefined, name: ''}]
+  }];
+  drd.drdMetrics = val?.drdMetrics || [{
+    uuid: undefined,
+    name: '',
+    classification: '',
+    type: ''
+  }];
+  drd.createdByUser = val?.createdByUser || {
+    name: userStore.user?.name || '',
+    email: userStore.user?.email || '',
+    cellphone: userStore.user?.cellphone || '',
+    profile_img_url: userStore.user?.profile_img_url || ''
+  };
+}, { immediate: true });
+
 const addDRDTopic = () => {
   drd.drdTopics.push({
     uuid: undefined,

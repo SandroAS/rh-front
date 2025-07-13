@@ -28,12 +28,11 @@ let jobPosition = reactive<JobPositionPayload>({
 })
 
 watch(() => props.selectedJobPosition, (val) => {
-  jobPosition = {
-    name: props.selectedJobPosition?.name || '',
-    description: props.selectedJobPosition?.description || '',
-    levelsGroup: props.selectedJobPosition?.levelsGroup || undefined
-  }
-})
+  jobPosition.uuid = val?.uuid || undefined
+  jobPosition.name = val?.name || ''
+  jobPosition.description = val?.description || ''
+  jobPosition.levelsGroup = val?.levelsGroup || undefined
+}, { immediate: true })
 
 async function onSubmit(formValues: Record<string, any>) {
   const jobPosition: JobPositionPayload = formValues as JobPositionPayload;
