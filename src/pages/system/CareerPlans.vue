@@ -109,6 +109,15 @@ onMounted(async () => {
                 {{ jobPositionInCareer.jobPosition.name }}
               </p>
             </div>
+            <template v-slot:opposite>
+              <div v-if="jobPositionInCareer.careerPlanY" style="margin-right: -114px;">
+                <v-timeline-item size="small" class="custom-timeline-y">
+                  <template v-slot:opposite>
+                    {{ jobPositionInCareer.careerPlanY.name }}
+                  </template>
+                </v-timeline-item>
+              </div>
+            </template>
           </v-timeline-item>
         </v-timeline>
       </template>
@@ -153,5 +162,15 @@ onMounted(async () => {
     max-width: 200px;
     overflow: auto;
   }
+}
+
+.custom-timeline-y .v-timeline-divider .v-timeline-divider__before {
+  transform: rotate(45deg);
+  margin-top: -65px;
+}
+
+.custom-timeline-y .v-timeline-item__opposite {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
 }
 </style>
