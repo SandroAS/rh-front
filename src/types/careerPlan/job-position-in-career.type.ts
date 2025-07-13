@@ -4,7 +4,7 @@ import type CareerPlanOption from './career-plan-option.type';
 export default interface JobPositionInCareer {
   uuid?: string;
   jobPosition: JobPositionOption;
-  nextJobPosition: JobPositionOption;
+  nextJobPosition?: JobPositionOption;
   careerPlanY?: CareerPlanOption;
   order: number;
 }

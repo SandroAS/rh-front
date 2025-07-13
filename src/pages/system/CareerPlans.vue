@@ -100,7 +100,17 @@ onMounted(async () => {
       @update:options="loadCareerPlans"
     >
       <template #item.name="{ item }">
+        <p class="font-weight-bold text-subtitle-1">{{ item.name }}</p>
         
+        <v-timeline direction="horizontal" side="start" dot-color="primary" class="custom-timeline">
+          <v-timeline-item v-for="jobPositionInCareer in item.jobPositionsInCareer" :key="jobPositionInCareer.uuid" size="small">
+            <div>
+              <p>
+                {{ jobPositionInCareer.jobPosition.name }}
+              </p>
+            </div>
+          </v-timeline-item>
+        </v-timeline>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
         <div>
@@ -117,3 +127,31 @@ onMounted(async () => {
     <CareerPlanModal v-model="dialog" :selectedCareerPlan="selectedCareerPlan" />
   </v-container>
 </template>
+
+<style>
+.custom-timeline .v-timeline-item__body {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+@media (max-width: 959px) {
+  .custom-timeline {
+    max-width: 500px;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 659px) {
+  .custom-timeline {
+    max-width: 300px;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 400px) {
+  .custom-timeline {
+    max-width: 200px;
+    overflow: auto;
+  }
+}
+</style>
