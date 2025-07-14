@@ -10,21 +10,21 @@ const userStore = useUserStore();
 const snackbarStore = useSnackbarStore();
 
 const companyDefault = reactive({
-  uuid: userStore.user!.companies?.[0].uuid || '',
-  name: userStore.user!.companies?.[0].name || '',
-  social_reason: userStore.user!.companies?.[0].social_reason || '',
-  cnpj: userStore.user!.companies?.[0].cnpj || '',
-  cellphone: userStore.user!.companies?.[0].cellphone || '',
-  email: userStore.user!.companies?.[0].email || '',
+  uuid: userStore?.user?.companies?.[0].uuid || '',
+  name: userStore?.user?.companies?.[0].name || '',
+  social_reason: userStore?.user?.companies?.[0].social_reason || '',
+  cnpj: userStore?.user?.companies?.[0].cnpj || '',
+  cellphone: userStore?.user?.companies?.[0].cellphone || '',
+  email: userStore?.user?.companies?.[0].email || '',
   address: {
-    uuid: userStore.user!.companies?.[0].address?.uuid || '',
-    cep: userStore.user!.companies?.[0].address?.cep || '',
-    street: userStore.user!.companies?.[0].address?.street || '',
-    number: userStore.user!.companies?.[0].address?.number || '',
-    neighborhood: userStore.user!.companies?.[0].address?.neighborhood || '',
-    complement: userStore.user!.companies?.[0].address?.complement || '',
-    city: userStore.user!.companies?.[0].address?.city || '',
-    state: userStore.user!.companies?.[0].address?.state || ''
+    uuid: userStore?.user?.companies?.[0].address?.uuid || '',
+    cep: userStore?.user?.companies?.[0].address?.cep || '',
+    street: userStore?.user?.companies?.[0].address?.street || '',
+    number: userStore?.user?.companies?.[0].address?.number || '',
+    neighborhood: userStore?.user?.companies?.[0].address?.neighborhood || '',
+    complement: userStore?.user?.companies?.[0].address?.complement || '',
+    city: userStore?.user?.companies?.[0].address?.city || '',
+    state: userStore?.user?.companies?.[0].address?.state || ''
   }
 });
 
@@ -98,7 +98,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Nome da empresa"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].name"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].name"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -115,7 +115,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Razão Social"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].social_reason"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].social_reason"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -132,7 +132,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="CNPJ"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].cnpj"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].cnpj"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -149,7 +149,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Telefone comer"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].cellphone"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].cellphone"
                 v-mask="['(##) #####-####', '(##) ####-####']"
                 variant="solo-filled"
                 density="compact"
@@ -167,7 +167,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Email comercial"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].email"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].email"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -187,7 +187,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="CEP"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].address?.cep"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].address?.cep"
                 v-mask="'#####-###'"
                 variant="solo-filled"
                 density="compact"
@@ -208,7 +208,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Rua"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].address?.street || !!value"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].address?.street || !!value"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -226,7 +226,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
                 id="number"
                 v-bind="field"
                 label="Número"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].address?.number"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].address?.number"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -243,7 +243,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Bairro"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].address?.neighborhood || !!value"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].address?.neighborhood || !!value"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -259,7 +259,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Complemento"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].address?.complement || !!value"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].address?.complement || !!value"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -276,7 +276,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Cidade"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].address?.city || !!value"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].address?.city || !!value"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -293,7 +293,7 @@ async function searchAddress(value: string, setFieldValue: Function) {
               <v-text-field
                 v-bind="field"
                 label="Estado"
-                :persistent-placeholder="!!userStore.user!.companies?.[0].address?.state || !!value"
+                :persistent-placeholder="!!userStore?.user?.companies?.[0].address?.state || !!value"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"

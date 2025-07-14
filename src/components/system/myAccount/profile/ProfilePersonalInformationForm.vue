@@ -17,11 +17,11 @@ watch(selectedImage, (newFile) => {
   if (newFile) {
     previewImageUrl.value = URL.createObjectURL(newFile);
   } else {
-    previewImageUrl.value = userStore.user!.profile_img_url || null;
+    previewImageUrl.value = userStore?.user?.profile_img_url || null;
   }
 }, { immediate: true });
 
-watch(() => userStore.user!.profile_img_url, (newUrl) => {
+watch(() => userStore?.user?.profile_img_url, (newUrl) => {
   if (!selectedImage.value) {
     previewImageUrl.value = newUrl || null;
   }
@@ -45,12 +45,12 @@ function onFileSelected(event: Event) {
 }
 
 const personalInformationDefault = reactive<ProfilePersonalInformation>({
-  name: userStore.user!.name,
-  email: userStore.user!.email,
-  cellphone: userStore.user!.cellphone,
-  cpf: userStore.user!.cpf,
-  gender: userStore.user!.gender ? (userStore.user!.gender === 'MALE' ? 'Masculino' : 'Feminino') : null,
-  profile_img_url: userStore.user!.profile_img_url
+  name: userStore?.user?.name || '',
+  email: userStore?.user?.email || '',
+  cellphone: userStore?.user?.cellphone,
+  cpf: userStore?.user?.cpf,
+  gender: userStore?.user?.gender ? (userStore?.user?.gender === 'MALE' ? 'Masculino' : 'Feminino') : null,
+  profile_img_url: userStore?.user?.profile_img_url
 })
 
 const genderTypes = [
@@ -168,7 +168,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 label="Telefone"
                 v-mask="['(##) #####-####', '(##) ####-####']"
                 prepend-inner-icon="mdi-phone"
-                :persistent-placeholder="!!userStore.user!.cellphone"
+                :persistent-placeholder="!!userStore?.user?.cellphone"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -187,7 +187,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 label="CPF"
                 v-mask="'###.###.###-##'"
                 prepend-inner-icon="mdi-card-account-details"
-                :persistent-placeholder="!!userStore.user!.cpf"
+                :persistent-placeholder="!!userStore?.user?.cpf"
                 variant="solo-filled"
                 density="compact"
                 :error="!!errorMessage"
@@ -207,7 +207,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 item-value="value"
                 label="Gênero"
                 prepend-inner-icon="mdi-gender-male-female"
-                :persistent-placeholder="!!userStore.user!.gender"
+                :persistent-placeholder="!!userStore?.user?.gender"
                 density="compact"
                 variant="solo-filled"
                 :error="!!errorMessage"
