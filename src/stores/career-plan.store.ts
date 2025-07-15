@@ -136,18 +136,11 @@ export const useCareerPlanStore = defineStore('careerPlan', {
                 order: 5,
               },
               {
-                uuid: 'jpic-uuid-1-2',
-                jobPosition: { uuid: 'jp-2', name: 'Dev Pleno' },
-                nextJobPosition: { uuid: 'jp-3', name: 'Dev Sênior' },
-                careerPlanY: undefined,
-                order: 6,
-              },
-              {
                 uuid: 'jpic-uuid-1-3',
                 jobPosition: { uuid: 'jp-3', name: 'Dev Sênior' },
                 nextJobPosition: undefined, // Último na cadeia
                 careerPlanY: undefined,
-                order: 7,
+                order: 6,
               },
             ],
           },
