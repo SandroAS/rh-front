@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import EmployeesProgressionChart from '@/components/system/dashboard/EmployeesProgressionChart.vue'
-import BillingPerServiceList from '@/components/system/dashboard/BillingPerServiceList.vue'
-import PatientsBirthdayList from '@/components/system/dashboard/PatientsBirthdayList.vue'
-import PatientsPendingPaymentList from '@/components/system/dashboard/PatientsPendingPaymentList.vue'
+import TeamsProgressionsList from '@/components/system/dashboard/TeamsProgressionsList.vue'
+import TopFiveProgressionsList from '@/components/system/dashboard/TopFiveProgressionsList.vue'
+import PendingEvaluationsList from '@/components/system/dashboard/PendingEvaluationsList.vue'
 
 const totalEmployees = 124
 const totalTeams = 11
@@ -48,13 +48,13 @@ const totalProgression = 250.75
 
     <v-row class="mt-6">
       <v-col cols="12" lg="4" md="6">
-        <BillingPerServiceList />
+        <TeamsProgressionsList />
       </v-col>
       <v-col cols="12" lg="4" md="6">
-        <PatientsBirthdayList />
+        <TopFiveProgressionsList />
       </v-col>
       <v-col cols="12" lg="4" md="6">
-        <PatientsPendingPaymentList />
+        <PendingEvaluationsList />
       </v-col>
     </v-row>
   </v-container>
