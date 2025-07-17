@@ -5,8 +5,8 @@ import logo from '@/assets/logo.png'
 <template>
   <v-toolbar-title class="pl-2">
     <div class="d-flex justify-self-start align-center">
-      <v-img :src="logo" alt="Logo Sistema RH" contain height="50" width="50" class="mr-2" />
-      <div>Sistema de RH</div>
+      <v-img :src="logo" alt="Logo Sistema RH" contain height="30" width="30" class="mr-2" />
+      <div class="text-subtitle-1">Sistema de RH</div>
     </div>
   </v-toolbar-title>
 </template>

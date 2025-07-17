@@ -36,7 +36,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-app-bar app color="primary" dark>
+  <v-app-bar app color="primary" dark height="40">
     <v-app-bar-nav-icon
       :icon="appBarIcon"
       @click="toggleAppBarIcon"

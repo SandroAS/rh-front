@@ -32,9 +32,10 @@ function irPara(path: string) {
         class="ml-2 elevation-4 bg-white"
         variant="text"
         icon
+        size="x-small"
       >
         <v-avatar size="36">
-          <span class="text-primary text-subtitle-2">{{ siglaUsuario }}</span>
+          <span class="text-primary text-subtitle-2 mb-1">{{ siglaUsuario }}</span>
         </v-avatar>
       </v-btn>
     </template>
