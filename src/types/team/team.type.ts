@@ -1,7 +1,7 @@
-import type User from '../user/user.type';
+import type AccountUser from '../account/account-user.type';
 
 export default interface Team {
   uuid: string;
   name: string;
-  users: User[];
+  users: AccountUser[];
 }

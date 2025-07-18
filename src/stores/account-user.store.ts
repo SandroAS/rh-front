@@ -32,7 +32,19 @@ export const useAccountUserStore = defineStore('accountUser', {
     search_term: undefined
   }),
 
-  getters: {},
+  getters: {
+    accountUsersOptions(): { value: AccountUser, title: string, disabled?: boolean }[] | [] {
+      if(!this.account_users) return [];
+      const levelsGroupsMapped = this.account_users.map(account_user => {
+        return {
+          value: account_user,
+          title: account_user.name,
+          disabled: false
+        }
+      });
+      return levelsGroupsMapped;
+    }
+  },
 
   actions: {
     async saveAccountUser(accountUser: AccountUserPayload, uuid?: string) {

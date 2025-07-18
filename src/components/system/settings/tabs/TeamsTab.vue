@@ -26,12 +26,12 @@ async function getTeams() {
   await teamStore.getTeams({ page: currentPage.value, limit: itemsPerPage.value });
 }
 
-async function getUsers() {
+async function getAccountUsers() {
   await accountUserStore.getAccountUsers({page: 1, limit: 10000 });
 }
 
 getTeams();
-getUsers()
+getAccountUsers()
 
 const loadTeams = async () => {
   await loadItems(
@@ -66,7 +66,7 @@ onMounted(async () => {
     <div class="flex-column flex-md-row d-flex justify-space-between mb-4 mt-2 align-center">
       <v-text-field
         v-model="searchTerm"
-        label="Buscar usuário"
+        label="Buscar time"
         prepend-inner-icon="mdi-magnify"
         variant="outlined"
         density="compact"
@@ -78,15 +78,14 @@ onMounted(async () => {
 
       <v-btn color="primary" class="w-md-auto w-100" @click="openDialog">
         <v-icon start>mdi-plus</v-icon>
-        Adicionar cargo
+        Adicionar time
       </v-btn>
     </div>
 
     <v-data-table
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
-        { title: 'Descrição', value: 'description', sortable: true },
-        { title: 'Valor (R$)', value: 'price', align: 'end' },
+        { title: 'Membros', value: 'users', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
       :items="teamStore.teams || []"
