@@ -5,6 +5,7 @@ import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import JobPositionsTab from '@/components/system/settings/tabs/JobPositionsTab.vue'
 import LevelsGroupsTab from '@/components/system/settings/tabs/LevelsGroupsTab.vue'
+import TeamsTab from '../../components/system/settings/tabs/TeamsTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,6 +55,10 @@ watch(selectedTab, (newTab) => {
 
         <v-tabs-window-item value="levels-groups">
           <LevelsGroupsTab />
+        </v-tabs-window-item>
+
+        <v-tabs-window-item value="teams">
+          <TeamsTab />
         </v-tabs-window-item>
       </v-tabs-window>
     </v-container>

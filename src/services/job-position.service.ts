@@ -15,10 +15,10 @@ export const getJobPositions = async (page: number = 1, limit: number = 10, sort
   return response.data;
 };
 
-export const saveJobPosition = async (service: JobPositionPayload, uuid?: string) => {
+export const saveJobPosition = async (jobPosition: JobPositionPayload, uuid?: string) => {
   const response: AxiosResponse<{ uuid: string }> = uuid 
-    ? await api.put(`/job-positions/${uuid}`, { ...service, system_module_uuid: service.levelsGroup!.uuid })
-    : await api.post('/job-positions', { ...service, system_module_uuid: service.levelsGroup!.uuid });
+    ? await api.put(`/job-positions/${uuid}`, { ...jobPosition, system_module_uuid: jobPosition.levelsGroup!.uuid })
+    : await api.post('/job-positions', { ...jobPosition, system_module_uuid: jobPosition.levelsGroup!.uuid });
   return response.data;
 };
 

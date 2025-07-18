@@ -1,49 +1,49 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useJobPositionStore } from '../../../../stores/job-position.store';
-import { useLevelsGroupStore } from '../../../../stores/levels-group.store';
+import { useTeamStore } from '../../../../stores/team.store';
+import { useAccountUserStore } from '@/stores/account-user.store';
 import loadItems from '@/utils/loadItems.util';
-import type JobPosition from '@/types/jobPosition/job-position.type';
-import JobPositionModal from '../jobPositions/JobPositionModal.vue';
+import type Team from '../../../../types/team/team.type';
+import TeamModal from '../teams/TeamModal.vue';
 
-const jobPositionStore = useJobPositionStore();
-const levelsGroupeStore = useLevelsGroupStore();
+const teamStore = useTeamStore();
+const accountUserStore = useAccountUserStore();
 
 const dialog = ref(false);
-const selectedJobPosition = ref<JobPosition | null>(null);
+const selectedTeam = ref<Team | null>(null);
 
-const currentPage = ref(jobPositionStore.page);
-const itemsPerPage = ref(jobPositionStore.limit);
-const searchTerm = ref(jobPositionStore.search_term || '');
-const sortBy = ref(jobPositionStore.sort_column ? [{ key: jobPositionStore.sort_column, order: jobPositionStore.sort_order }] : []);
+const currentPage = ref(teamStore.page);
+const itemsPerPage = ref(teamStore.limit);
+const searchTerm = ref(teamStore.search_term || '');
+const sortBy = ref(teamStore.sort_column ? [{ key: teamStore.sort_column, order: teamStore.sort_order }] : []);
 
-const openDialog = (item?: JobPosition) => {
-  selectedJobPosition.value = item || null;
+const openDialog = (item?: Team) => {
+  selectedTeam.value = item || null;
   dialog.value = true;
 }
 
-async function getJobPositions() {
-  await jobPositionStore.getJobPositions({ page: currentPage.value, limit: itemsPerPage.value });
+async function getTeams() {
+  await teamStore.getTeams({ page: currentPage.value, limit: itemsPerPage.value });
 }
 
-async function getLevelsGroups() {
-  await levelsGroupeStore.getLevelsGroups();
+async function getUsers() {
+  await accountUserStore.getAccountUsers({page: 1, limit: 10000 });
 }
 
-getJobPositions();
-getLevelsGroups()
+getTeams();
+getUsers()
 
-const loadJobPositions = async () => {
+const loadTeams = async () => {
   await loadItems(
     { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
     searchTerm.value,
-    jobPositionStore,
-    'getJobPositions',
-    'job_positions'
+    teamStore,
+    'getTeams',
+    'teams'
   );
 
-  currentPage.value = jobPositionStore.page;
-  itemsPerPage.value = jobPositionStore.limit;
+  currentPage.value = teamStore.page;
+  itemsPerPage.value = teamStore.limit;
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -52,12 +52,12 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadJobPositions();
+    loadTeams();
   }, 300);
 });
 
 onMounted(async () => {
-  loadJobPositions();
+  loadTeams();
 });
 </script>
 
@@ -66,7 +66,7 @@ onMounted(async () => {
     <div class="flex-column flex-md-row d-flex justify-space-between mb-4 mt-2 align-center">
       <v-text-field
         v-model="searchTerm"
-        label="Buscar cargo"
+        label="Buscar usuário"
         prepend-inner-icon="mdi-magnify"
         variant="outlined"
         density="compact"
@@ -89,15 +89,15 @@ onMounted(async () => {
         { title: 'Valor (R$)', value: 'price', align: 'end' },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
-      :items="jobPositionStore.job_positions || []"
+      :items="teamStore.teams || []"
       item-value="uuid"
       :items-per-page="itemsPerPage"
       :items-per-page-options="[{title: '10', value: 10}, {title: '25', value: 25}, {title: '50', value: 50}, {title: '100', value: 100}]"
-      :items-length="jobPositionStore.total"
-      :loading="jobPositionStore.loading"
+      :items-length="teamStore.total"
+      :loading="teamStore.loading"
       :page="currentPage"
       mobile-breakpoint="md"
-      @update:options="loadJobPositions"
+      @update:options="loadTeams"
     >
       <template v-slot:[`item.actions`]="{ item }">
         <div>
@@ -111,6 +111,6 @@ onMounted(async () => {
       </template>
     </v-data-table>
 
-    <JobPositionModal v-model="dialog" :selectedJobPosition="selectedJobPosition" />
+    <TeamModal v-model="dialog" :selectedTeam="selectedTeam" />
   </div>
 </template>
