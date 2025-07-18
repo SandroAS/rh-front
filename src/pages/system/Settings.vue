@@ -14,7 +14,8 @@ const tabs = [
   { name: 'Usuários', value: 'usuarios' },
   { name: 'Permissões', value: 'permissoes' },
   { name: 'Cargos', value: 'job-positions' },
-  { name: 'Níves de Cargos', value: 'levels-groups' }
+  { name: 'Níves de Cargos', value: 'levels-groups' },
+  { name: 'Times', value: 'teams' }
 ];
 
 const selectedTab = ref(route.query.tab || 'usuarios');

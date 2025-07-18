@@ -1,4 +1,4 @@
-import { getTeams, saveTeam } from '@/services/team.service';
+import { getTeams, saveTeam } from '../services/teams.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import { defineStore } from 'pinia';
 import type Team from '@/types/team/team.type';
