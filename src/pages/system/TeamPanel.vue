@@ -1,276 +1,119 @@
 <script setup lang="ts">
+import SprintEvolutionChart from '@/components/system/teamPanel/SprintEvolutionChart.vue';
 import { ref, computed } from 'vue';
-import VueApexCharts from 'vue3-apexcharts';
 
-interface SprintDataItem {
-  name: string; // Nome da sprint (ex: "Sprint Fev/25")
+// Para os totalizadores, vamos precisar de dados de contexto.
+// Para fins de demonstração, vou incluir uma versão simplificada do mockSprintData aqui
+// para que os cálculos dos totalizadores sejam baseados nela.
+// Em um cenário real, esses dados viriam de uma API ou de um Vuex store.
 
-  // CENÁRIOS PARA SPRINTS PASSADAS:
-  // Projetos planejados SÓ para esta sprint:
-  sprintOnlyOnTime?: number;        // Entregues no prazo (verde)
-  sprintOnlyDelayed?: number;       // Entregues fora do prazo (vermelho)
-  sprintOnlyNotDelivered?: number;  // Não entregues (vermelho escuro 1)
-
-  // Projetos planejados para MAIS DE UMA sprint:
-  multiSprintNotPlannedDelivery?: number; // Não planejados para entrega nesta sprint (amarelo)
-  multiSprintPlannedDeliveryDelayed?: number; // Planejados para entrega nesta sprint e entregues fora do prazo (vermelho escuro 2)
-  multiSprintPlannedDeliveryOnTime?: number; // Planejados para entrega nesta sprint e entregues no prazo (verde escuro)
-  multiSprintPlannedDeliveryNotDelivered?: number; // Planejados para entrega nesta sprint e NÃO entregues (vermelho escuro 3)
-
-  // CENÁRIOS PARA A SPRINT ATUAL:
-  currentNewProjects?: number;      // Projetos novos nesta sprint (azul)
-  currentInheritedDelayed?: number; // Projetos herdados e já atrasados (laranja)
-  currentMultiSprintNotPlannedDelivery?: number; // NOVO: Projetos multi-sprint não planejados para entrega nesta (amarelo)
+// **Importante:** Se o SprintEvolutionChart precisar dos mesmos dados,
+// você precisará decidir onde residem os "dados verdadeiros" e passá-los como prop.
+// Por enquanto, para este exemplo, vou duplicar a interface e uma versão reduzida dos dados
+// para focar nos cálculos dos totalizadores.
+interface SprintDataItemForCalculations {
+  name: string;
+  sprintOnlyOnTime?: number;
+  sprintOnlyDelayed?: number;
+  sprintOnlyNotDelivered?: number;
+  multiSprintPlannedDeliveryDelayed?: number;
+  multiSprintPlannedDeliveryOnTime?: number;
+  multiSprintPlannedDeliveryNotDelivered?: number;
+  currentNewProjects?: number;
+  currentInheritedDelayed?: number;
+  currentMultiSprintNotPlannedDelivery?: number;
 }
 
-// Dados mockados de exemplo para o gráfico de sprint com os novos cenários
-const mockSprintData: SprintDataItem[] = [
-  // Exemplo de sprints passadas
+// Usando os dados mockados para os cálculos dos totalizadores
+const mockDataForTotalizers: SprintDataItemForCalculations[] = [
   {
-    name: 'Spint 1 (12/05 - 25/05)',
-    sprintOnlyOnTime: 5,
-    sprintOnlyDelayed: 1,
-    sprintOnlyNotDelivered: 0,
-    multiSprintNotPlannedDelivery: 2,
-    multiSprintPlannedDeliveryDelayed: 1,
-    multiSprintPlannedDeliveryOnTime: 3,
-    multiSprintPlannedDeliveryNotDelivered: 0,
+    name: 'Spint 1', sprintOnlyOnTime: 5, sprintOnlyDelayed: 1, sprintOnlyNotDelivered: 0,
+    multiSprintPlannedDeliveryDelayed: 1, multiSprintPlannedDeliveryOnTime: 3, multiSprintPlannedDeliveryNotDelivered: 0,
   },
   {
-    name: 'Spint 2 (26/05 - 08/06)',
-    sprintOnlyOnTime: 7,
-    sprintOnlyDelayed: 0,
-    sprintOnlyNotDelivered: 1, // Não entregue
-    multiSprintNotPlannedDelivery: 1,
-    multiSprintPlannedDeliveryDelayed: 0,
-    multiSprintPlannedDeliveryOnTime: 2,
-    multiSprintPlannedDeliveryNotDelivered: 0,
+    name: 'Spint 2', sprintOnlyOnTime: 7, sprintOnlyDelayed: 0, sprintOnlyNotDelivered: 1,
+    multiSprintPlannedDeliveryDelayed: 0, multiSprintPlannedDeliveryOnTime: 2, multiSprintPlannedDeliveryNotDelivered: 0,
   },
   {
-    name: 'Spint 3 (09/06 - 22/06)',
-    sprintOnlyOnTime: 4,
-    sprintOnlyDelayed: 2,
-    sprintOnlyNotDelivered: 0,
-    multiSprintNotPlannedDelivery: 2,
-    multiSprintPlannedDeliveryDelayed: 1,
-    multiSprintPlannedDeliveryOnTime: 1,
-    multiSprintPlannedDeliveryNotDelivered: 1, // Multi-sprint, entrega planejada, não entregue
+    name: 'Spint 3', sprintOnlyOnTime: 4, sprintOnlyDelayed: 2, sprintOnlyNotDelivered: 0,
+    multiSprintPlannedDeliveryDelayed: 1, multiSprintPlannedDeliveryOnTime: 1, multiSprintPlannedDeliveryNotDelivered: 1,
   },
   {
-    name: 'Spint 4 (23/06 - 06/07)',
-    sprintOnlyOnTime: 8,
-    sprintOnlyDelayed: 0,
-    sprintOnlyNotDelivered: 0,
-    multiSprintNotPlannedDelivery: 0,
-    multiSprintPlannedDeliveryDelayed: 0,
-    multiSprintPlannedDeliveryOnTime: 2,
-    multiSprintPlannedDeliveryNotDelivered: 0,
+    name: 'Spint 4', sprintOnlyOnTime: 8, sprintOnlyDelayed: 0, sprintOnlyNotDelivered: 0,
+    multiSprintPlannedDeliveryDelayed: 0, multiSprintPlannedDeliveryOnTime: 2, multiSprintPlannedDeliveryNotDelivered: 0,
   },
   {
-    name: 'Spint 5 (07/07 - 20/07)',
-    sprintOnlyOnTime: 5,
-    sprintOnlyDelayed: 3,
-    sprintOnlyNotDelivered: 1,
-    multiSprintNotPlannedDelivery: 1,
-    multiSprintPlannedDeliveryDelayed: 0,
-    multiSprintPlannedDeliveryOnTime: 2,
-    multiSprintPlannedDeliveryNotDelivered: 0,
+    name: 'Spint 5', sprintOnlyOnTime: 5, sprintOnlyDelayed: 3, sprintOnlyNotDelivered: 1,
+    multiSprintPlannedDeliveryDelayed: 0, multiSprintPlannedDeliveryOnTime: 2, multiSprintPlannedDeliveryNotDelivered: 0,
   },
   {
-    name: 'Spint 6 (21/07 - 03/08)',
-    sprintOnlyOnTime: 9,
-    sprintOnlyDelayed: 1,
-    sprintOnlyNotDelivered: 0,
-    multiSprintNotPlannedDelivery: 2,
-    multiSprintPlannedDeliveryDelayed: 1,
-    multiSprintPlannedDeliveryOnTime: 1,
-    multiSprintPlannedDeliveryNotDelivered: 0,
+    name: 'Spint 6', sprintOnlyOnTime: 9, sprintOnlyDelayed: 1, sprintOnlyNotDelivered: 0,
+    multiSprintPlannedDeliveryDelayed: 1, multiSprintPlannedDeliveryOnTime: 1, multiSprintPlannedDeliveryNotDelivered: 0,
   },
   {
-    name: 'Spint 7 (04/08 - 17/08)',
-    sprintOnlyOnTime: 6,
-    sprintOnlyDelayed: 2,
-    sprintOnlyNotDelivered: 1,
-    multiSprintNotPlannedDelivery: 1,
-    multiSprintPlannedDeliveryDelayed: 0,
-    multiSprintPlannedDeliveryOnTime: 2,
-    multiSprintPlannedDeliveryNotDelivered: 0,
+    name: 'Spint 7', sprintOnlyOnTime: 6, sprintOnlyDelayed: 2, sprintOnlyNotDelivered: 1,
+    multiSprintPlannedDeliveryDelayed: 0, multiSprintPlannedDeliveryOnTime: 2, multiSprintPlannedDeliveryNotDelivered: 0,
   },
-  // Sprint atual
+  // A sprint atual não contribui para entregas "finalizadas" nos totalizadores gerais de "entregues"
+  // mas seus projetos "novos" podem ser considerados para média por colaborador.
   {
-    name: 'Sprint Atual (18/07 - 31/07)', // Considerando a data atual de 19/07/2025
+    name: 'Sprint Atual',
     currentNewProjects: 7,
     currentInheritedDelayed: 3,
-    currentMultiSprintNotPlannedDelivery: 2, // NOVO: 2 projetos multi-sprint não previstos para entrega nesta sprint atual
+    currentMultiSprintNotPlannedDelivery: 2,
   },
 ];
 
-const chartSeries = computed(() => {
-  const series = [
-    // Projetos planejados para SÓ esta sprint (passadas)
-    { name: 'Entregues no Prazo', data: [] as number[], color: '#4CAF50' }, // Verde
-    { name: 'Entregues Fora do Prazo', data: [] as number[], color: '#f27070' }, // Vermelho
-    { name: 'Não Entregues', data: [] as number[], color: '#E74040' }, // Vermelho Escuro 1
+// Supondo um número fixo de colaboradores para o cálculo da média
+const totalCollaborators = ref(10); // Ajuste conforme o número real de colaboradores no time
 
-    // Projetos planejados para MAIS DE UMA sprint (passadas)
-    { name: 'Não Prev. Entrega (Passada)', data: [] as number[], color: '#FFEB3B' }, // Amarelo
-    { name: 'Entrega Prev. Atraso', data: [] as number[], color: '#B71C1C' }, // Vermelho Escuro 2
-    { name: 'Entrega Prev. Prazo', data: [] as number[], color: '#388E3C' }, // Verde Escuro
-    { name: 'Entrega Prev. Não Entregue', data: [] as number[], color: '#890F0F' }, // Vermelho Escuro 3
+// --- Computed Properties para os Totalizadores ---
 
-    // Cenários para a Sprint ATUAL
-    { name: 'Novos Projetos', data: [] as number[], color: '#2196F3' }, // Azul
-    { name: 'Herdadas Atrasados', data: [] as number[], color: '#FF9800' }, // Laranja
-    { name: 'Não Prev. Entrega', data: [] as number[], color: '#FFEB3B' }, // Amarelo (mesma cor do passado)
-  ];
-
-  mockSprintData.forEach(sprint => {
-    // Sprints Passadas
-    (series[0].data as number[]).push(sprint.sprintOnlyOnTime || 0);
-    (series[1].data as number[]).push(sprint.sprintOnlyDelayed || 0);
-    (series[2].data as number[]).push(sprint.sprintOnlyNotDelivered || 0);
-    (series[3].data as number[]).push(sprint.multiSprintNotPlannedDelivery || 0);
-    (series[4].data as number[]).push(sprint.multiSprintPlannedDeliveryDelayed || 0);
-    (series[5].data as number[]).push(sprint.multiSprintPlannedDeliveryOnTime || 0);
-    (series[6].data as number[]).push(sprint.multiSprintPlannedDeliveryNotDelivered || 0);
-
-    // Sprint Atual (usamos os novos campos aqui)
-    (series[7].data as number[]).push(sprint.currentNewProjects || 0);
-    (series[8].data as number[]).push(sprint.currentInheritedDelayed || 0);
-    (series[9].data as number[]).push(sprint.currentMultiSprintNotPlannedDelivery || 0);
+const totalDeliveries = computed(() => {
+  let total = 0;
+  mockDataForTotalizers.forEach(sprint => {
+    // Somas para sprints passadas
+    total += (sprint.sprintOnlyOnTime || 0);
+    total += (sprint.sprintOnlyDelayed || 0);
+    total += (sprint.sprintOnlyNotDelivered || 0); // Projetos que eram para ser entregues mas não foram
+    total += (sprint.multiSprintPlannedDeliveryDelayed || 0);
+    total += (sprint.multiSprintPlannedDeliveryOnTime || 0);
+    total += (sprint.multiSprintPlannedDeliveryNotDelivered || 0); // Projetos multi-sprint não entregues
+    
+    // Para a sprint atual, consideramos os projetos "novos" para o total de trabalho planejado/entregue
+    // mas não para entregas "finalizadas" no passado
+    total += (sprint.currentNewProjects || 0);
   });
-
-  // Filtra as séries que não possuem nenhum dado para não aparecerem na legenda ou gráfico desnecessariamente
-  return series.filter(s => s.data.some(d => d > 0));
+  return total;
 });
 
-const chartCategories = computed(() => mockSprintData.map(sprint => sprint.name));
+const totalOnTimeDeliveries = computed(() => {
+  let total = 0;
+  mockDataForTotalizers.forEach(sprint => {
+    total += (sprint.sprintOnlyOnTime || 0);
+    total += (sprint.multiSprintPlannedDeliveryOnTime || 0);
+  });
+  return total;
+});
 
-// Opções do gráfico ApexCharts
-const chartOptions = computed(() => ({
-  chart: {
-    type: 'bar',
-    height: 350,
-    stacked: true,
-    toolbar: {
-      show: false,
-    },
-    zoom: {
-      enabled: false,
-    },
-  },
-  plotOptions: {
-    bar: {
-      horizontal: false,
-      borderRadius: 5,
-      // === NOVO ===
-      // Adicionado borderRadiusApplication para garantir que o arredondamento ocorra nas extremidades
-      // 'end' arredonda a extremidade superior ou direita (dependendo de horizontal: false/true)
-      // 'both' arredonda ambas as extremidades do grupo empilhado (o que geralmente queremos)
-      borderRadiusApplication: 'end', // Pode testar 'both' se preferir arredondar também a base
-      borderRadiusWhenStacked: true, // Garante que se aplica quando empilhado
-      // === FIM NOVO ===
-      dataLabels: {
-        total: {
-          enabled: true,
-          formatter: function (val: number) {
-            return val ? val.toFixed(0) : '';
-          },
-          style: {
-            fontSize: '12px',
-            fontWeight: 700,
-            color: '#333'
-          }
-        }
-      }
-    },
-  },
-  xaxis: {
-    categories: chartCategories.value,
-    labels: {
-      style: {
-        fontSize: '12px',
-        fontWeight: 500,
-        colors: '#333',
-      },
-    },
-  },
-  yaxis: {
-    title: {
-      text: 'Quantidade de Projetos',
-      style: {
-        fontSize: '14px',
-        fontWeight: 600,
-        color: '#555',
-      },
-    },
-    labels: {
-      formatter: function (val: number) {
-        return val.toFixed(0);
-      },
-      style: {
-        fontSize: '12px',
-        fontWeight: 500,
-        colors: '#333',
-      },
-    },
-  },
-  fill: {
-    opacity: 1,
-  },
-  colors: chartSeries.value.map(s => s.color),
-  legend: {
-    position: 'bottom',
-    horizontalAlign: 'center',
-    markers: {
-      radius: 12,
-    },
-    itemMargin: {
-      horizontal: 10,
-      vertical: 5
-    }
-  },
-  tooltip: {
-    y: {
-      formatter: function (val: number) {
-        return val.toFixed(0);
-      }
-    }
-  },
-  grid: {
-    show: true,
-    borderColor: '#e0e0e0',
-    strokeDashArray: 0,
-    position: 'back',
-    xaxis: {
-      lines: {
-        show: false,
-      }
-    },
-    yaxis: {
-      lines: {
-        show: true,
-      }
-    },
-  },
-  dataLabels: {
-    enabled: true,
-    formatter: function (val: number) {
-      return val > 0 ? val.toFixed(0) : '';
-    },
-    style: {
-      fontSize: '10px',
-      colors: ['#fff']
-    },
-    dropShadow: {
-      enabled: true,
-      top: 1,
-      left: 1,
-      blur: 1,
-      opacity: 0.5
-    }
-  },
-}));
+const totalLateDeliveries = computed(() => {
+  let total = 0;
+  mockDataForTotalizers.forEach(sprint => {
+    total += (sprint.sprintOnlyDelayed || 0);
+    total += (sprint.sprintOnlyNotDelivered || 0); // Considera não entregues como fora do prazo/falha
+    total += (sprint.multiSprintPlannedDeliveryDelayed || 0);
+    total += (sprint.multiSprintPlannedDeliveryNotDelivered || 0); // Considera multi-sprint não entregues como fora do prazo/falha
+    total += (sprint.currentInheritedDelayed || 0); // Projetos já atrasados na sprint atual
+  });
+  return total;
+});
+
+const averageDeliveriesPerCollaborator = computed(() => {
+  if (totalCollaborators.value === 0) return 0;
+  // A média pode ser do total de entregas concluídas, ou do total de projetos trabalhados.
+  // Vou considerar "totalDeliveries" que inclui tanto entregues quanto não entregues (trabalhados).
+  return (totalDeliveries.value / totalCollaborators.value).toFixed(1); // Arredonda para 1 casa decimal
+});
 
 </script>
 
@@ -278,20 +121,36 @@ const chartOptions = computed(() => ({
   <v-container fluid>
     <h2 class="mb-3">Painel do Time: <span style="font-weight: 500;">TechFin</span></h2>
 
+    <v-row dense class="mb-6">
+      <v-col cols="12" md="3">
+        <v-card class="pa-4" elevation="2">
+          <v-icon size="32" color="blue darken-2">mdi-chart-bar</v-icon> <div class="text-h6 mt-2">Entregas totais</div>
+          <div class="text-h5 font-weight-bold">{{ totalDeliveries }}</div>
+        </v-card>
+      </v-col>
+      <v-col cols="12" md="3">
+        <v-card class="pa-4" elevation="2">
+          <v-icon size="32" color="green darken-2">mdi-check-circle-outline</v-icon> <div class="text-h6 mt-2">Entregas no prazo</div>
+          <div class="text-h5 font-weight-bold">{{ totalOnTimeDeliveries }}</div>
+        </v-card>
+      </v-col>
+      <v-col cols="12" md="3">
+        <v-card class="pa-4" elevation="2">
+          <v-icon size="32" color="red darken-2">mdi-close-circle-outline</v-icon> <div class="text-h6 mt-2">Entregas fora do prazo</div>
+          <div class="text-h5 font-weight-bold">{{ totalLateDeliveries }}</div>
+        </v-card>
+      </v-col>
+      <v-col cols="12" md="3">
+        <v-card class="pa-4" elevation="2">
+          <v-icon size="32" color="orange darken-2">mdi-account-multiple-outline</v-icon> <div class="text-h6 mt-2">Média por membro</div>
+          <div class="text-h5 font-weight-bold">{{ averageDeliveriesPerCollaborator }}</div>
+        </v-card>
+      </v-col>
+    </v-row>
+
     <v-row>
       <v-col cols="12">
-        <v-card class="pa-4" elevation="2">
-          <v-card-title class="text-h6 font-weight-bold mb-4">Evolução de Entregas por Sprint</v-card-title>
-          <v-divider class="mb-4"></v-divider>
-          <div id="chart">
-            <VueApexCharts
-              type="bar"
-              :options="chartOptions"
-              :series="chartSeries"
-              height="350"
-            ></VueApexCharts>
-          </div>
-        </v-card>
+        <SprintEvolutionChart />
       </v-col>
     </v-row>
   </v-container>
