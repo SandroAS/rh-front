@@ -1,9 +1,9 @@
 export enum RoleType {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
-  ASSISTANT = 'ASSISTANT',
-  HEALTHCARE_PROFESSIONAL = 'HEALTHCARE_PROFESSIONAL',
-  PATIENT = 'PATIENT'
+  MANAGER = 'MANAGER',
+  LEADER = 'LEADER',
+  MEMBER = 'MEMBER'
 }
 export interface UserRole {
   uuid: string;

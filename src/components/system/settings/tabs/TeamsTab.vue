@@ -98,6 +98,24 @@ onMounted(async () => {
       mobile-breakpoint="md"
       @update:options="loadTeams"
     >
+      <template #item.users="{ item }">
+        <div class="mb-1">
+          <v-chip
+            v-for="user in item.users"
+            link
+            pill
+            size="small"
+            class="mt-1"
+          >
+            <v-avatar start>
+              <v-img src="https://cdn.vuetifyjs.com/images/john.png"></v-img>
+            </v-avatar>
+
+            {{ user.name }}
+          </v-chip>
+        </div>
+      </template>
+
       <template v-slot:[`item.actions`]="{ item }">
         <div>
           <v-btn icon @click="openDialog(item)">

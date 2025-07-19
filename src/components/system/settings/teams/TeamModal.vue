@@ -23,20 +23,20 @@ const close = () => emit('update:modelValue', false)
 let team = reactive<TeamPayload>({
   uuid: props.selectedTeam?.uuid || undefined,
   name: props.selectedTeam?.name || '',
-  users: props.selectedTeam?.users || undefined
-})
+  users: props.selectedTeam?.users || []
+});
 
 watch(() => props.selectedTeam, (val) => {
-  team.uuid = val?.uuid || undefined
-  team.name = val?.name || ''
-  team.users = val?.users || undefined
-}, { immediate: true })
+  team.uuid = val?.uuid || undefined;
+  team.name = val?.name || '';
+  team.users = val?.users || [];
+}, { immediate: true });
 
 async function onSubmit(formValues: Record<string, any>) {
-  const team: TeamPayload = formValues as TeamPayload;
+  const payload: TeamPayload = formValues as TeamPayload;
 
   try {
-    await teamStore.saveTeam(team, props.selectedTeam?.uuid);
+    await teamStore.saveTeam(payload, props.selectedTeam?.uuid);
     snackbarStore.show('Time salvo com sucesso!', 'success');
     close();
   } catch (err: any) {
@@ -54,10 +54,10 @@ async function onSubmit(formValues: Record<string, any>) {
           {{ !!selectedTeam ? 'Editar Time' : 'Novo Time' }}
         </v-card-title>
         <v-card-text>
-          <Field name="name" label="nome" rules="required" v-slot="{ field, errorMessage }">
+          <Field name="name" label="Nome do Time" rules="required" v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
-              label="Nome"
+              label="Nome do Time"
               variant="solo-filled"
               density="compact"
               :persistent-placeholder="!!props.selectedTeam?.name"
@@ -66,25 +66,33 @@ async function onSubmit(formValues: Record<string, any>) {
               class="mb-3"
             />
           </Field>
-          <Field name="users" label="mebros do time" rules="required" v-slot="{ field, errorMessage }">
-            <v-select
+          
+          <Field name="users" label="Membros do Time" rules="required" v-slot="{ field, errorMessage }">
+            <v-autocomplete
               v-bind="field"
-              label="Membros do time"
+              label="Selecione os Membros"
               :items="accountUserStore.accountUsersOptions"
-              item-value="value"
               item-title="title"
-              item-props="disabled"
-              :return-object="false"
+              item-value="value"
+              :return-object="true"
+              multiple
+              chips
+              closable-chips
+              clearable
               variant="solo-filled"
               density="compact"
-              persistent-placeholder
               :error="!!errorMessage"
               :error-messages="errorMessage"
             >
               <template v-slot:item="{ item, props: itemProps }">
-                <v-list-item v-bind="itemProps" :title="item.title" :disabled="item.raw.disabled" />
+                <v-list-item v-bind="itemProps" :title="item.raw.title" />
+                </template>
+              
+              <template v-slot:chip="{ item, props: chipProps }">
+                <v-chip v-bind="chipProps">
+                  {{ item.raw.title }} </v-chip>
               </template>
-            </v-select>
+            </v-autocomplete>
           </Field>
         </v-card-text>
         <v-card-actions>
