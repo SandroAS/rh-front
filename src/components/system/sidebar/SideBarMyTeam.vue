@@ -44,12 +44,15 @@ const teamMembers = ref([
 <template>
   <div class="border-t">
     <div v-if="!rail" class="pa-2">
-      <div class="d-flex align-end justify-space-between mb-2">
-        <div>
-          <div class="text-subtitle-2 font-weight-medium">Meu Time: <b>TechFin</b></div>
-          <div class="text-caption text-medium-emphasis">Membros do meu time</div>
-        </div>
+      <div class="d-flex align-center mb-2 team-header-container">
+        <div class="text-subtitle-2 font-weight-medium mr-1 nowrap-text">Meu Time:</div>
+        
+        <v-btn color="primary" size="small" class="team-dashboard-btn" to="time/hiseuhfkbeiuefiab">
+          <span class="team-name-text">TechFin</span>
+          <v-icon class="ml-1">mdi-speedometer</v-icon>
+        </v-btn>
       </div>
+      <div class="text-caption text-medium-emphasis mb-2">Membros do meu time</div>
   
       <v-divider class="mb-2" />
   
@@ -77,5 +80,31 @@ const teamMembers = ref([
 <style scoped>
 .border-t {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.nowrap-text {
+  white-space: nowrap;
+}
+
+.team-header-container {
+  max-width: 100%;
+  overflow: hidden;
+  flex-wrap: nowrap;
+}
+
+.team-dashboard-btn {
+  min-width: 0 !important;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.team-dashboard-btn .team-name-text {
+  display: block; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  flex-grow: 1;
+  min-width: 0;
+  max-width: 108px; 
 }
 </style>

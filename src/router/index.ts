@@ -14,6 +14,7 @@ import Settings from '@/pages/system/Settings.vue'
 import DRDs from '@/pages/system/DRDs.vue'
 import GoogleAuthCallback from '@/pages/auth/GoogleAuthCallback.vue'
 import CareerPlans from '@/pages/system/CareerPlans.vue'
+import TeamPanel from '@/pages/system/TeamPanel.vue'
 
 const SISTEM_NAME = 'Soft Clinic';
 
@@ -86,9 +87,15 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'planos-de-carreira',
-        name: 'career-plans',
+        name: 'careerPlans',
         component: CareerPlans,
         meta: { isPublic: false, title: 'Planos de Carreira - '+SISTEM_NAME }
+      },
+      {
+        path: 'time/:uuid',
+        name: 'teamPanel',
+        component: TeamPanel,
+        meta: { isPublic: false, title: 'Time - '+SISTEM_NAME }
       }
     ]
   }
