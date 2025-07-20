@@ -1,9 +1,7 @@
 <script setup lang="ts">
+import router from '@/router';
 import { getInitials } from '@/utils/getInitialsFromName.util';
-import { ref, watch, onMounted } from 'vue';
-// Não precisaremos mais dos stores de autenticação e time para este mock
-// import { useAuthStore } from '@/stores/auth.store';
-// import { useTeamStore } from '@/stores/team.store';
+import { ref } from 'vue';
 
 const props = defineProps<{
   rail: boolean
@@ -25,20 +23,10 @@ const teamMembers = ref([
   { uuid: 'mock-8', name: 'Henrique Alves', email: 'henrique.alves@example.com' },
 ]);
 
-// Removendo os watchers e onMounted, pois a lista é fixa
-// watch(() => authStore.user?.teamId, (newTeamId) => {
-//   if (newTeamId) {
-//     teamStore.fetchTeamMembers(newTeamId);
-//   } else {
-//     teamStore.teamMembers = [];
-//   }
-// }, { immediate: true });
-
-// onMounted(() => {
-//   if (authStore.user?.teamId) {
-//     teamStore.fetchTeamMembers(authStore.user.teamId);
-//   }
-// });
+const goToCollaboratorPanel = (uuid: string) => {
+  // *** MUDANÇA AQUI ***
+  router.push({ name: 'userPanel', params: { uuid: uuid } });
+};
 </script>
 
 <template>
@@ -46,26 +34,27 @@ const teamMembers = ref([
     <div v-if="!rail" class="pa-2">
       <div class="d-flex align-center mb-2 team-header-container">
         <div class="text-subtitle-2 font-weight-medium mr-1 nowrap-text">Meu Time:</div>
-        
-        <v-btn color="primary" size="small" class="team-dashboard-btn" to="time/hiseuhfkbeiuefiab">
+
+        <v-btn color="primary" size="small" class="team-dashboard-btn" to="/system/time/hiseuhfkbeiuefiab">
           <span class="team-name-text">TechFin</span>
           <v-icon class="ml-1">mdi-speedometer</v-icon>
         </v-btn>
       </div>
       <div class="text-caption text-medium-emphasis mb-2">Membros do meu time</div>
-  
+
       <v-divider class="mb-2" />
-  
+
       <div
         v-for="member in teamMembers"
         :key="member.uuid"
-        class="d-flex align-center mb-2 elevation-1 rounded pa-2"
+        class="d-flex align-center mb-2 elevation-1 rounded pa-2 member-item"
+        @click="goToCollaboratorPanel(member.uuid)"
       >
         <v-avatar size="28" class="mr-2" color="primary">
-            <span class="text-caption font-weight-bold">{{ getInitials(member.name) }}</span>
+          <span class="text-caption font-weight-bold">{{ getInitials(member.name) }}</span>
         </v-avatar>
         <div>
-          <div class="text-caption font-weight-medium">{{ member.name }}</div>
+          <div class="text-caption font-weight-medium member-name-text">{{ member.name }}</div>
           <div class="text-caption text-medium-emphasis">{{ member.email }}</div>
         </div>
       </div>
@@ -99,12 +88,31 @@ const teamMembers = ref([
 }
 
 .team-dashboard-btn .team-name-text {
-  display: block; 
-  white-space: nowrap; 
-  overflow: hidden; 
-  text-overflow: ellipsis; 
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   flex-grow: 1;
   min-width: 0;
-  max-width: 108px; 
+  max-width: 108px;
+}
+
+/* Estilos para o item do membro */
+.member-item {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.member-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.member-item .member-name-text {
+  display: inline-block;
+  transition: text-decoration 0.2s ease;
+}
+
+.member-item:hover .member-name-text {
+  text-decoration: underline;
 }
 </style>

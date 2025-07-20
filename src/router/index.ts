@@ -15,6 +15,7 @@ import DRDs from '@/pages/system/DRDs.vue'
 import GoogleAuthCallback from '@/pages/auth/GoogleAuthCallback.vue'
 import CareerPlans from '@/pages/system/CareerPlans.vue'
 import TeamPanel from '@/pages/system/TeamPanel.vue'
+import UserPanel from '@/pages/system/UserPanel.vue'
 
 const SISTEM_NAME = 'Soft Clinic';
 
@@ -96,6 +97,12 @@ const routes: RouteRecordRaw[] = [
         name: 'teamPanel',
         component: TeamPanel,
         meta: { isPublic: false, title: 'Time - '+SISTEM_NAME }
+      },
+      {
+        path: 'colaborador/:uuid',
+        name: 'userPanel',
+        component: UserPanel,
+        meta: { isPublic: false, title: 'Colaborador - '+SISTEM_NAME }
       }
     ]
   }

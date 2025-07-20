@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import BlockedPausedProjectsList from '@/components/system/teamPanel/BlockedPausedProjectsList.vue';
+import ProjectDeliveriesList from '@/components/system/teamPanel/ProjectDeliveriesList.vue';
+import ProjectsInProgressList from '@/components/system/teamPanel/ProjectsInProgressList.vue';
 import SprintEvolutionChart from '@/components/system/teamPanel/SprintEvolutionChart.vue';
 import { ref, computed } from 'vue';
 
@@ -151,6 +154,18 @@ const averageDeliveriesPerCollaborator = computed(() => {
     <v-row>
       <v-col cols="12">
         <SprintEvolutionChart />
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col cols="12" md="4">
+        <ProjectDeliveriesList />
+      </v-col>
+      <v-col cols="12" md="4">
+        <ProjectsInProgressList />
+      </v-col>
+      <v-col cols="12" md="4">
+        <BlockedPausedProjectsList />
       </v-col>
     </v-row>
   </v-container>

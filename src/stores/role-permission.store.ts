@@ -40,8 +40,9 @@ export const useRoleStore = defineStore('role', {
     formatName(name: string) {
       switch (name) {
         case RoleType.ADMIN: return 'Administrador'
-        case RoleType.ASSISTANT: return 'Assistente'
-        case RoleType.HEALTHCARE_PROFESSIONAL: return 'Profissional de Saúde'
+        case RoleType.MANAGER: return 'Gerente'
+        case RoleType.LEADER: return 'Líder'
+        case RoleType.MEMBER: return 'Membro'
         default: ''
       }
     },
