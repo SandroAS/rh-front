@@ -162,7 +162,61 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
       id: '4',
       colaboradorId: 'mock-2',
       type: 'treinamento',
-      title: 'Certificação React',
+      title: 'Certificação Vue',
+      description: 'Concluiu curso avançado de React',
+      date: '2023-06-10',
+      icon: '🎖️'
+    },
+    {
+      id: '4',
+      colaboradorId: 'mock-2',
+      type: 'treinamento',
+      title: 'Certificação Vue',
+      description: 'Concluiu curso avançado de React',
+      date: '2023-06-10',
+      icon: '🎖️'
+    },
+    {
+      id: '4',
+      colaboradorId: 'mock-2',
+      type: 'treinamento',
+      title: 'Certificação Vue',
+      description: 'Concluiu curso avançado de React',
+      date: '2023-06-10',
+      icon: '🎖️'
+    },
+    {
+      id: '4',
+      colaboradorId: 'mock-2',
+      type: 'treinamento',
+      title: 'Certificação Vue',
+      description: 'Concluiu curso avançado de React',
+      date: '2023-06-10',
+      icon: '🎖️'
+    },
+    {
+      id: '4',
+      colaboradorId: 'mock-2',
+      type: 'treinamento',
+      title: 'Certificação Vue',
+      description: 'Concluiu curso avançado de React',
+      date: '2023-06-10',
+      icon: '🎖️'
+    },
+    {
+      id: '4',
+      colaboradorId: 'mock-2',
+      type: 'treinamento',
+      title: 'Certificação Vue',
+      description: 'Concluiu curso avançado de React',
+      date: '2023-06-10',
+      icon: '🎖️'
+    },
+    {
+      id: '4',
+      colaboradorId: 'mock-2',
+      type: 'treinamento',
+      title: 'Certificação Vue',
       description: 'Concluiu curso avançado de React',
       date: '2023-06-10',
       icon: '🎖️'
