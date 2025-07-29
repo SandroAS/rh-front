@@ -16,6 +16,7 @@ import GoogleAuthCallback from '@/pages/auth/GoogleAuthCallback.vue'
 import CareerPlans from '@/pages/system/CareerPlans.vue'
 import TeamPanel from '@/pages/system/TeamPanel.vue'
 import UserPanel from '@/pages/system/UserPanel.vue'
+import Evaluations from '@/pages/system/Evaluations.vue'
 
 const SISTEM_NAME = 'Soft Clinic';
 
@@ -103,6 +104,12 @@ const routes: RouteRecordRaw[] = [
         name: 'userPanel',
         component: UserPanel,
         meta: { isPublic: false, title: 'Colaborador - '+SISTEM_NAME }
+      },
+      {
+        path: 'avaliacoes',
+        name: 'evaluations',
+        component: Evaluations,
+        meta: { isPublic: false, title: 'Avaliações - '+SISTEM_NAME }
       }
     ]
   }

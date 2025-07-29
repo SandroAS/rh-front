@@ -21,7 +21,7 @@ const menuItems = [
   { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/system/dashboard' },
   { title: 'DRDs', icon: 'mdi-account', to: '/system/drds' },
   { title: 'Planos de Carreira', icon: 'mdi-file-document-outline', to: '/system/planos-de-carreira' },
-  { title: 'Avaliações', icon: 'mdi-account-heart', to: '/system/avaliacao' },
+  { title: 'Avaliações', icon: 'mdi-account-heart', to: '/system/avaliacoes' },
   { title: 'PDIs', icon: 'mdi-calendar-account', to: '/system/pdis' },
 ]
 </script>
