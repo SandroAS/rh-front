@@ -232,7 +232,7 @@ async function onSubmit(formValues: Record<string, any>) {
                   ></v-textarea>
                 </Field>
               </v-col>
-              <v-col cols="12" sm="6">
+              <v-col cols="12" sm="12">
                 <Field name="rate" label="Rate da Avaliação"rules="required" v-slot="{ field, errorMessage }">
                   <div class="d-flex align-center">
                     <v-rating
@@ -251,7 +251,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 </Field>
               </v-col>
 
-              <v-col cols="12" sm="6">
+              <v-col cols="12" sm="12">
                 <Field name="drd_uuid" label="Vincular a um DRD (Opcional)" v-slot="{ field, errorMessage }">
                   <v-select
                     v-bind="field"
