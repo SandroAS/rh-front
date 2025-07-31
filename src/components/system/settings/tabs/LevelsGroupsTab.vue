@@ -61,7 +61,7 @@ onMounted(async () => {
         v-model="searchTerm"
         label="Buscar grupo de níveis de cargo"
         prepend-inner-icon="mdi-magnify"
-        variant="outlined"
+        variant="solo-filled"
         density="compact"
         hide-details
         clearable

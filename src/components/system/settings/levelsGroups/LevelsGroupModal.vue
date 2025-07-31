@@ -157,7 +157,7 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
                 <v-text-field
                   v-bind="field"
                   v-model="level.name" :label="`Nível ${index + 1}`"
-                  variant="outlined"
+                  variant="solo-filled"
                   density="compact"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
@@ -169,7 +169,7 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
                   v-bind="field"
                   :label="`Remuneração nível ${index + 1}`"
                   :model-value="formatAmountDisplay(index)"
-                  variant="outlined"
+                  variant="solo-filled"
                   density="compact"
                   type="text"
                   prefix="R$"

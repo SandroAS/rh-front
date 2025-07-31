@@ -78,7 +78,7 @@ const getStatusColor = (status: string) => {
         v-model="searchTerm"
         label="Buscar Avaliação"
         prepend-inner-icon="mdi-magnify"
-        variant="outlined"
+        variant="solo-filled"
         density="compact"
         hide-details
         clearable

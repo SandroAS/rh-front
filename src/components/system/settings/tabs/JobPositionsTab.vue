@@ -68,7 +68,7 @@ onMounted(async () => {
         v-model="searchTerm"
         label="Buscar cargo"
         prepend-inner-icon="mdi-magnify"
-        variant="outlined"
+        variant="solo-filled"
         density="compact"
         hide-details
         clearable

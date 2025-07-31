@@ -140,7 +140,7 @@ async function onSubmit(formValues: Record<string, any>) {
                     v-bind="field"
                     v-model="jobPositionInCareer.order" :label="`Ordem ${index + 1}`"
                     type="number"
-                    variant="outlined"
+                    variant="solo-filled"
                     density="compact"
                     :error="!!errorMessage"
                     :error-messages="errorMessage"

@@ -109,7 +109,7 @@ onMounted(() => {
         v-model="searchTerm"
         label="Buscar usuário"
         prepend-inner-icon="mdi-magnify"
-        variant="outlined"
+        variant="solo-filled"
         density="compact"
         hide-details
         clearable

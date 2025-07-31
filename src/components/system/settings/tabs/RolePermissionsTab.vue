@@ -94,7 +94,7 @@ onMounted(() => {
   <v-card flat>
     <div class="d-flex justify-start mb-4 mt-2 align-center">
       <v-text-field v-model="searchTerm" label="Buscar grupo de permissões" prepend-inner-icon="mdi-magnify"
-        variant="outlined" density="compact" hide-details clearable class="w-md-auto w-100"
+        variant="solo-filled" density="compact" hide-details clearable class="w-md-auto w-100"
         style="max-width: 300px;"></v-text-field>
     </div>
 

@@ -70,7 +70,7 @@ onMounted(async () => {
         v-model="searchTerm"
         label="Buscar plano de carreira"
         prepend-inner-icon="mdi-magnify"
-        variant="outlined"
+        variant="solo-filled"
         density="compact"
         hide-details
         clearable

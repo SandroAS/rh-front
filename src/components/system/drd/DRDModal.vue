@@ -152,7 +152,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 <v-text-field
                   v-bind="field"
                   v-model="drdTopic.name" :label="`Tópico ${index + 1}`"
-                  variant="outlined"
+                  variant="solo-filled"
                   density="compact"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
@@ -168,7 +168,7 @@ async function onSubmit(formValues: Record<string, any>) {
                     <v-text-field
                       v-bind="field"
                       v-model="drdTopicItem.name" :label="`Item ${drdTopicItemIndex + 1}`"
-                      variant="outlined"
+                      variant="solo-filled"
                       density="compact"
                       :error="!!errorMessage"
                       :error-messages="errorMessage"

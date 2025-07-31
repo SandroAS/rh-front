@@ -69,7 +69,7 @@ onMounted(async () => {
         v-model="searchTerm"
         label="Buscar DRD"
         prepend-inner-icon="mdi-magnify"
-        variant="outlined"
+        variant="solo-filled"
         density="compact"
         hide-details
         clearable
