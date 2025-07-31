@@ -1,126 +1,60 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import { useEvaluationStore } from '@/stores/evaluation.store';
-import loadItems from '@/utils/loadItems.util';
-import type Evaluation from '@/types/evaluation/evaluation.type';
-import EvaluationModal from '@/components/system/evaluation/EvaluationModal.vue';
-import { useAccountUserStore } from '@/stores/account-user.store';
+import ModelsTab from '@/components/system/evaluation/tabs/ModelsTab.vue';
+import ApplicationsTab from '@/components/system/evaluation/tabs/ApplicationsTab.vue';
+import MetricsTab from '@/components/system/evaluation/tabs/MetricsTab.vue';
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-const evaluationStore = useEvaluationStore();
-const accountUserStore = useAccountUserStore();
+const route = useRoute();
+const router = useRouter();
 
-const dialog = ref(false);
-const selectedEvaluation = ref<Evaluation | null>(null);
+const tabs = [
+  { name: 'Modelos', value: 'modelos' },
+  { name: 'Aplicações', value: 'aplicacoes' },
+  { name: 'Métricas', value: 'metricas' }
+];
 
-const currentPage = ref(evaluationStore.page);
-const itemsPerPage = ref(evaluationStore.limit);
-const searchTerm = ref(evaluationStore.search_term || '');
-const sortBy = ref(evaluationStore.sort_column ? [{ key: evaluationStore.sort_column, order: evaluationStore.sort_order }] : []);
+// O valor inicial da tab selecionada será o que estiver na URL ou 'modelos' por padrão
+const selectedTab = ref(route.query.tab?.toString() || 'modelos');
 
-const openDialog = (item?: Evaluation) => {
-  selectedEvaluation.value = item || null;
-  dialog.value = true;
-}
-
-async function getEvaluations() {
-  await evaluationStore.getEvaluations({ page: currentPage.value, limit: itemsPerPage.value });
-}
-
-async function getAccountUsers() {
-  await accountUserStore.getAccountUsers({page: 1, limit: 10000 });
-}
-
-getEvaluations();
-getAccountUsers();
-
-const loadEvaluations = async () => {
-  await loadItems(
-    { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
-    searchTerm.value,
-    evaluationStore,
-    'getEvaluations',
-    'evaluations'
-  );
-
-  currentPage.value = evaluationStore.page;
-  itemsPerPage.value = evaluationStore.limit;
-};
-
-let searchDebounceTimeout: ReturnType<typeof setTimeout>;
-watch(searchTerm, (newVal) => {
-  if (typeof newVal !== 'string') return;
-
-  clearTimeout(searchDebounceTimeout);
-  searchDebounceTimeout = setTimeout(() => {
-    loadEvaluations();
-  }, 300);
+// Observa mudanças na tab selecionada e atualiza a URL
+watch(selectedTab, (newTab) => {
+  router.replace({ query: { ...route.query, tab: newTab } });
 });
-
-onMounted(async () => {
-  loadEvaluations();
-});
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'completed': return 'success';
-    case 'pending': return 'warning';
-    case 'canceled': return 'error';
-    default: return 'info';
-  }
-};
 </script>
 
 <template>
   <v-container fluid>
-    <h2 class="mb-6">Avaliações</h2>
-    <div class="flex-column flex-md-row d-flex justify-space-between mb-4 mt-2 align-center">
-      <v-text-field
-        v-model="searchTerm"
-        label="Buscar Avaliação"
-        prepend-inner-icon="mdi-magnify"
-        variant="solo-filled"
-        density="compact"
-        hide-details
-        clearable
-        class="mb-4 mb-md-0 w-md-auto w-100"
-        style="max-width: 300px;"
-      ></v-text-field>
+    <h2 class="mb-6">Gerenciamento de Avaliações</h2>
 
-      <v-btn color="primary" class="w-md-auto w-100" @click="openDialog">
-        <v-icon start>mdi-plus</v-icon>
-        Adicionar Avaliação
-      </v-btn>
-    </div>
-
-    <v-data-table
-      :headers="[
-        { title: 'Título', value: 'title', sortable: true },
-        { title: 'Criado por', value: 'created_by_user_id', sortable: true },
-        { title: 'DRD', value: 'drd_id', sortable: true },
-        { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
-      ]"
-      :items="evaluationStore.evaluations || []"
-      item-value="uuid"
-      :items-per-page="itemsPerPage"
-      :items-per-page-options="[{title: '10', value: 10}, {title: '25', value: 25}, {title: '50', value: 50}, {title: '100', value: 100}]"
-      :items-length="evaluationStore.total"
-      :loading="evaluationStore.loading"
-      :page="currentPage"
-      mobile-breakpoint="md"
-      @update:options="loadEvaluations"
+    <v-tabs
+      v-model="selectedTab"
+      class="border-b"
+      align-tabs="start"
     >
-      <template v-slot:[`item.actions`]="{ item }">
-        <div>
-          <v-btn icon @click="openDialog(item)" size="small">
-            <v-icon>mdi-pencil</v-icon>
-          </v-btn>
-          <!-- <v-btn icon color="red" @click="evaluationStore.deleteEvaluation(item.uuid)" size="small">
-            <v-icon>mdi-delete</v-icon>
-          </v-btn> -->
-        </div>
-      </template>
-    </v-data-table>
+      <v-tab
+        v-for="(tab, index) in tabs"
+        :key="index"
+        :value="tab.value"
+      >
+        {{ tab.name }}
+      </v-tab>
+    </v-tabs>
 
-    <EvaluationModal v-model="dialog" :selectedEvaluation="selectedEvaluation" />
+    <v-container class="py-12">
+      <v-tabs-window v-model="selectedTab">
+        <v-tabs-window-item value="modelos">
+          <ModelsTab />
+        </v-tabs-window-item>
+
+        <v-tabs-window-item value="aplicacoes">
+          <ApplicationsTab />
+        </v-tabs-window-item>
+
+        <v-tabs-window-item value="metricas">
+          <MetricsTab />
+        </v-tabs-window-item>
+      </v-tabs-window>
+    </v-container>
   </v-container>
 </template>
