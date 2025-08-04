@@ -7,7 +7,6 @@ import { useDRDStore } from '@/stores/drd.store';
 import { useUserStore } from '@/stores/user.store';
 import type Evaluation from '@/types/evaluation/evaluation.type';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
-import { required } from '@vee-validate/rules';
 
 const evaluationStore = useEvaluationStore();
 const snackbarStore = useSnackbarStore();
@@ -233,6 +232,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 </Field>
               </v-col>
               <v-col cols="12" sm="12">
+                <small>Para melhor proveito ao tirar métricas a escala de avaliação deve ser a mesma para todas perguntas que optar por esse tipo.</small>
                 <Field name="rate" label="Rate da Avaliação"rules="required" v-slot="{ field, errorMessage }">
                   <div class="d-flex align-center">
                     <v-rating
@@ -365,7 +365,7 @@ async function onSubmit(formValues: Record<string, any>) {
                           <v-select
                             v-bind="field"
                             v-model="question.type"
-                            :items="['text', 'select', 'number', 'options']"
+                            :items="['Resposta curta', 'Resposta longa', 'Múltipla escolha', 'Caixa de seleção', 'Lista suspensa']"
                             label="Tipo da Questão"
                             variant="solo-filled"
                             density="compact"

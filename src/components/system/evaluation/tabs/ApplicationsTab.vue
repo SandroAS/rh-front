@@ -5,6 +5,7 @@ import { useEvaluationStore } from '@/stores/evaluation.store'; // Para buscar o
 import loadItems from '@/utils/loadItems.util';
 import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
 import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
+import ApplicationModal from '../ApplicationModal.vue';
 
 // Importar um modal para criar/editar aplicações, similar ao EvaluationModal
 // Você precisará criar este modal separadamente, pois a lógica de "aplicação" é diferente do "modelo".
@@ -60,13 +61,13 @@ onMounted(async () => {
 
 const getUserName = (uuid: string | undefined) => {
   if (!uuid) return 'N/A';
-  const user = accountUserStore.account_users.find(u => u.uuid === uuid);
+  const user = accountUserStore.account_users!.find(u => u.uuid === uuid);
   return user ? user.name : 'Usuário Desconhecido';
 };
 
 const getEvaluationModelTitle = (uuid: string | undefined) => {
   if (!uuid) return 'N/A';
-  const model = evaluationStore.evaluations.find(e => e.uuid === uuid);
+  const model = evaluationStore.evaluations!.find(e => e.uuid === uuid);
   return model ? model.title : 'Modelo Desconhecido';
 };
 
@@ -176,23 +177,6 @@ const getStatusColor = (status: string) => {
       </template>
     </v-data-table>
 
-    <v-dialog v-model="dialog" max-width="500">
-      <v-card>
-        <v-card-title>Modal de Aplicação (Em Desenvolvimento)</v-card-title>
-        <v-card-text>
-          Este modal seria para criar/editar aplicações de avaliação.
-          <br>
-          Você selecionaria o modelo, os usuários envolvidos e o tipo de aplicação.
-          <br>
-          Aplicar uma avaliação copiaria o modelo para a `evaluation_application_topics` e `evaluation_application_questions`.
-          <br>
-          Item selecionado: {{ selectedApplication?.uuid }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="dialog = false">Fechar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <ApplicationModal v-model="dialog" :selectedApplication="selectedApplication" />
   </div>
 </template>
