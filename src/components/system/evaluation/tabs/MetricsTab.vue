@@ -10,6 +10,8 @@ const evaluationApplicationStore = useEvaluationApplicationStore();
 const evaluationStore = useEvaluationStore();
 const accountUserStore = useAccountUserStore();
 
+const showChart = ref(false);
+
 // --- Estado dos Filtros ---
 const filters = ref({
   evaluationName: null,
@@ -157,6 +159,55 @@ onMounted(async () => {
   ]);
   loadMetricsData();
 });
+
+const filteredApplications = ref<EvaluationApplication[]>([]);
+
+const applyFilters = async () => {
+  showChart.value = false;
+  loadingData.value = true; // Inicia o carregamento
+
+  // Limpar dados anteriores
+  filteredApplications.value = [];
+  chartData.value.labels = [];
+  chartData.value.datasets[0].data = [];
+  chartData.value.datasets[1].data = [];
+  chartData.value.datasets[2].data = [];
+  
+  try {
+    await evaluationApplicationStore.getEvaluationApplications({ page: 1, limit: 10000 });
+    
+    const allApplications = evaluationApplicationStore.evaluation_applications;
+    
+    // Armazena os dados filtrados em uma variável reativa
+    filteredApplications.value = allApplications?.filter(app => {
+      // ... (lógica de filtro permanece a mesma)
+      let isMatch = true;
+      if (filters.value.evaluationName && app.evaluation_model_uuid !== filters.value.evaluationName) isMatch = false;
+      if (filters.value.evaluationType && app.type !== filters.value.evaluationType) isMatch = false;
+      if (filters.value.evaluated && app.evaluated_collaborator_uuid !== filters.value.evaluated) isMatch = false;
+      if (filters.value.evaluator && app.evaluator_collaborator_uuid !== filters.value.evaluator) isMatch = false;
+      if (filters.value.requestedBy && app.requested_by_user_uuid !== filters.value.requestedBy) isMatch = false;
+      if (filters.value.status && app.status && app.status !== filters.value.status) isMatch = false;
+      
+      const appDate = new Date(app.application_date);
+      const startDate = new Date(dateRange.value[0]);
+      const endDate = new Date(dateRange.value[1]);
+      if (appDate < startDate || appDate > endDate) isMatch = false;
+
+      return isMatch;
+    }) || [];
+    
+    // Processa os dados filtrados para o gráfico
+    if (filteredApplications.value.length > 0) {
+      processChartData(filteredApplications.value);
+    }
+  } catch (error) {
+    console.error("Erro ao carregar dados de métricas:", error);
+  } finally {
+    loadingData.value = false;
+    showChart.value = true;
+  }
+};
 </script>
 
 <template>

@@ -148,6 +148,16 @@ onMounted(() => {
 </script>
 
 <template>
+  <div class="pa-3">
+    <div class="text-subtitle-1 font-weight-bold">Filros</div>
+    <div class="d-flex">
+      <v-checkbox label="Checkbox"></v-checkbox>
+      <v-checkbox label="Checkbox"></v-checkbox>
+      <v-checkbox label="Checkbox"></v-checkbox>
+      <v-checkbox label="Checkbox"></v-checkbox>
+    </div>
+  </div>
+
   <div class="roadmap-container">
     <div class="roadmap-wrapper" ref="roadmapRef">
       <svg

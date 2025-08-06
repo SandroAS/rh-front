@@ -3,9 +3,8 @@ import type DataTableFilterParams from '@/types/dataTable/data-table-filter-para
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
 import type EvaluationResponsePagination from '@/types/evaluation/evaluation-response-pagination.type';
 import type Evaluation from '@/types/evaluation/evaluation.type';
-
 import { defineStore } from 'pinia';
-
+import { mockEvaluationModels } from '@/mocks/evaluation.mocks';
 
 interface EvaluationStoreState {
   evaluations: Evaluation[] | null;
@@ -44,21 +43,24 @@ export const useEvaluationStore = defineStore('evaluation', {
       try {
         const res: { uuid: string } = await saveEvaluation(evaluation, uuid);
         if(!this.evaluations) this.evaluations = [];
-        const Evaluationsaved = {
+        const evaluationSaved = {
           uuid: res.uuid,
+          title: evaluation.title,
+          description: evaluation.description,
           rate: evaluation.rate,
-          evaluationTopics: evaluation.evaluationTopics,
-          createdByUser: evaluation.createdByUser
+          drd_uuid: evaluation.drd_uuid,
+          evaluation_topics: evaluation.evaluation_topics,
+          created_by_user_uuid: evaluation.created_by_user_uuid,
         }
         if(uuid) {
           const index = this.evaluations.findIndex(x => x.uuid === uuid);
           if (index !== -1) {
-            this.evaluations.splice(index, 1, Evaluationsaved);
+            this.evaluations.splice(index, 1, evaluationSaved);
           } else {
             console.error('UUID: '+uuid+' não encontrado para atualizar localmente.')
           }
         } else {
-          this.evaluations.unshift(Evaluationsaved);
+          this.evaluations.unshift(evaluationSaved);
         }
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar atualizar serviço.';
@@ -68,23 +70,57 @@ export const useEvaluationStore = defineStore('evaluation', {
       }
     },
 
+    // async getEvaluations(params: DataTableFilterParams) {
+    //   this.loading = true;
+    //   this.error = null;
+
+    //   try {
+    //     const res: EvaluationResponsePagination = await getEvaluations(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+    //     this.evaluations = res.data;
+    //     this.total = res.total;
+    //     this.page = res.page;
+    //     this.limit = res.limit;
+    //     this.last_page = res.last_page;
+    //     this.sort_column = params.sort_column;
+    //     this.sort_order = params.sort_order;
+    //     this.search_term = params.search_term;
+    //   } catch (err: any) {
+    //     this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
+    //     throw err;
+    //   } finally {
+    //     this.loading = false;
+    //   }
+    // },
+
     async getEvaluations(params: DataTableFilterParams) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res: EvaluationResponsePagination = await getEvaluations(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
-        this.evaluations = res.data;
-        this.total = res.total;
-        this.page = res.page;
-        this.limit = res.limit;
-        this.last_page = res.last_page;
-        this.sort_column = params.sort_column;
-        this.sort_order = params.sort_order;
-        this.search_term = params.search_term;
+        if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
+          // Lógica para dados mockados
+          this.evaluations = mockEvaluationModels;
+          this.total = mockEvaluationModels.length;
+          this.page = params.page;
+          this.limit = params.limit;
+          this.last_page = 1; // Simplificamos a paginação no mock
+          this.sort_column = params.sort_column;
+          this.sort_order = params.sort_order;
+          this.search_term = params.search_term;
+        } else {
+          // Lógica de API real
+          const res: EvaluationResponsePagination = await getEvaluations(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+          this.evaluations = res.data;
+          this.total = res.total;
+          this.page = res.page;
+          this.limit = res.limit;
+          this.last_page = res.last_page;
+          this.sort_column = params.sort_column;
+          this.sort_order = params.sort_order;
+          this.search_term = params.search_term;
+        }
       } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
-        throw err;
+        // ... (erro)
       } finally {
         this.loading = false;
       }

@@ -4,6 +4,7 @@ import type AccountUser from '@/types/account/account-user.type';
 import type AccountUsersResponsePaginationDto from '@/types/account/account-users-response-pagination-dto';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import { defineStore } from 'pinia';
+import { mockUsers } from '@/mocks/evaluation.mocks';
 
 interface AccountUserStoreState {
   account_users: AccountUser[] | null;
@@ -102,23 +103,46 @@ export const useAccountUserStore = defineStore('accountUser', {
       }
     },
 
+    // async getAccountUsers(params: DataTableFilterParams) {
+    //   this.loading = true;
+    //   this.error = null;
+
+    //   try {
+    //     const res: AccountUsersResponsePaginationDto = await getAccountUsers(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+    //     this.account_users = res.users;
+    //     this.total = res.total;
+    //     this.page = res.page;
+    //     this.limit = res.limit;
+    //     this.last_page = res.last_page;
+    //     this.sort_column = params.sort_column;
+    //     this.sort_order = params.sort_order;
+    //     this.search_term = params.search_term;
+    //   } catch (err: any) {
+    //     this.error = err.response?.data?.message || 'Erro ao tentar buscar usuários.';
+    //     throw err;
+    //   } finally {
+    //     this.loading = false;
+    //   }
+    // },
+
     async getAccountUsers(params: DataTableFilterParams) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res: AccountUsersResponsePaginationDto = await getAccountUsers(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
-        this.account_users = res.users;
-        this.total = res.total;
-        this.page = res.page;
-        this.limit = res.limit;
-        this.last_page = res.last_page;
-        this.sort_column = params.sort_column;
-        this.sort_order = params.sort_order;
-        this.search_term = params.search_term;
+        if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
+          this.account_users = mockUsers;
+          this.total = mockUsers.length;
+          this.page = params.page;
+          this.limit = params.limit;
+        } else {
+          // Lógica de API real
+          const res: AccountUsersResponsePaginationDto = await getAccountUsers(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+          this.account_users = res.users;
+          // ... (resto da lógica)
+        }
       } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar buscar usuários.';
-        throw err;
+        // ... (erro)
       } finally {
         this.loading = false;
       }

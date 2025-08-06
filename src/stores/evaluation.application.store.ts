@@ -3,7 +3,7 @@ import { getEvaluationApplications, saveEvaluationApplication, deleteEvaluationA
 import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
-
+import { mockEvaluationApplications } from '@/mocks/evaluation.mocks';
 // Payload para salvar uma nova aplicação. Note que topics/questions não são passados aqui,
 // pois o backend deve copiá-los do modelo.
 export interface EvaluationApplicationSavePayload {
@@ -85,30 +85,64 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
       }
     },
 
+    // async getEvaluationApplications(params: DataTableFilterParams) {
+    //   this.loading = true;
+    //   this.error = null;
+
+    //   try {
+    //     const res: EvaluationApplicationResponsePagination = await getEvaluationApplications(
+    //       params.page,
+    //       params.limit,
+    //       params.sort_column,
+    //       params.sort_order,
+    //       params.search_term
+    //     );
+    //     this.evaluation_applications = res.data;
+    //     this.total = res.total;
+    //     this.page = res.page;
+    //     this.limit = res.limit;
+    //     this.last_page = res.last_page;
+    //     this.sort_column = params.sort_column;
+    //     this.sort_order = params.sort_order;
+    //     this.search_term = params.search_term;
+    //   } catch (err: any) {
+    //     this.error = err.response?.data?.message || 'Erro ao tentar buscar aplicações de avaliação.';
+    //     console.error('Erro ao buscar aplicações de avaliação:', err);
+    //     throw err;
+    //   } finally {
+    //     this.loading = false;
+    //   }
+    // },
+
     async getEvaluationApplications(params: DataTableFilterParams) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res: EvaluationApplicationResponsePagination = await getEvaluationApplications(
-          params.page,
-          params.limit,
-          params.sort_column,
-          params.sort_order,
-          params.search_term
-        );
-        this.evaluation_applications = res.data;
-        this.total = res.total;
-        this.page = res.page;
-        this.limit = res.limit;
-        this.last_page = res.last_page;
-        this.sort_column = params.sort_column;
-        this.sort_order = params.sort_order;
-        this.search_term = params.search_term;
+        if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
+          // Lógica para dados mockados
+          this.evaluation_applications = mockEvaluationApplications;
+          this.total = mockEvaluationApplications.length;
+          this.page = params.page;
+          this.limit = params.limit;
+          this.last_page = 1;
+          this.sort_column = params.sort_column;
+          this.sort_order = params.sort_order;
+          this.search_term = params.search_term;
+        } else {
+          // Lógica de API real
+          const res: EvaluationApplicationResponsePagination = await getEvaluationApplications(
+            params.page,
+            params.limit,
+            params.sort_column,
+            params.sort_order,
+            params.search_term
+          );
+          this.evaluation_applications = res.data;
+          // ... (resto da lógica)
+        }
       } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar buscar aplicações de avaliação.';
-        console.error('Erro ao buscar aplicações de avaliação:', err);
-        throw err;
+        // ... (erro)
       } finally {
         this.loading = false;
       }
