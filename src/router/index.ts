@@ -17,6 +17,8 @@ import CareerPlans from '@/pages/system/CareerPlans.vue'
 import TeamPanel from '@/pages/system/TeamPanel.vue'
 import UserPanel from '@/pages/system/UserPanel.vue'
 import Evaluations from '@/pages/system/Evaluations.vue'
+import LayoutForms from '@/layouts/LayoutForms.vue'
+import EvaluationForm from '@/pages/forms/EvaluationForm.vue'
 
 const SISTEM_NAME = 'Soft Clinic';
 
@@ -110,6 +112,18 @@ const routes: RouteRecordRaw[] = [
         name: 'evaluations',
         component: Evaluations,
         meta: { isPublic: false, title: 'Avaliações - '+SISTEM_NAME }
+      }
+    ]
+  },
+  {
+    path: '/forms/:uuid',
+    component: LayoutForms,
+    children: [
+      {
+        path: '',
+        name: 'evaluationForm',
+        component: EvaluationForm,
+        meta: { isPublic: true, title: 'Formulário de Avaliação - ' + SISTEM_NAME }
       }
     ]
   }

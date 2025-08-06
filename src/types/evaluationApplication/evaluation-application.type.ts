@@ -1,4 +1,5 @@
 import type Evaluation from '../evaluation/evaluation.type';
+import type User from '../user/user.type';
 import type { EvaluationApplicationTopic } from './evaluation-application-topic.type';
 
 export default interface EvaluationApplication {
@@ -8,6 +9,7 @@ export default interface EvaluationApplication {
   type: 'peer' | 'self' | 'leader';
   requested_by_user_uuid: string;
   evaluated_collaborator_uuid: string;
+  evaluated_collaborator: User;
   evaluator_collaborator_uuid: string;
   application_date: string;
   status: 'pending' | 'in_progress' | 'completed' | 'canceled';
