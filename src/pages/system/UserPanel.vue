@@ -2,8 +2,9 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import UserProfileCard from '../../components/system/userPanel/UserProfileCard.vue';
-import UserTimelineCard from '../../components/system/userPanel/UserTimelineCard.vue'; // Ajuste o caminho
-import UserCareerPlanCard from '../../components/system/userPanel/UserCareerPlanCard.vue'; // Ajuste o caminho
+import UserTimelineCard from '../../components/system/userPanel/UserTimelineCard.vue';
+import UserCareerPlanCard from '../../components/system/userPanel/UserCareerPlanCard.vue';
+import UserCareerPathTimeline from '../../components/system/userPanel/UserCareerPathTimeline.vue'; // Importe o novo componente
 import { getUserById, type User } from '@/types/teamPanel/project-mocks.type';
 import CareerPlanTeste from '../../components/system/userPanel/CareerPlanTeste.vue';
 
@@ -46,6 +47,13 @@ const panelTitle = computed(() => {
         <UserTimelineCard :user="currentUser" />
       </v-col>
     </v-row>
+
+    <v-row v-if="currentUser">
+      <v-col cols="12">
+        <UserCareerPathTimeline :user="currentUser" />
+      </v-col>
+    </v-row>
+
     <v-row>
       <v-col cols="12">
         <v-card>
@@ -53,11 +61,13 @@ const panelTitle = computed(() => {
         </v-card>
       </v-col>
     </v-row>
+
     <v-row v-if="currentUser">
       <v-col cols="12">
         <UserCareerPlanCard :user="currentUser" />
       </v-col>
     </v-row>
+
     <v-row v-else>
       <v-col cols="12">
         <v-card class="pa-4 text-center text-h6 text-medium-emphasis">
