@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import type { User } from '@/types/teamPanel/project-mocks.type';
 
 const props = defineProps<{
@@ -37,6 +37,13 @@ const formatDate = (dateString: string | null) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString('pt-BR');
 };
+
+onMounted(() => {
+  const div = document.getElementById('career-path-container');
+  if(div) {
+    div.scrollTop = div.scrollHeight;
+  }
+})
 </script>
 
 <template>
@@ -48,7 +55,7 @@ const formatDate = (dateString: string | null) => {
     <v-divider class="my-4"></v-divider>
 
     <v-card-text>
-      <div class="career-path-container w-100">
+      <div id="career-path-container" class="career-path-container w-100">
         <div class="d-flex align-center w-100 mt-4">
           <div
             v-for="(step, index) in careerPlan.progression"
