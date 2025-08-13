@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import UserProfileCard from '../../components/system/userPanel/UserProfileCard.vue';
 import UserTimelineCard from '../../components/system/userPanel/UserTimelineCard.vue';
@@ -11,6 +11,8 @@ import CareerPlanTeste from '../../components/system/userPanel/CareerPlanTeste.v
 const route = useRoute();
 const userUuid = ref<string | string[] | null>(null);
 const currentUser = ref<User | undefined>(undefined);
+
+const showDRDCard = ref(false);
 
 // Função para carregar o usuário com base no UUID da rota
 const loadUser = (uuid: string) => {
@@ -33,6 +35,22 @@ watch(
 const panelTitle = computed(() => {
   return currentUser.value ? currentUser.value.name : 'Colaborador';
 });
+
+const drdCardRef = ref<HTMLElement | null>(null);
+
+function clickProgressBar(step: any) {
+  showDRDCard.value = true;
+
+  setTimeout(() => {
+    if (drdCardRef.value) {
+      window.scrollTo({
+        top: 800,
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, 200);
+}
 </script>
 
 <template>
@@ -50,9 +68,17 @@ const panelTitle = computed(() => {
 
     <v-row v-if="currentUser">
       <v-col cols="12">
-        <UserCareerPathTimeline :user="currentUser" />
+        <UserCareerPathTimeline :user="currentUser" @progressbar="clickProgressBar"/>
       </v-col>
     </v-row>
+
+    <Transition name="expand">
+      <v-row v-if="currentUser && showDRDCard" ref="drdCardRef">
+        <v-col cols="12">
+          <UserCareerPlanCard :user="currentUser" />
+        </v-col>
+      </v-row>
+    </Transition>
 
     <v-row>
       <v-col cols="12">
@@ -61,19 +87,26 @@ const panelTitle = computed(() => {
         </v-card>
       </v-col>
     </v-row>
-
-    <v-row v-if="currentUser">
-      <v-col cols="12">
-        <UserCareerPlanCard :user="currentUser" />
-      </v-col>
-    </v-row>
-
-    <v-row v-else>
-      <v-col cols="12">
-        <v-card class="pa-4 text-center text-h6 text-medium-emphasis">
-          Usuário não encontrado.
-        </v-card>
-      </v-col>
-    </v-row>
   </v-container>
 </template>
+
+<style scoped>
+/* Estilos para a animação de expansão */
+.expand-enter-active,
+.expand-leave-active {
+  transition: max-height 0.5s ease-in-out;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 500px; /* Um valor alto o suficiente para o card */
+  opacity: 1;
+}
+</style>

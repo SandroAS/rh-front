@@ -6,6 +6,8 @@ const props = defineProps<{
   user: User;
 }>();
 
+const emit = defineEmits(['progressbar']);
+
 // Dados mockados para simular um plano de carreira
 const careerPlan = ref({
   currentJobTitle: 'Desenvolvedor',
@@ -107,7 +109,7 @@ onMounted(() => {
                   <div class="font-weight-bold">Nível II</div>
                 </div>
                 <template v-if="isCurrentJob(step.title)">
-                  <div class="vertical-progress-container">
+                  <div class="vertical-progress-container teste" @click.prevent="emit('progressbar', step)">
                     <v-progress-linear
                       class="vertical-progress-bar"
                       :model-value="60"
@@ -142,7 +144,7 @@ onMounted(() => {
                 v-if="index < careerPlan.progression.length - 1"
                 class="flex-grow-1"
               >
-                <div v-if="isCurrentJob(step.title)" class="progress-bar-wrapper">
+                <div v-if="isCurrentJob(step.title)" class="teste2">
                   <div class="text-caption text-center font-weight-bold" :class="`text-${progressBarColor}`">
                     {{ careerPlan.progressToNext }}%
                   </div>
@@ -180,6 +182,24 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.teste2 {
+  cursor: pointer;
+  transition: transform .2s ease-in-out;
+}
+
+.teste2:hover {
+  transform: scale(1.3);
+}
+
+.teste {
+  cursor: pointer;
+  transition: transform .2s ease-in-out;
+}
+
+.teste:hover {
+  transform: rotate(90deg) translateX(0) scale(1.3);
+}
+
 .career-path-container {
   overflow: auto;
   max-height: 260px;

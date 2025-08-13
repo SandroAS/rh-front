@@ -1,102 +1,244 @@
 <script setup lang="ts">
-import type { CareerLevel, User } from '@/types/teamPanel/project-mocks.type';
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
+import type { User } from '@/types/teamPanel/project-mocks.type';
+import VueApexCharts from "vue3-apexcharts";
 
 const props = defineProps<{
   user: User;
 }>();
 
-const currentLevelData = computed<CareerLevel | undefined>(() => {
-  return props.user.careerPlan.levels.find(level => level.level === props.user.careerPlan.currentLevel);
+// Dados mockados para simular o progresso do plano de carreira
+const careerProgress = ref({
+  drdName: 'Descritivo de Resultado e Desempenho (DRD)',
+  currentLevel: 'Desenvolvedor - Nível I',
+  indicators: {
+    throughput: {
+      label: 'Throughput',
+      value: 75,
+      color: '#4caf50' // verde
+    },
+    onTimeDelivery: {
+      label: 'Assert. de Prazo',
+      value: 85,
+      color: '#2196f3' // azul
+    },
+    reworkPercentage: {
+      label: 'Retrabalho',
+      value: 15,
+      color: '#ff5722' // laranja
+    }
+  },
+  checklists: {
+    trainings: [
+      { name: 'Vue.js Avançado', completed: true },
+      { name: 'Testes de Unidade', completed: true },
+      { name: 'Git Flow para Equipes', completed: false },
+      { name: 'Introdução ao Docker', completed: false }
+    ],
+    certifications: [
+      { name: 'Certificação AWS Solutions Architect', completed: false },
+      { name: 'Certificação Azure Developer Associate', completed: false }
+    ],
+    books: [
+      { name: 'Clean Code (Robert C. Martin)', completed: true },
+      { name: 'The Pragmatic Programmer', completed: false }
+    ]
+  }
 });
 
-const getStepperIcon = (level: number) => {
-  if (level === props.user.careerPlan.currentLevel) {
-    return 'mdi-star'; // Ícone para o nível atual
-  } else if (level < props.user.careerPlan.currentLevel) {
-    return 'mdi-check-circle-outline'; // Ícone para níveis passados
-  } else {
-    return 'mdi-circle-outline'; // Ícone para níveis futuros
-  }
+// Opções base para o gráfico de semi-círculo
+const baseChartOptions = {
+  chart: {
+    type: 'radialBar',
+    sparkline: {
+      enabled: true,
+    }
+  },
+  plotOptions: {
+    radialBar: {
+      startAngle: -90,
+      endAngle: 90,
+      hollow: {
+        size: '60%',
+      },
+      track: {
+        background: '#e7e7e7',
+        strokeWidth: '97%',
+        margin: 5,
+      },
+      dataLabels: {
+        name: {
+          show: true,
+          fontSize: '14px',
+          offsetY: 6,
+        },
+        value: {
+          show: true,
+          fontSize: '20px',
+          fontWeight: 600,
+          offsetY: -25,
+        }
+      },
+    }
+  },
+  stroke: {
+    lineCap: 'round'
+  },
+  labels: [''],
 };
 
-const getStepperColor = (level: number) => {
-  if (level === props.user.careerPlan.currentLevel) {
-    return 'primary';
-  } else if (level < props.user.careerPlan.currentLevel) {
-    return 'success';
-  } else {
-    return 'grey';
+// Configurações e séries para cada gráfico
+const throughputChart = computed(() => ({
+  series: [careerProgress.value.indicators.throughput.value],
+  chartOptions: {
+    ...baseChartOptions,
+    labels: [careerProgress.value.indicators.throughput.label],
+    colors: [careerProgress.value.indicators.throughput.color],
   }
+}));
+
+const onTimeDeliveryChart = computed(() => ({
+  series: [careerProgress.value.indicators.onTimeDelivery.value],
+  chartOptions: {
+    ...baseChartOptions,
+    labels: [careerProgress.value.indicators.onTimeDelivery.label],
+    colors: [careerProgress.value.indicators.onTimeDelivery.color],
+  }
+}));
+
+const reworkChart = computed(() => ({
+  series: [careerProgress.value.indicators.reworkPercentage.value],
+  chartOptions: {
+    ...baseChartOptions,
+    labels: [careerProgress.value.indicators.reworkPercentage.label],
+    colors: [careerProgress.value.indicators.reworkPercentage.color],
+  }
+}));
+
+// Classes dinâmicas para o texto de porcentagem
+const getTextColorClass = (value: number) => {
+  if (value >= 90) return 'text-success';
+  if (value >= 50) return 'text-warning';
+  return 'text-primary';
+};
+
+const getReworkTextColorClass = (value: number) => {
+  if (value <= 10) return 'text-success';
+  if (value <= 20) return 'text-warning';
+  return 'text-error';
 };
 </script>
 
 <template>
-  <v-card elevation="2" class="pa-4 user-career-plan-card">
-    <v-card-title class="text-h6 font-weight-bold">Plano de Carreira</v-card-title>
+  <v-card elevation="2" class="pa-4">
+    <v-card-title class="text-h6 d-flex align-center">
+      <v-icon class="mr-2" color="primary">mdi-chart-bar</v-icon>
+      O que está pendente para alcançar o próximo nível:
+    </v-card-title>
     <v-divider class="mb-4"></v-divider>
 
-    <div class="mb-4">
-      <div class="text-subtitle-1 font-weight-bold">Posição Atual:</div>
-      <div class="text-h5 text-primary">{{ user.careerPlan.currentPosition }}</div>
+    <div class="d-flex align-end">
+      <div class="text-h6 font-weight-bold mr-2">{{ careerProgress.drdName }}:</div>
+      <div class="text-h5 text-primary">{{ careerProgress.currentLevel.split(' - ')[0] }}</div>
+    </div>
+    <div class="mb-4 d-flex align-end">
+      <div class="text-subtitle-1 font-weight-bold mr-2">Nível atual:</div>
+      <div class="text-h6 text-primary">{{ careerProgress.currentLevel.split(' - ')[1] }}</div>
     </div>
 
-    <v-stepper :model-value="user.careerPlan.currentLevel" flat class="pa-0">
-      <v-stepper-item
-        v-for="levelData in user.careerPlan.levels"
-        :key="levelData.level"
-        :value="levelData.level"
-        :title="levelData.position"
-        :icon="getStepperIcon(levelData.level)"
-        :color="getStepperColor(levelData.level)"
-        editable
-        @click="user.careerPlan.currentLevel = levelData.level"
-      >
-        <v-card class="mt-2" flat border>
-          <v-card-text>
-            <div class="font-weight-medium mb-2">{{ levelData.description }}</div>
-            <v-expansion-panels flat>
-              <v-expansion-panel
-                title="Habilidades Necessárias"
-              >
-                <template v-slot:text>
-                  <v-chip
-                    v-for="skill in levelData.skillsRequired"
-                    :key="skill"
-                    class="ma-1"
-                    color="blue-grey"
-                    variant="tonal"
-                    size="small"
-                  >{{ skill }}</v-chip>
-                </template>
-              </v-expansion-panel>
+    <div class="text-h6 font-weight-bold my-4">Indicadores de Desempenho:</div>
+    <v-divider class="mb-4"></v-divider>
 
-              <v-expansion-panel
-                title="Conquistas Requeridas"
-                class="mt-2"
-              >
-                <template v-slot:text>
-                  <v-list density="compact">
-                    <v-list-item v-for="achievement in levelData.achievementsRequired" :key="achievement">
-                      <v-list-item-title class="text-caption">{{ achievement }}</v-list-item-title>
-                    </v-list-item>
-                  </v-list>
-                </template>
-              </v-expansion-panel>
-            </v-expansion-panels>
-          </v-card-text>
-        </v-card>
-      </v-stepper-item>
-    </v-stepper>
+    <v-row class="text-center">
+      <v-col cols="12" md="4">
+        <VueApexCharts
+          type="radialBar"
+          :series="throughputChart.series"
+          :options="throughputChart.chartOptions"
+        ></VueApexCharts>
+      </v-col>
+      
+      <v-col cols="12" md="4">
+        <VueApexCharts
+          type="radialBar"
+          :series="onTimeDeliveryChart.series"
+          :options="onTimeDeliveryChart.chartOptions"
+        ></VueApexCharts>
+      </v-col>
+
+      <v-col cols="12" md="4">
+        <VueApexCharts
+          type="radialBar"
+          :series="reworkChart.series"
+          :options="reworkChart.chartOptions"
+        ></VueApexCharts>
+      </v-col>
+    </v-row>
+
+    <div class="text-h6 font-weight-bold my-4 mt-6">Conquistas e Requisitos:</div>
+    <v-divider class="mb-4"></v-divider>
+
+    <v-row>
+      <v-col cols="12" md="6">
+        <v-list density="compact" rounded>
+          <v-list-subheader class="font-weight-bold text-subtitle-1">Treinamentos</v-list-subheader>
+          <v-list-item
+            v-for="(item, i) in careerProgress.checklists.trainings"
+            :key="i"
+            :value="item"
+          >
+            <template #prepend>
+              <v-icon
+                :color="item.completed ? 'success' : 'grey-lighten-1'"
+                :icon="item.completed ? 'mdi-check-circle' : 'mdi-circle-outline'"
+              ></v-icon>
+            </template>
+            <v-list-item-title class="text-wrap" :class="{'text-decoration-line-through': item.completed}">
+              {{ item.name }}
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-col>
+
+      <v-col cols="12" md="6">
+        <v-list density="compact" rounded>
+          <v-list-subheader class="font-weight-bold text-subtitle-1">Certificados</v-list-subheader>
+          <v-list-item
+            v-for="(item, i) in careerProgress.checklists.certifications"
+            :key="i"
+            :value="item"
+          >
+            <template #prepend>
+              <v-icon
+                :color="item.completed ? 'success' : 'grey-lighten-1'"
+                :icon="item.completed ? 'mdi-check-circle' : 'mdi-circle-outline'"
+              ></v-icon>
+            </template>
+            <v-list-item-title class="text-wrap" :class="{'text-decoration-line-through': item.completed}">
+              {{ item.name }}
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+        
+        <v-list density="compact" rounded class="mt-4">
+          <v-list-subheader class="font-weight-bold text-subtitle-1">Livros</v-list-subheader>
+          <v-list-item
+            v-for="(item, i) in careerProgress.checklists.books"
+            :key="i"
+            :value="item"
+          >
+            <template #prepend>
+              <v-icon
+                :color="item.completed ? 'success' : 'grey-lighten-1'"
+                :icon="item.completed ? 'mdi-check-circle' : 'mdi-circle-outline'"
+              ></v-icon>
+            </template>
+            <v-list-item-title class="text-wrap" :class="{'text-decoration-line-through': item.completed}">
+              {{ item.name }}
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-col>
+    </v-row>
   </v-card>
 </template>
-
-<style scoped>
-.user-career-plan-card .v-stepper {
-  background-color: transparent !important;
-}
-
-.user-career-plan-card .v-stepper-item--selected .v-stepper-item__header {
-  font-weight: bold;
-}
-</style>
