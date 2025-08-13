@@ -70,7 +70,7 @@ const baseChartOptions = {
         name: {
           show: true,
           fontSize: '14px',
-          offsetY: 6,
+          offsetY: 10,
         },
         value: {
           show: true,
