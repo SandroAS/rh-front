@@ -24,7 +24,6 @@ const teamMembers = ref([
 ]);
 
 const goToCollaboratorPanel = (uuid: string) => {
-  // *** MUDANÇA AQUI ***
   router.push({ name: 'userPanel', params: { uuid: uuid } });
 };
 </script>
@@ -55,7 +54,7 @@ const goToCollaboratorPanel = (uuid: string) => {
         </v-avatar>
         <div>
           <div class="text-caption font-weight-medium member-name-text">{{ member.name }}</div>
-          <div class="text-caption text-medium-emphasis">{{ member.email }}</div>
+          <div class="text-caption text-medium-emphasis text-warp">{{ member.email }}</div>
         </div>
       </div>
     </div>
@@ -114,5 +113,12 @@ const goToCollaboratorPanel = (uuid: string) => {
 
 .member-item:hover .member-name-text {
   text-decoration: underline;
+}
+
+.text-warp {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 155px;
 }
 </style>

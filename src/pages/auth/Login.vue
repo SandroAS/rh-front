@@ -41,8 +41,8 @@ const loginWithGoogle = async () => {
   <v-container class="fill-height d-flex justify-center align-center">
     <v-card class="pa-8" max-width="400" elevation="10" rounded="xl">
       <v-card-title class="justify-center mb-6">
-        <v-img :src="logo" alt="Logo Soft Clinic" contain height="50" width="50" class="mr-2" />
-        <span class="text-h5 font-weight-bold">Soft Clinic</span>
+        <v-img :src="logo" alt="Logo RH" contain height="50" width="50" class="mr-2" />
+        <span class="text-h5 font-weight-bold">RH</span>
       </v-card-title>
 
       <Form @submit="onSubmit">

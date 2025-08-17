@@ -20,8 +20,8 @@ const modalContent = computed(() => {
 });
 
 const termsOfServiceContent = `
-  <h2>Termos de Serviço para o Sistema da Soft Clinic</h2>
-  <p>Bem-vindo ao nosso Sistema da Soft Clinic! Estes Termos de Serviço regem o uso do nosso software.</p>
+  <h2>Termos de Serviço para o RH</h2>
+  <p>Bem-vindo ao nosso RH! Estes Termos de Serviço regem o uso do nosso software.</p>
 
   <h3>1. Aceitação dos Termos</h3>
   <p>Ao acessar ou usar nosso Sistema, você concorda em cumprir e estar vinculado a estes Termos.</p>
@@ -48,12 +48,12 @@ const termsOfServiceContent = `
   <p>Estes Termos serão regidos e interpretados de acordo com as leis do Brasil.</p>
 
   <h3>7. Contato</h3>
-  <p>Para quaisquer dúvidas sobre estes Termos, entre em contato conosco em suporte@softclinic.com.br.</p>
+  <p>Para quaisquer dúvidas sobre estes Termos, entre em contato conosco em suporte@rh.com.br.</p>
 `;
 
 const privacyPolicyContent = `
-  <h2>Política de Privacidade do Sistema da Soft Clinic</h2>
-  <p>Sua privacidade é de extrema importância para nós. Esta Política de Privacidade descreve como coletamos, usamos e protegemos suas informações pessoais e as informações de seus pacientes dentro do nosso Sistema da Soft Clinic.</p>
+  <h2>Política de Privacidade do Sistema da RH</h2>
+  <p>Sua privacidade é de extrema importância para nós. Esta Política de Privacidade descreve como coletamos, usamos e protegemos suas informações pessoais e as informações de seus pacientes dentro do nosso Sistema da RH.</p>
 
   <h3>1. Informações Coletadas</h3>
   <ul>
@@ -65,7 +65,7 @@ const privacyPolicyContent = `
   <h3>2. Como Usamos Suas Informações</h3>
   <p>Utilizamos as informações coletadas para:</p>
   <ul>
-    <li>Fornecer e manter o funcionamento do Sistema da Soft Clinic.</li>
+    <li>Fornecer e manter o funcionamento do RH.</li>
     <li>Processar e gerenciar agendamentos e registros de pacientes.</li>
     <li>Melhorar e personalizar sua experiência no Sistema.</li>
     <li>Garantir a segurança e integridade dos dados.</li>
@@ -95,7 +95,7 @@ const privacyPolicyContent = `
   <p>Podemos atualizar nossa Política de Privacidade periodicamente. Notificaremos você sobre quaisquer alterações publicando a nova Política nesta página.</p>
 
   <h3>8. Contato</h3>
-  <p>Para dúvidas sobre esta Política de Privacidade ou sobre suas informações, entre em contato conosco em suporte@softclinic.com.br.</p>
+  <p>Para dúvidas sobre esta Política de Privacidade ou sobre suas informações, entre em contato conosco em suporte@rh.com.br.</p>
 `;
 </script>
 

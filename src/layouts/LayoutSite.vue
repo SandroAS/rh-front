@@ -7,10 +7,10 @@ import logo from '@/assets/logo.png'
     <div class="d-flex align-center justify-space-between w-100 px-4">
       <a href="#home" class="text-decoration-none">
         <div class="d-flex align-center">
-          <v-img :src="logo" alt="Logo Soft Clinic" contain height="40" width="120" class="mr-4" />
+          <v-img :src="logo" alt="Logo RH" contain height="40" width="120" class="mr-4" />
 
 
-          <span class="text-primary font-weight-bold text-h5">Soft Clinic</span>
+          <span class="text-primary font-weight-bold text-h5">RH</span>
         </div>
       </a>
 

@@ -94,7 +94,7 @@ const beneficios = [
       <v-row>
         <v-col cols="12" class="text-center mb-12">
           <h2 class="text-h4 font-weight-bold">
-            Benefícios do Soft Clinic
+            Benefícios do RH
           </h2>
           <p class="text-body-1 text-medium-emphasis mt-4">
             Descubra como nossa plataforma pode transformar sua gestão clínica

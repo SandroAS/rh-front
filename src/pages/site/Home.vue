@@ -31,7 +31,7 @@ const features = [
             Gestão inteligente para sua clínica
           </h1>
           <p class="text-body-1 text-medium-emphasis mb-8">
-            Simplifique a gestão da sua clínica com o Soft Clinic. Nossa plataforma
+            Simplifique a gestão da sua clínica com o RH. Nossa plataforma
             oferece todas as ferramentas necessárias para otimizar seus processos e
             melhorar o atendimento aos pacientes.
           </p>
@@ -56,7 +56,7 @@ const features = [
       <v-row>
         <v-col cols="12" class="text-center mb-12">
           <h2 class="text-h4 font-weight-bold mb-4">
-            Por que escolher o Soft Clinic?
+            Por que escolher o RH?
           </h2>
           <p class="text-body-1 text-medium-emphasis">
             Descubra como nossa plataforma pode transformar sua clínica
