@@ -5,6 +5,7 @@ import { useLevelsGroupStore } from '../../../../stores/levels-group.store';
 import loadItems from '@/utils/loadItems.util';
 import type JobPosition from '@/types/jobPosition/job-position.type';
 import JobPositionModal from '../jobPositions/JobPositionModal.vue';
+import formatCurrency from '@/utils/formatCurrency.util.ts';
 
 const jobPositionStore = useJobPositionStore();
 const levelsGroupeStore = useLevelsGroupStore();
@@ -84,9 +85,9 @@ onMounted(async () => {
 
     <v-data-table
       :headers="[
-        { title: 'Nome', value: 'name', sortable: true },
+        { title: 'Título', value: 'title', sortable: true },
         { title: 'Descrição', value: 'description', sortable: true },
-        { title: 'Valor (R$)', value: 'price', align: 'end' },
+        { title: 'Valor (R$)', value: 'base_salary', align: 'end' },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
       :items="jobPositionStore.job_positions || []"
@@ -99,6 +100,10 @@ onMounted(async () => {
       mobile-breakpoint="md"
       @update:options="loadJobPositions"
     >
+      <template v-slot:[`item.base_salary`]="{ item }">
+        {{ formatCurrency(item.base_salary) }}
+      </template>
+
       <template v-slot:[`item.actions`]="{ item }">
         <div>
           <v-btn icon @click="openDialog(item)">

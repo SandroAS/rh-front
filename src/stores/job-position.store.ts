@@ -38,7 +38,7 @@ export const useJobPositionStore = defineStore('jobPosition', {
       const jobPositionsMapped = this.job_positions.map(job_position => {
         return {
           value: job_position,
-          title: job_position.name,
+          title: job_position.title,
           disabled: !!job_position.drd_uuid
         }
       });
@@ -56,8 +56,10 @@ export const useJobPositionStore = defineStore('jobPosition', {
         if(!this.job_positions) this.job_positions = [];
         const jobPositionSaved = {
           uuid: res.uuid,
-          name: jobPosition.name,
+          title: jobPosition.title,
           description: jobPosition.description,
+          cbo_code: jobPosition.cbo_code,
+          base_salary: jobPosition.base_salary,
           levelsGroup: jobPosition.levelsGroup
             ? { uuid: jobPosition.levelsGroup.uuid, name: jobPosition.levelsGroup.name, levels: jobPosition.levelsGroup.levels }
             : { uuid: '', name: '', levels: [] },

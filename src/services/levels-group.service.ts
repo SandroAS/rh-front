@@ -5,7 +5,7 @@ import type LevelsGroupResponsePagination from '@/types/levelsGroup/levels-group
 import type LevelsGroupPayload from '@/types/levelsGroup/levels-group-payload.type';
 
 export const getLevelsGroups = async (): Promise<LevelsGroup[]> => {
-  const response: AxiosResponse<LevelsGroup[]> = await api.get('/levels-groups');
+  const response: AxiosResponse<LevelsGroup[]> = await api.get('/job-positions-levels-groups');
   return response.data;
 };
 
@@ -16,19 +16,19 @@ export const getLevelsGroupsPagination = async (page: number = 1, limit: number 
   if (sortOrder) params.sort_order = sortOrder;
   if (searchTerm) params.search_term = searchTerm;
 
-  const response: AxiosResponse<LevelsGroupResponsePagination> = await api.get('/levels-groups/pagination', { params });
+  const response: AxiosResponse<LevelsGroupResponsePagination> = await api.get('/job-positions-levels-groups/pagination', { params });
 
   return response.data;
 };
 
 export const saveLevelsGroup = async (levelsGroup: LevelsGroupPayload, uuid?: string) => {
   const response: AxiosResponse<{ uuid: string }> = uuid 
-    ? await api.put(`/levels-groups/${uuid}`, levelsGroup)
-    : await api.post('/levels-groups', levelsGroup);
+    ? await api.put(`/job-positions-levels-groups/${uuid}`, levelsGroup)
+    : await api.post('/job-positions-levels-groups', levelsGroup);
   return response.data;
 };
 
 export const removeLevelsGroup = async (uuid: string) => {
-  const response: AxiosResponse<boolean> = await api.delete(`/levels-groups/${uuid}`);
+  const response: AxiosResponse<boolean> = await api.delete(`/job-positions-levels-groups/${uuid}`);
   return response.data;
 };
