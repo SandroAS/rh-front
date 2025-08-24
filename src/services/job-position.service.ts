@@ -10,7 +10,7 @@ export const getJobPositions = async (page: number = 1, limit: number = 10, sort
   if (sortOrder) params.sort_order = sortOrder;
   if (searchTerm) params.search_term = searchTerm;
 
-  const response: AxiosResponse<JobPositionResponsePagination> = await api.get('/job-positions/paginate', { params });
+  const response: AxiosResponse<JobPositionResponsePagination> = await api.get('/job-positions/pagination', { params });
 
   return response.data;
 };

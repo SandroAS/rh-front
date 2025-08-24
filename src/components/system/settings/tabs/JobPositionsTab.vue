@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useJobPositionStore } from '../../../../stores/job-position.store';
-import { useLevelsGroupStore } from '../../../../stores/levels-group.store';
+import { useJobPositionsLevelsGroupStore } from '../../../../stores/job-positions-levels-group.store';
 import loadItems from '@/utils/loadItems.util';
 import type JobPosition from '@/types/jobPosition/job-position.type';
 import JobPositionModal from '../jobPositions/JobPositionModal.vue';
 import formatCurrency from '@/utils/formatCurrency.util.ts';
 
 const jobPositionStore = useJobPositionStore();
-const levelsGroupeStore = useLevelsGroupStore();
+const levelsGroupeStore = useJobPositionsLevelsGroupStore();
 
 const dialog = ref(false);
 const selectedJobPosition = ref<JobPosition | null>(null);

@@ -5,11 +5,11 @@ import { useJobPositionStore } from '@/stores/job-position.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import type JobPositionPayload from '@/types/jobPosition/job-position-payload.type';
 import type JobPosition from '@/types/jobPosition/job-position.type';
-import { useLevelsGroupStore } from '@/stores/levels-group.store';
+import { useJobPositionsLevelsGroupStore } from '@/stores/job-positions-levels-group.store';
 
 const jobPositionStore = useJobPositionStore();
 const snackbarStore = useSnackbarStore();
-const levelsGroupStore = useLevelsGroupStore()
+const levelsGroupStore = useJobPositionsLevelsGroupStore()
 
 const props = defineProps<{
   modelValue: boolean,

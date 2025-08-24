@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useLevelsGroupStore } from '../../../../stores/levels-group.store';
+import { useJobPositionsLevelsGroupStore } from '../../../../stores/job-positions-levels-group.store';
 import loadItems from '@/utils/loadItems.util';
-import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
+import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
 import LevelsGroupModal from '../levelsGroups/LevelsGroupModal.vue';
 
-const levelsGroupStore = useLevelsGroupStore();
+const levelsGroupStore = useJobPositionsLevelsGroupStore();
 
 const dialog = ref(false);
-const selectedLevelsGroup = ref<LevelsGroup | null>(null);
+const selectedLevelsGroup = ref<JobPositionsLevelsGroup | null>(null);
 
 const currentPage = ref(levelsGroupStore.page);
 const itemsPerPage = ref(levelsGroupStore.limit);
 const searchTerm = ref(levelsGroupStore.search_term || '');
 const sortBy = ref(levelsGroupStore.sort_column ? [{ key: levelsGroupStore.sort_column, order: levelsGroupStore.sort_order }] : []);
 
-const openDialog = (item?: LevelsGroup) => {
+const openDialog = (item?: JobPositionsLevelsGroup) => {
   selectedLevelsGroup.value = item || null;
   dialog.value = true;
 }

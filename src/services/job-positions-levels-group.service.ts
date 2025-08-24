@@ -1,8 +1,8 @@
 import type { AxiosResponse } from 'axios';
 import api from './api.service';
-import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
-import type LevelsGroupResponsePagination from '@/types/levelsGroup/levels-group-response-pagination.type';
-import type LevelsGroupPayload from '@/types/levelsGroup/levels-group-payload.type';
+import type LevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
+import type LevelsGroupResponsePagination from '@/types/jobPositionsLevelsGroup/job-positions-levels-group-response-pagination.type';
+import type LevelsGroupPayload from '@/types/jobPositionsLevelsGroup/job-positions-levels-group-payload.type';
 
 export const getLevelsGroups = async (): Promise<LevelsGroup[]> => {
   const response: AxiosResponse<LevelsGroup[]> = await api.get('/job-positions-levels-groups');

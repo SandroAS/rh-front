@@ -1,4 +1,4 @@
-import type LevelsGroup from '../levelsGroup/levels-group.type';
+import type LevelsGroup from '../jobPositionsLevelsGroup/job-positions-levels-group.type';
 
 export default interface JobPositionPayload {
   uuid?: string;

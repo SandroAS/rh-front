@@ -1,12 +1,12 @@
-import { getLevelsGroups, getLevelsGroupsPagination, saveLevelsGroup } from '@/services/levels-group.service';
+import { getLevelsGroups, getLevelsGroupsPagination, saveLevelsGroup } from '@/services/job-positions-levels-group.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
-import type LevelsGroupPayload from '@/types/levelsGroup/levels-group-payload.type';
-import type LevelsGroupResponsePagination from '@/types/levelsGroup/levels-group-response-pagination.type';
-import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
+import type JobPositionsLevelsGroupPayload from '@/types/jobPositionsLevelsGroup/job-positions-levels-group-payload.type';
+import type JobPositionsLevelsGroupResponsePagination from '@/types/jobPositionsLevelsGroup/job-positions-levels-group-response-pagination.type';
+import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
 import { defineStore } from 'pinia';
 
-interface LevelsGroupStoreState {
-  levels_groups: LevelsGroup[] | null;
+interface JobPositionsLevelsGroupStoreState {
+  levels_groups: JobPositionsLevelsGroup[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -18,8 +18,8 @@ interface LevelsGroupStoreState {
   search_term?: string;
 }
 
-export const useLevelsGroupStore = defineStore('levelsGroup', {
-  state: (): LevelsGroupStoreState => ({
+export const useJobPositionsLevelsGroupStore = defineStore('jobPositionsLevelsGroup', {
+  state: (): JobPositionsLevelsGroupStoreState => ({
     levels_groups: null,
     loading: false,
     error: null,
@@ -33,7 +33,7 @@ export const useLevelsGroupStore = defineStore('levelsGroup', {
   }),
 
   getters: {
-    levelsGroupsOptions(): { value: LevelsGroup, title: string, disabled?: boolean }[] | [] {
+    levelsGroupsOptions(): { value: JobPositionsLevelsGroup, title: string, disabled?: boolean }[] | [] {
       if(!this.levels_groups) return [];
       const levelsGroupsMapped = this.levels_groups.map(level_group => {
         return {
@@ -60,7 +60,7 @@ export const useLevelsGroupStore = defineStore('levelsGroup', {
       }
     },
 
-    async saveLevelsGroup(levelsGroup: LevelsGroupPayload, uuid?: string) {
+    async saveLevelsGroup(levelsGroup: JobPositionsLevelsGroupPayload, uuid?: string) {
       this.loading = true;
       this.error = null;
 
@@ -97,7 +97,7 @@ export const useLevelsGroupStore = defineStore('levelsGroup', {
       this.error = null;
 
       try {
-        const res: LevelsGroupResponsePagination = await getLevelsGroupsPagination(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+        const res: JobPositionsLevelsGroupResponsePagination = await getLevelsGroupsPagination(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
         this.levels_groups = res.data;
         this.total = res.total;
         this.page = res.page;

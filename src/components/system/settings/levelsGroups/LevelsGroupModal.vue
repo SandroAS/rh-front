@@ -2,24 +2,24 @@
 import { reactive, watch } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useSnackbarStore } from '@/stores/snackbar.store';
-import type LevelsGroupPayload from '@/types/levelsGroup/levels-group-payload.type';
-import type LevelsGroup from '@/types/levelsGroup/levels-group.type';
-import { useLevelsGroupStore } from '@/stores/levels-group.store';
-import type Level from '@/types/level/level.type';
+import type JobPositionsLevelsGroupPayload from '@/types/jobPositionsLevelsGroup/job-positions-levels-group-payload.type';
+import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
+import { useJobPositionsLevelsGroupStore } from '@/stores/job-positions-levels-group.store';
+import type JobPositionsLevel from '@/types/jobPositionsLevel/job-positions-level.type';
 
-const levelsGroupStore = useLevelsGroupStore();
+const levelsGroupStore = useJobPositionsLevelsGroupStore();
 const snackbarStore = useSnackbarStore();
 
 const props = defineProps<{
   modelValue: boolean,
-  selectedLevelsGroup?: LevelsGroup | null
+  selectedLevelsGroup?: JobPositionsLevelsGroup | null
 }>();
 
 const emit = defineEmits(['update:modelValue']);
 
 const close = () => emit('update:modelValue', false);
 
-const levelsGroup = reactive<LevelsGroupPayload & { levels: Level[] }>({
+const levelsGroup = reactive<JobPositionsLevelsGroupPayload & { levels: JobPositionsLevel[] }>({
   uuid: undefined,
   name: '',
   levels: [{ name: '', amount: undefined }]
@@ -55,7 +55,7 @@ async function onSubmit(formValues: Record<string, any>) {
     return;
   }
 
-  const payload: LevelsGroupPayload = {
+  const payload: JobPositionsLevelsGroupPayload = {
     uuid: levelsGroup.uuid,
     name: formValues.name,
     levels: filteredLevels
@@ -131,7 +131,7 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
     <Form @submit="onSubmit" :initial-values="levelsGroup">
       <v-card>
         <v-card-title class="text-h6">
-          {{ !!selectedLevelsGroup ? 'Editar Níveis do Cargo' : 'Novo Níveis do Cargo' }}
+          {{ !!selectedLevelsGroup?.uuid ? 'Editar Níveis do Cargo' : 'Novo Níveis do Cargo' }}
         </v-card-title>
         <v-card-text>
           <Field name="name" label="nome" rules="required" v-slot="{ field, errorMessage }">
