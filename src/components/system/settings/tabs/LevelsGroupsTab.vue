@@ -20,12 +20,6 @@ const openDialog = (item?: JobPositionsLevelsGroup) => {
   dialog.value = true;
 }
 
-async function getLevelsGroups() {
-  await levelsGroupStore.getLevelsGroupsPagination({ page: currentPage.value, limit: itemsPerPage.value });
-}
-
-getLevelsGroups()
-
 const leadLevelsGrupos = async () => {
   await loadItems(
     { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
@@ -47,10 +41,6 @@ watch(searchTerm, (newVal) => {
   searchDebounceTimeout = setTimeout(() => {
     leadLevelsGrupos();
   }, 300);
-});
-
-onMounted(async () => {
-  leadLevelsGrupos();
 });
 </script>
 

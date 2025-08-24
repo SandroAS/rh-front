@@ -23,15 +23,10 @@ const openDialog = (item?: JobPosition) => {
   dialog.value = true;
 }
 
-async function getJobPositions() {
-  await jobPositionStore.getJobPositions({ page: currentPage.value, limit: itemsPerPage.value });
-}
-
 async function getLevelsGroups() {
   await levelsGroupeStore.getLevelsGroups();
 }
 
-getJobPositions();
 getLevelsGroups()
 
 const loadJobPositions = async () => {
@@ -55,10 +50,6 @@ watch(searchTerm, (newVal) => {
   searchDebounceTimeout = setTimeout(() => {
     loadJobPositions();
   }, 300);
-});
-
-onMounted(async () => {
-  loadJobPositions();
 });
 </script>
 

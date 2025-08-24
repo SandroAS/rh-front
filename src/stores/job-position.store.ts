@@ -84,6 +84,7 @@ export const useJobPositionStore = defineStore('jobPosition', {
     },
 
     async getJobPositions(params: DataTableFilterParams) {
+      console.log('jobpositionstore')
       this.loading = true;
       this.error = null;
 
