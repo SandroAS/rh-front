@@ -61,7 +61,7 @@ export const useJobPositionStore = defineStore('jobPosition', {
           cbo_code: jobPosition.cbo_code,
           base_salary: jobPosition.base_salary,
           levelsGroup: jobPosition.levelsGroup
-            ? { uuid: jobPosition.levelsGroup.uuid, name: jobPosition.levelsGroup.name, levels: jobPosition.levelsGroup.levels }
+            ? { uuid: jobPosition.levelsGroup.uuid, name: jobPosition.levelsGroup.name, levels: jobPosition.levelsGroup.jobPositionsLevels }
             : { uuid: '', name: '', levels: [] },
           drd_uuid: ''
         }

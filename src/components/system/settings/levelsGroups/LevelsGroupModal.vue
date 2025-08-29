@@ -7,7 +7,7 @@ import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-po
 import { useJobPositionsLevelsGroupStore } from '@/stores/job-positions-levels-group.store';
 import type JobPositionsLevel from '@/types/jobPositionsLevel/job-positions-level.type';
 
-const levelsGroupStore = useJobPositionsLevelsGroupStore();
+const jobPositionsLevelsGroupStore = useJobPositionsLevelsGroupStore();
 const snackbarStore = useSnackbarStore();
 
 const props = defineProps<{
@@ -19,35 +19,35 @@ const emit = defineEmits(['update:modelValue']);
 
 const close = () => emit('update:modelValue', false);
 
-const levelsGroup = reactive<JobPositionsLevelsGroupPayload & { levels: JobPositionsLevel[] }>({
+const jobPositionsLevelsGroup = reactive<JobPositionsLevelsGroupPayload & { jobPositionsLevels: JobPositionsLevel[] }>({
   uuid: undefined,
   name: '',
-  levels: [{ name: '', amount: undefined }]
+  jobPositionsLevels: [{ name: '', salary: undefined }]
 });
 
 watch(() => props.selectedLevelsGroup, (val) => {
-  levelsGroup.uuid = val?.uuid || undefined;
-  levelsGroup.name = val?.name || '';
-  levelsGroup.levels = (val?.levels && val.levels.length > 0)
-    ? val.levels.map(level => ({ name: level.name, amount: level.amount || undefined }))
-    : [{ name: '', amount: undefined }];
+  jobPositionsLevelsGroup.uuid = val?.uuid || undefined;
+  jobPositionsLevelsGroup.name = val?.name || '';
+  jobPositionsLevelsGroup.jobPositionsLevels = (val?.jobPositionsLevels && val.jobPositionsLevels.length > 0)
+    ? val.jobPositionsLevels.map(jobPositionsLevel => ({ name: jobPositionsLevel.name, salary: jobPositionsLevel.salary || undefined }))
+    : [{ name: '', salary: undefined }];
 }, { immediate: true });
 
 const addLevel = () => {
-  levelsGroup.levels.push({ name: '', amount: undefined });
+  jobPositionsLevelsGroup.jobPositionsLevels.push({ name: '', salary: undefined });
 };
 
 const removeLevel = (index: number) => {
-  if (levelsGroup.levels.length > 1) {
-    levelsGroup.levels.splice(index, 1);
+  if (jobPositionsLevelsGroup.jobPositionsLevels.length > 1) {
+    jobPositionsLevelsGroup.jobPositionsLevels.splice(index, 1);
   } else {
     snackbarStore.show('Não é possível remover todos os níveis. Adicione um novo para poder remover este.', 'warning');
   }
 };
 
 async function onSubmit(formValues: Record<string, any>) {
-  const filteredLevels = levelsGroup.levels.filter(level =>
-    level.name.trim() !== '' || (level.amount !== null && level.amount !== 0)
+  const filteredLevels = jobPositionsLevelsGroup.jobPositionsLevels.filter(jobPositionsLevel =>
+    jobPositionsLevel.name.trim() !== '' || (jobPositionsLevel.salary !== null && jobPositionsLevel.salary !== 0)
   );
 
   if (filteredLevels.length === 0) {
@@ -56,24 +56,24 @@ async function onSubmit(formValues: Record<string, any>) {
   }
 
   const payload: JobPositionsLevelsGroupPayload = {
-    uuid: levelsGroup.uuid,
+    uuid: jobPositionsLevelsGroup.uuid,
     name: formValues.name,
-    levels: filteredLevels
+    jobPositionsLevels: filteredLevels
   };
 
   try {
-    await levelsGroupStore.saveLevelsGroup(payload, payload.uuid);
+    await jobPositionsLevelsGroupStore.saveLevelsGroup(payload, payload.uuid);
     snackbarStore.show('Níveis do Cargo salvo com sucesso!', 'success');
     close();
   } catch (err: any) {
     console.error('Erro no registro:', err);
-    snackbarStore.show(levelsGroupStore.error || 'Falha ao salvar níveis do cargo.', 'error');
+    snackbarStore.show(jobPositionsLevelsGroupStore.error || 'Falha ao salvar níveis do cargo.', 'error');
   }
 };
 
 function formatAmountDisplay(index: number) {
-  if(props?.selectedLevelsGroup?.levels && props?.selectedLevelsGroup?.levels.length) {
-    const valueAsNumber = parseFloat(String(props.selectedLevelsGroup?.levels[index] || '0.00').replace(',', '.'));
+  if(props?.selectedLevelsGroup?.jobPositionsLevels && props?.selectedLevelsGroup?.jobPositionsLevels.length) {
+    const valueAsNumber = parseFloat(String(props.selectedLevelsGroup?.jobPositionsLevels[index] || '0.00').replace(',', '.'));
     
     if (isNaN(valueAsNumber) || valueAsNumber === null) {
       return '0,00';
@@ -122,13 +122,13 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
     : null;
 
   onChange(valueForVeeValidate);
-  levelsGroup!.levels[index].amount = Number(valueForVeeValidate);
+  jobPositionsLevelsGroup!.jobPositionsLevels[index].salary = Number(valueForVeeValidate);
 }
 </script>
 
 <template>
   <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" max-width="600px">
-    <Form @submit="onSubmit" :initial-values="levelsGroup">
+    <Form @submit="onSubmit" :initial-values="jobPositionsLevelsGroup">
       <v-card>
         <v-card-title class="text-h6">
           {{ !!selectedLevelsGroup?.uuid ? 'Editar Níveis do Cargo' : 'Novo Níveis do Cargo' }}
@@ -151,12 +151,12 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
 
           <h3 class="text-subtitle-1 mb-3">Níveis de Cargo e Remuneração</h3>
 
-          <div v-for="(level, index) in levelsGroup.levels" :key="index" class="d-flex mb-4">
+          <div v-for="(jobPositionsLevel, index) in jobPositionsLevelsGroup.jobPositionsLevels" :key="index" class="d-flex mb-4">
             <div class="d-flex gap-2 flex-grow-1">
               <Field :name="`levels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
                   v-bind="field"
-                  v-model="level.name" :label="`Nível ${index + 1}`"
+                  v-model="jobPositionsLevel.name" :label="`Nível ${index + 1}`"
                   variant="solo-filled"
                   density="compact"
                   :error="!!errorMessage"
@@ -164,7 +164,7 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
                   class="mb-1 w-100"
                 />
               </Field>
-              <Field :name="`levels[${index}].amount`" :label="'remuneração do nível '+(index+1)" rules="required|min_value:0" v-slot="{ field, errorMessage, value }">
+              <Field :name="`levels[${index}].salary`" :label="'remuneração do nível '+(index+1)" rules="required|min_value:0" v-slot="{ field, errorMessage, value }">
                 <v-text-field
                   v-bind="field"
                   :label="`Remuneração nível ${index + 1}`"
@@ -181,7 +181,7 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
               </Field>
             </div>
             <v-btn
-              v-if="levelsGroup.levels.length > 1" icon
+              v-if="jobPositionsLevelsGroup.jobPositionsLevels.length > 1" icon
               variant="text"
               color="error"
               @click="removeLevel(index)"

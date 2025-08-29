@@ -3,5 +3,5 @@ import type JobPositionsLevel from '../jobPositionsLevel/job-positions-level.typ
 export default interface JobPositionsLevelsGroup {
   uuid: string;
   name: string;
-  levels: JobPositionsLevel[];
+  jobPositionsLevels: JobPositionsLevel[];
 }
