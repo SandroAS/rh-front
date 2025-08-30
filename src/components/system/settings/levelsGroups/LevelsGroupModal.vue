@@ -29,9 +29,9 @@ watch(() => props.selectedLevelsGroup, (val) => {
   jobPositionsLevelsGroup.uuid = val?.uuid || undefined;
   jobPositionsLevelsGroup.name = val?.name || '';
   jobPositionsLevelsGroup.jobPositionsLevels = (val?.jobPositionsLevels && val.jobPositionsLevels.length > 0)
-    ? val.jobPositionsLevels.map(jobPositionsLevel => ({ name: jobPositionsLevel.name, salary: jobPositionsLevel.salary || undefined }))
+    ? val.jobPositionsLevels.map(level => ({ name: level.name, salary: level.salary || undefined }))
     : [{ name: '', salary: undefined }];
-}, { immediate: true });
+}, { immediate: true, deep: true });
 
 const addLevel = () => {
   jobPositionsLevelsGroup.jobPositionsLevels.push({ name: '', salary: undefined });
@@ -153,10 +153,11 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
 
           <div v-for="(jobPositionsLevel, index) in jobPositionsLevelsGroup.jobPositionsLevels" :key="index" class="d-flex mb-4">
             <div class="d-flex gap-2 flex-grow-1">
-              <Field :name="`levels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
+              <Field :name="`jobPositionsLevels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
                   v-bind="field"
-                  v-model="jobPositionsLevel.name" :label="`Nível ${index + 1}`"
+                  v-model="jobPositionsLevel.name"
+                  :label="`Nível ${index + 1}`"
                   variant="solo-filled"
                   density="compact"
                   :error="!!errorMessage"
@@ -164,11 +165,11 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
                   class="mb-1 w-100"
                 />
               </Field>
-              <Field :name="`levels[${index}].salary`" :label="'remuneração do nível '+(index+1)" rules="required|min_value:0" v-slot="{ field, errorMessage, value }">
+              <Field :name="`jobPositionsLevels[${index}].salary`" :label="'remuneração do nível '+(index+1)" rules="required|min_value:0" v-slot="{ field, errorMessage, value }">
                 <v-text-field
                   v-bind="field"
+                  v-model="jobPositionsLevelsGroup.jobPositionsLevels[index].salary"
                   :label="`Remuneração nível ${index + 1}`"
-                  :model-value="formatAmountDisplay(index)"
                   variant="solo-filled"
                   density="compact"
                   type="text"

@@ -71,8 +71,8 @@ export const useJobPositionsLevelsGroupStore = defineStore('jobPositionsLevelsGr
           uuid: res.uuid,
           name: levelsGroup.name,
           jobPositionsLevels: levelsGroup.jobPositionsLevels
-            ? levelsGroup.jobPositionsLevels.map(jobPositionsLevel => ({ uuid: jobPositionsLevel.uuid, name: jobPositionsLevel.name, amount: jobPositionsLevel.amount }))
-            : [{ uuid: '', name: '', amount: 0 }]
+            ? levelsGroup.jobPositionsLevels.map(jobPositionsLevel => ({ uuid: jobPositionsLevel.uuid, name: jobPositionsLevel.name, salary: jobPositionsLevel.salary }))
+            : [{ uuid: '', name: '', salary: 0 }]
         }
         if(uuid) {
           const index = this.levels_groups.findIndex(x => x.uuid === uuid);
