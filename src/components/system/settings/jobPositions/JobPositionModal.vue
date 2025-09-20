@@ -6,6 +6,7 @@ import { useSnackbarStore } from '@/stores/snackbar.store';
 import type JobPositionPayload from '@/types/jobPosition/job-position-payload.type';
 import type JobPosition from '@/types/jobPosition/job-position.type';
 import { useJobPositionsLevelsGroupStore } from '@/stores/job-positions-levels-group.store';
+import { formatCurrencyDisplay, getCurrencyNumber } from '@/utils/formatCurrencyField.util'
 
 const jobPositionStore = useJobPositionStore();
 const snackbarStore = useSnackbarStore();
@@ -25,7 +26,7 @@ let jobPosition = reactive<JobPositionPayload>({
   title: props.selectedJobPosition?.title || '',
   description: props.selectedJobPosition?.description || '',
   cbo_code: props.selectedJobPosition?.cbo_code || '',
-  base_salary: props.selectedJobPosition?.base_salary || '0.00',
+  base_salary: props.selectedJobPosition?.base_salary || 0,
   levelsGroup: props.selectedJobPosition?.levelsGroup || undefined
 })
 
@@ -34,7 +35,7 @@ watch(() => props.selectedJobPosition, (val) => {
   jobPosition.title = val?.title || ''
   jobPosition.description = val?.description || ''
   jobPosition.cbo_code = val?.cbo_code || ''
-  jobPosition.base_salary = val?.base_salary || '0.00'
+  jobPosition.base_salary = val?.base_salary || 0
   jobPosition.levelsGroup = val?.levelsGroup || undefined
 }, { immediate: true })
 
@@ -51,54 +52,10 @@ async function onSubmit(formValues: Record<string, any>) {
   }
 };
 
-const displayFormattedValue = computed((val) => {
-  const valueAsNumber = parseFloat(String(props.selectedJobPosition?.base_salary || '0.00').replace(',', '.'));
-  
-  if (isNaN(valueAsNumber) || valueAsNumber === null) {
-    return '0,00';
-  }
-
-  return valueAsNumber.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    useGrouping: true,
-  });
-});
-
-function handleBaseSalaryKeydown(event: KeyboardEvent, currentValue: string | number | null, onChange: (value: any) => void) {
-  const key = event.key;
-  
-  let currentPriceInCentsString = '';
-  if (currentValue !== null && currentValue !== undefined) {
-    currentPriceInCentsString = String(currentValue).replace(/\D/g, '');
-  }
-
-  if (!/^\d$/.test(key) && key !== 'Backspace') {
-    event.preventDefault();
-    return;
-  }
-
-  let newBaseSalaryString = currentPriceInCentsString;
-
-  if (key === 'Backspace') {
-    newBaseSalaryString = newBaseSalaryString.slice(0, -1);
-    if (newBaseSalaryString.length === 0) {
-      newBaseSalaryString = '0';
-    }
-  } else {
-    newBaseSalaryString += key;
-  }
-
-  newBaseSalaryString = newBaseSalaryString.replace(/^0+(?=\d)/, '');
-
-  const newPriceValueInCents = newBaseSalaryString === '' ? null : parseFloat(newBaseSalaryString);
-  
-  const valueForVeeValidate = newPriceValueInCents !== null 
-    ? (newPriceValueInCents / 100).toFixed(2) 
-    : undefined;
-
-  onChange(valueForVeeValidate);
-  jobPosition.base_salary = valueForVeeValidate;
+function handleCurrencyKeydown(event: KeyboardEvent, onChange: (value: any) => void) {
+  const newValue = getCurrencyNumber(event, jobPosition.base_salary)
+  jobPosition.base_salary = newValue;
+  onChange(newValue);
 }
 </script>
 
@@ -146,10 +103,10 @@ function handleBaseSalaryKeydown(event: KeyboardEvent, currentValue: string | nu
               class="mb-3"
             />
           </Field>
-          <Field name="base_salary" label="remuneração base" rules="min:0" v-slot="{ field, errorMessage, value }">
+          <Field name="base_salary" label="remuneração base" rules="required" v-slot="{ field, errorMessage, value }">
             <v-text-field
               v-bind="field"
-              :model-value="displayFormattedValue"
+              :value="formatCurrencyDisplay(jobPosition.base_salary)"
               label="Remuneração base (R$)"
               prefix="R$"
               variant="solo-filled"
@@ -158,7 +115,7 @@ function handleBaseSalaryKeydown(event: KeyboardEvent, currentValue: string | nu
               :error="!!errorMessage"
               :error-messages="errorMessage"
               class="mb-3"
-              @keydown.prevent="handleBaseSalaryKeydown($event, value, field.onChange)"
+              @keydown.prevent="handleCurrencyKeydown($event, field.onChange)"
             />
           </Field>
           <Field name="levelGroup" label="nível do cargo" v-slot="{ field, errorMessage }">

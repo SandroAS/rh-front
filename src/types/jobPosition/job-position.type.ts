@@ -5,7 +5,7 @@ export default interface JobPosition {
   title: string;
   description: string;
   cbo_code?: string;
-  base_salary?: string;
+  base_salary?: number;
   levelsGroup?: LevelsGroup;
   drd_uuid?: string;
 }
