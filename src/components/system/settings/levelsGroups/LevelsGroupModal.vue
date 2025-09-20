@@ -6,6 +6,7 @@ import type JobPositionsLevelsGroupPayload from '@/types/jobPositionsLevelsGroup
 import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
 import { useJobPositionsLevelsGroupStore } from '@/stores/job-positions-levels-group.store';
 import type JobPositionsLevel from '@/types/jobPositionsLevel/job-positions-level.type';
+import { formatCurrencyDisplay, getCurrencyNumber } from '@/utils/formatCurrencyField.util'
 
 const jobPositionsLevelsGroupStore = useJobPositionsLevelsGroupStore();
 const snackbarStore = useSnackbarStore();
@@ -71,58 +72,10 @@ async function onSubmit(formValues: Record<string, any>) {
   }
 };
 
-function formatAmountDisplay(index: number) {
-  if(props?.selectedLevelsGroup?.jobPositionsLevels && props?.selectedLevelsGroup?.jobPositionsLevels.length) {
-    const valueAsNumber = parseFloat(String(props.selectedLevelsGroup?.jobPositionsLevels[index] || '0.00').replace(',', '.'));
-    
-    if (isNaN(valueAsNumber) || valueAsNumber === null) {
-      return '0,00';
-    }
-  
-    return valueAsNumber.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-      useGrouping: true,
-    });
-  }
-
-  return '0,00';
-};
-
-function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number | null, onChange: (value: any) => void, index: number) {
-  const key = event.key;
-  
-  let currentInCentsString = '';
-  if (currentValue !== null && currentValue !== undefined) {
-    currentInCentsString = String(currentValue).replace(/\D/g, '');
-  }
-
-  if (!/^\d$/.test(key) && key !== 'Backspace') {
-    event.preventDefault();
-    return;
-  }
-
-  let newPriceString = currentInCentsString;
-
-  if (key === 'Backspace') {
-    newPriceString = newPriceString.slice(0, -1);
-    if (newPriceString.length === 0) {
-      newPriceString = '0';
-    }
-  } else {
-    newPriceString += key;
-  }
-
-  newPriceString = newPriceString.replace(/^0+(?=\d)/, '');
-
-  const newPriceValueInCents = newPriceString === '' ? null : parseFloat(newPriceString);
-  
-  const valueForVeeValidate = newPriceValueInCents !== null 
-    ? (newPriceValueInCents / 100).toFixed(2) 
-    : null;
-
-  onChange(valueForVeeValidate);
-  jobPositionsLevelsGroup!.jobPositionsLevels[index].salary = Number(valueForVeeValidate);
+function handleCurrencyKeydown(event: KeyboardEvent, onChange: (value: any) => void, index: number) {
+  const newValue = getCurrencyNumber(event, jobPositionsLevelsGroup.jobPositionsLevels[index].salary)
+  jobPositionsLevelsGroup.jobPositionsLevels[index].salary = newValue;
+  onChange(newValue);
 }
 </script>
 
@@ -165,19 +118,18 @@ function handleAmountKeydown(event: KeyboardEvent, currentValue: string | number
                   class="mb-1 w-100"
                 />
               </Field>
-              <Field :name="`jobPositionsLevels[${index}].salary`" :label="'remuneração do nível '+(index+1)" rules="required|min_value:0" v-slot="{ field, errorMessage, value }">
+              <Field :name="`jobPositionsLevels[${index}].salary`" :label="'remuneração do nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
                   v-bind="field"
-                  v-model="jobPositionsLevelsGroup.jobPositionsLevels[index].salary"
+                  :value="formatCurrencyDisplay(jobPositionsLevelsGroup.jobPositionsLevels[index].salary)"
                   :label="`Remuneração nível ${index + 1}`"
                   variant="solo-filled"
                   density="compact"
-                  type="text"
                   prefix="R$"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
                   class="mb-1 w-100 text-right"
-                  @keydown.prevent="handleAmountKeydown($event, value, field.onChange, index)"
+                  @keydown="handleCurrencyKeydown($event, field.onChange, index)"
                 />
               </Field>
             </div>

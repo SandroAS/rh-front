@@ -12,12 +12,12 @@ export default function formatToBRL(value: number | string | undefined): string 
   } else if (typeof value === 'number') {
     numericValue = value;
   } else {
-    console.error('Invalid value provided to formatToBRL. Expected a number or a string.');
+    console.error('Valor provido é inválido para usar o formatToBRL. Esperado um número ou uma string.');
     return '';
   }
 
   if (isNaN(numericValue)) {
-    console.error('Failed to convert the provided value to a valid number.');
+    console.error('Falha ao converter o valor provido para um número válido.');
     return '';
   }
 
