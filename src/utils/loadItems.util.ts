@@ -74,11 +74,9 @@ export default async function loadItems(
     } else {
       console.error(`Ação '${fetchActionName}' não encontrada na store.`);
     }
-  }
-
-  if (!store[itemsPropertyName] || store[itemsPropertyName].length === 0 && !store.loading) {
-     if (typeof store[fetchActionName] === 'function') {
-        await store[fetchActionName](fetchParams);
-     }
+  } else if ((!store[itemsPropertyName] || store[itemsPropertyName].length === 0) && !store.loading) {
+    if (typeof store[fetchActionName] === 'function') {
+      await store[fetchActionName](fetchParams);
+    }
   }
 }
