@@ -103,7 +103,7 @@ function handleCurrencyKeydown(event: KeyboardEvent, onChange: (value: any) => v
               class="mb-3"
             />
           </Field>
-          <Field name="base_salary" label="remuneração base" rules="required" v-slot="{ field, errorMessage, value }">
+          <Field name="base_salary" label="remuneração base" rules="required" v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
               :value="formatCurrencyDisplay(jobPosition.base_salary)"
@@ -111,7 +111,7 @@ function handleCurrencyKeydown(event: KeyboardEvent, onChange: (value: any) => v
               prefix="R$"
               variant="solo-filled"
               density="compact"
-              :persistent-placeholder="!!props.selectedJobPosition?.base_salary"
+              :persistent-placeholder="!!props.selectedJobPosition?.base_salary || !!jobPosition.base_salary"
               :error="!!errorMessage"
               :error-messages="errorMessage"
               class="mb-3"

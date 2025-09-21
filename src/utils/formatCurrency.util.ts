@@ -4,7 +4,7 @@
  * @param value The value to be formatted. Can be a number or a string (e.g., "2000.00").
  * @returns The formatted currency string, e.g., "R$ 2.000,00".
  */
-export default function formatToBRL(value: number | string | undefined): string {
+export default function formatCurrency(value: number | string | undefined): string {
   let numericValue: number;
 
   if (typeof value === 'string') {
@@ -12,7 +12,7 @@ export default function formatToBRL(value: number | string | undefined): string 
   } else if (typeof value === 'number') {
     numericValue = value;
   } else {
-    console.error('Valor provido é inválido para usar o formatToBRL. Esperado um número ou uma string.');
+    console.error('Valor provido é inválido para usar a formatação de moeda. Esperado um número ou uma string.');
     return '';
   }
 

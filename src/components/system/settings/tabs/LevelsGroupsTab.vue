@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useJobPositionsLevelsGroupStore } from '../../../../stores/job-positions-levels-group.store';
 import loadItems from '@/utils/loadItems.util';
 import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
 import LevelsGroupModal from '../levelsGroups/LevelsGroupModal.vue';
+import { getInitials } from '@/utils/getInitialsFromName.util';
+import formatCurrency from '@/utils/formatCurrency.util';
 
 const levelsGroupStore = useJobPositionsLevelsGroupStore();
 
@@ -68,8 +70,8 @@ watch(searchTerm, (newVal) => {
     <v-data-table
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
-        { title: 'Criado por', value: 'created_by_user', align: 'end' },
-        { title: 'Criado em', value: 'created_at', align: 'end', sortable: true },
+        { title: 'Criado por', value: 'created_by_user', align: 'start' },
+        { title: 'Níveis', value: 'job_positions_levels', align: 'end', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
       :items="levelsGroupStore.levels_groups || []"
@@ -82,6 +84,48 @@ watch(searchTerm, (newVal) => {
       mobile-breakpoint="md"
       @update:options="leadLevelsGrupos"
     >
+      <template v-slot:[`item.created_by_user`]="{ item }">
+        <div class="mb-1">
+          <v-chip
+            link
+            pill
+            size="small"
+            class="mt-1"
+          >
+            <v-avatar v-if="item.createdBy.profile_img_url" start>
+              <v-img :src="item.createdBy.profile_img_url"></v-img>
+            </v-avatar>
+            <v-avatar v-else size="28" class="mr-2" color="primary">
+              <span class="text-caption font-weight-bold">{{ getInitials(item.createdBy.name) }}</span>
+            </v-avatar>
+
+            {{ item.createdBy.name }}
+          </v-chip>
+        </div>
+      </template>
+      <template v-slot:[`item.job_positions_levels`]="{ item }">
+        <div class="mb-1">
+          <div v-if="item.jobPositionsLevels && item.jobPositionsLevels.length > 0">
+            <v-chip
+              v-for="jobPositionsLevel in item.jobPositionsLevels.slice(0, 5)"
+              :key="jobPositionsLevel.uuid"
+              pill
+              color="primary"
+              size="small"
+              class="mt-1 pr-0"
+            >
+              {{ jobPositionsLevel.name }}
+              <v-chip pill color="green" size="small" class="ml-1">
+                {{ formatCurrency(jobPositionsLevel.salary) }}
+              </v-chip>
+            </v-chip>
+
+            <v-chip v-if="item.jobPositionsLevels.length > 5" color="secondary" size="small" class="mt-1">
+              ...
+            </v-chip>
+          </div>
+        </div>
+      </template>
       <template v-slot:[`item.actions`]="{ item }">
         <div>
           <v-btn icon @click="openDialog(item)">
