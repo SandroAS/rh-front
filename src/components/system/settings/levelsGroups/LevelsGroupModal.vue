@@ -130,6 +130,7 @@ function handleCurrencyKeydown(event: KeyboardEvent, onChange: (value: any) => v
                   variant="solo-filled"
                   density="compact"
                   prefix="R$"
+                  :persistent-placeholder="!!(props.selectedLevelsGroup?.jobPositionsLevels?.length && props.selectedLevelsGroup?.jobPositionsLevels[index]?.salary)"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
                   class="mb-1 w-100 text-right"
