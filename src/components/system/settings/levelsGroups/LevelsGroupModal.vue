@@ -7,9 +7,11 @@ import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-po
 import { useJobPositionsLevelsGroupStore } from '@/stores/job-positions-levels-group.store';
 import type JobPositionsLevel from '@/types/jobPositionsLevel/job-positions-level.type';
 import { formatCurrencyDisplay, getCurrencyNumber } from '@/utils/formatCurrencyField.util'
+import { useUserStore } from '@/stores/user.store'
 
 const jobPositionsLevelsGroupStore = useJobPositionsLevelsGroupStore();
 const snackbarStore = useSnackbarStore();
+const userStore = useUserStore();
 
 const props = defineProps<{
   modelValue: boolean,
@@ -23,6 +25,7 @@ const close = () => emit('update:modelValue', false);
 const jobPositionsLevelsGroup = reactive<JobPositionsLevelsGroupPayload & { jobPositionsLevels: JobPositionsLevel[] }>({
   uuid: undefined,
   name: '',
+  createdBy: userStore.userAvatar!,
   jobPositionsLevels: [{ name: '', salary: undefined }]
 });
 
@@ -59,6 +62,7 @@ async function onSubmit(formValues: Record<string, any>) {
   const payload: JobPositionsLevelsGroupPayload = {
     uuid: jobPositionsLevelsGroup.uuid,
     name: formValues.name,
+    createdBy: userStore.userAvatar!,
     jobPositionsLevels: filteredLevels
   };
 

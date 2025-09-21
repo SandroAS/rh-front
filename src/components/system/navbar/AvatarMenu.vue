@@ -10,8 +10,8 @@ const usuario = {
   nome: 'Sandro Souza'
 }
 
-const nomeUsuario = 'Sandro Souza'
-const emailUsuario = 'sandro.souza@email.com'
+const nomeUsuario = useUserStore().userName
+const emailUsuario = useUserStore().userEmail
 
 const siglaUsuario = computed(() => {
   const nomes = usuario.nome.trim().split(' ')

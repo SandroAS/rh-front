@@ -3,6 +3,7 @@ import type DataTableFilterParams from '@/types/dataTable/data-table-filter-para
 import type JobPositionsLevelsGroupPayload from '@/types/jobPositionsLevelsGroup/job-positions-levels-group-payload.type';
 import type JobPositionsLevelsGroupResponsePagination from '@/types/jobPositionsLevelsGroup/job-positions-levels-group-response-pagination.type';
 import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
+import type { UserAvatar } from '@/types/user/user-avatar.type';
 import { defineStore } from 'pinia';
 
 interface JobPositionsLevelsGroupStoreState {
@@ -70,6 +71,7 @@ export const useJobPositionsLevelsGroupStore = defineStore('jobPositionsLevelsGr
         const levelsGroupSaved = {
           uuid: res.uuid,
           name: levelsGroup.name,
+          createdBy: levelsGroup.createdBy,
           jobPositionsLevels: levelsGroup.jobPositionsLevels
             ? levelsGroup.jobPositionsLevels.map(jobPositionsLevel => ({ uuid: jobPositionsLevel.uuid, name: jobPositionsLevel.name, salary: jobPositionsLevel.salary }))
             : [{ uuid: '', name: '', salary: 0 }]
