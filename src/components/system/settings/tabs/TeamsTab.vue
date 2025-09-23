@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useTeamStore } from '../../../../stores/team.store';
 import { useAccountUserStore } from '@/stores/account-user.store';
-import loadItems from '@/utils/loadItems.util';
+import loadItems from '@/utils/loadItems.util'; 
 import type Team from '../../../../types/team/team.type';
 import TeamModal from '../teams/TeamModal.vue';
 
@@ -22,15 +22,10 @@ const openDialog = (item?: Team) => {
   dialog.value = true;
 }
 
-async function getTeams() {
-  await teamStore.getTeams({ page: currentPage.value, limit: itemsPerPage.value });
-}
-
 async function getAccountUsers() {
   await accountUserStore.getAccountUsers({page: 1, limit: 10000 });
 }
 
-getTeams();
 getAccountUsers()
 
 const loadTeams = async () => {
@@ -54,10 +49,6 @@ watch(searchTerm, (newVal) => {
   searchDebounceTimeout = setTimeout(() => {
     loadTeams();
   }, 300);
-});
-
-onMounted(async () => {
-  loadTeams();
 });
 </script>
 
