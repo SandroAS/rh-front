@@ -6,7 +6,7 @@ import { useSnackbarStore } from '@/stores/snackbar.store';
 import type DRDPayload from '@/types/drd/drd-payload.type';
 import type DRD from '@/types/drd/drd.type';
 import { useJobPositionStore } from '@/stores/job-position.store';
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from '@/stores/auth.store';
 
 const drdStore = useDRDStore();
 const snackbarStore = useSnackbarStore();

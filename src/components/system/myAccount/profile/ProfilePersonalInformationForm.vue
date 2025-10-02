@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import profile_img_default from '@/assets/profile_img_default.png'
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from '@/stores/auth.store';
 import type { ProfilePersonalInformation } from '@/types/profile/profile-personal-information.type';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useSnackbarStore } from '@/stores/snackbar.store';

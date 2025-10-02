@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from '@/stores/auth.store';
 import TermsOfServiceAndPrivacyPoliciesModal from './TermsOfServiceAndPrivacyPoliciesModal.vue';
 
 const dialog = ref(false)

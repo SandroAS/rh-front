@@ -7,7 +7,7 @@ import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-po
 import { useJobPositionsLevelsGroupStore } from '@/stores/job-positions-levels-group.store';
 import type JobPositionsLevel from '@/types/jobPositionsLevel/job-positions-level.type';
 import { formatCurrencyDisplay, getCurrencyNumber } from '@/utils/formatCurrencyField.util'
-import { useUserStore } from '@/stores/user.store'
+import { useUserStore } from '@/stores/auth.store'
 
 const jobPositionsLevelsGroupStore = useJobPositionsLevelsGroupStore();
 const snackbarStore = useSnackbarStore();

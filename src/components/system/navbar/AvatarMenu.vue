@@ -1,20 +1,16 @@
 <script setup lang="ts">
-import { useUserStore } from '@/stores/user.store'
+import { useUserStore } from '@/stores/auth.store'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// Simulando dados do usuário logado
-const usuario = {
-  nome: 'Sandro Souza'
-}
-
 const nomeUsuario = useUserStore().userName
 const emailUsuario = useUserStore().userEmail
 
 const siglaUsuario = computed(() => {
-  const nomes = usuario.nome.trim().split(' ')
+  if(!nomeUsuario) return '??'
+  const nomes = nomeUsuario.trim().split(' ')
   if (nomes.length === 1) return nomes[0][0].toUpperCase()
   return `${nomes[0][0]}${nomes[nomes.length - 1][0]}`.toUpperCase()
 })

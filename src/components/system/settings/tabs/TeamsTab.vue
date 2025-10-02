@@ -23,7 +23,7 @@ const openDialog = (item?: Team) => {
 }
 
 async function getAccountUsers() {
-  await accountUserStore.getAccountUsers({page: 1, limit: 10000 });
+  await accountUserStore.getAllAccountUsers();
 }
 
 getAccountUsers()

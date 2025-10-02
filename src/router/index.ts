@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { useUserStore } from '@/stores/user.store'
+import { useUserStore } from '@/stores/auth.store'
 
 import LayoutSite from '@/layouts/LayoutSite.vue'
 import LayoutAuth from '@/layouts/LayoutAuth.vue'

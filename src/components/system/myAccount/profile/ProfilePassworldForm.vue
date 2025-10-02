@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Form, Field } from '@/plugins/vee-validate'
-import { useUserStore } from '@/stores/user.store'
+import { useUserStore } from '@/stores/auth.store'
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import type ProfilePassword from '@/types/profile/profile-password.type';
 

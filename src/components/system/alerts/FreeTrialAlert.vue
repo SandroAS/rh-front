@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from '@/stores/auth.store';
 import TrialExpiredModal from './TrialExpiredModal.vue';
 
 const props = defineProps<{

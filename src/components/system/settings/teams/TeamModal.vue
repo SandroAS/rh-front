@@ -6,6 +6,7 @@ import { useSnackbarStore } from '@/stores/snackbar.store';
 import type TeamPayload from '@/types/team/team-payload.type';
 import type Team from '@/types/team/team.type';
 import { useAccountUserStore } from '@/stores/account-user.store';
+import { getInitials } from '@/utils/getInitialsFromName.util';
 
 const teamStore = useTeamStore();
 const snackbarStore = useSnackbarStore();
@@ -66,31 +67,64 @@ async function onSubmit(formValues: Record<string, any>) {
               class="mb-3"
             />
           </Field>
-          
+
           <Field name="users" label="Membros do Time" rules="required" v-slot="{ field, errorMessage }">
             <v-autocomplete
-              v-bind="field"
-              label="Selecione os Membros"
+              :model-value="field.value" 
+              @update:model-value="field.onChange"
               :items="accountUserStore.accountUsersOptions"
-              item-title="title"
-              item-value="value"
-              :return-object="true"
-              multiple
+              color="blue-grey-lighten-2"
+              item-title="name"
+              item-value="uuid"
+              label="Select"
               chips
               closable-chips
-              clearable
+              multiple
               variant="solo-filled"
               density="compact"
               :error="!!errorMessage"
               :error-messages="errorMessage"
             >
-              <template v-slot:item="{ item, props: itemProps }">
-                <v-list-item v-bind="itemProps" :title="item.raw.title" />
-                </template>
-              
-              <template v-slot:chip="{ item, props: chipProps }">
-                <v-chip v-bind="chipProps">
-                  {{ item.raw.title }} </v-chip>
+              <template v-slot:chip="{ props, item }">
+                <v-chip v-if="item.raw.avatar"
+                  v-bind="props"
+                  :prepend-avatar="item.raw.avatar"
+                  :text="item.raw.title"
+                ></v-chip>
+
+                <v-chip v-else
+                  v-bind="props"
+                  :text="item.raw.title"
+                  class="pl-1"
+                >
+                  <v-avatar color="primary" class="mr-1">
+                    <span class="text-white">{{ getInitials(item.raw.title) }}</span>
+                  </v-avatar>
+                  <span>{{ item.raw.title }}</span>
+                </v-chip>
+              </template>
+
+              <template v-slot:item="{ props, item }">
+                <v-list-item v-if="item.raw.avatar"
+                  v-bind="props"
+                  :prepend-avatar="item.raw.avatar"
+                  :title="item.raw.title"
+                  density="compact"
+                  max-height="10"
+                ></v-list-item>
+                <v-list-item v-else
+                  v-bind="props"
+                  :title="item.raw.title"
+                  density="compact"
+                  max-height="70"
+                  class="py-0"
+                >
+                  <template v-slot:prepend>
+                    <v-avatar color="primary" size="35">
+                      <span class="text-white">{{ getInitials(item.raw.title) }}</span>
+                    </v-avatar>
+                  </template>
+                </v-list-item>
               </template>
             </v-autocomplete>
           </Field>

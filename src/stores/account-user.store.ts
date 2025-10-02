@@ -5,9 +5,12 @@ import type AccountUsersResponsePaginationDto from '@/types/account/account-user
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import { defineStore } from 'pinia';
 import { mockUsers } from '@/mocks/evaluation.mocks';
+import { getAllAccountUsers } from '@/services/user.service';
+import type { UserAvatar } from '@/types/user/user-avatar.type';
 
 interface AccountUserStoreState {
   account_users: AccountUser[] | null;
+  all_account_users: UserAvatar[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -22,6 +25,7 @@ interface AccountUserStoreState {
 export const useAccountUserStore = defineStore('accountUser', {
   state: (): AccountUserStoreState => ({
     account_users: null,
+    all_account_users: null,
     loading: false,
     error: null,
     total: 0,
@@ -34,15 +38,19 @@ export const useAccountUserStore = defineStore('accountUser', {
   }),
 
   getters: {
-    accountUsersOptions(): { value: AccountUser, title: string, disabled?: boolean }[] | [] {
-      if(!this.account_users) return [];
-      const levelsGroupsMapped = this.account_users.map(account_user => {
+    accountUsersOptions(): { value: string, title: string, avatar?: UserAvatar['profile_img_url'], disabled?: boolean }[] | [] {
+      if(!this.all_account_users) return [];
+      const levelsGroupsMapped = this.all_account_users.map(account_user => {
         return {
-          value: account_user,
+          value: account_user.uuid,
           title: account_user.name,
+          avatar: account_user.profile_img_url,
           disabled: false
         }
       });
+      levelsGroupsMapped[1] = levelsGroupsMapped[0]
+      levelsGroupsMapped[2] = levelsGroupsMapped[0]
+      levelsGroupsMapped[3] = levelsGroupsMapped[0]
       return levelsGroupsMapped;
     }
   },
@@ -103,46 +111,38 @@ export const useAccountUserStore = defineStore('accountUser', {
       }
     },
 
-    // async getAccountUsers(params: DataTableFilterParams) {
-    //   this.loading = true;
-    //   this.error = null;
-
-    //   try {
-    //     const res: AccountUsersResponsePaginationDto = await getAccountUsers(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
-    //     this.account_users = res.users;
-    //     this.total = res.total;
-    //     this.page = res.page;
-    //     this.limit = res.limit;
-    //     this.last_page = res.last_page;
-    //     this.sort_column = params.sort_column;
-    //     this.sort_order = params.sort_order;
-    //     this.search_term = params.search_term;
-    //   } catch (err: any) {
-    //     this.error = err.response?.data?.message || 'Erro ao tentar buscar usuários.';
-    //     throw err;
-    //   } finally {
-    //     this.loading = false;
-    //   }
-    // },
-
     async getAccountUsers(params: DataTableFilterParams) {
       this.loading = true;
       this.error = null;
 
       try {
-        if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
-          this.account_users = mockUsers;
-          this.total = mockUsers.length;
-          this.page = params.page;
-          this.limit = params.limit;
-        } else {
-          // Lógica de API real
-          const res: AccountUsersResponsePaginationDto = await getAccountUsers(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
-          this.account_users = res.users;
-          // ... (resto da lógica)
-        }
+        const res: AccountUsersResponsePaginationDto = await getAccountUsers(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+        this.account_users = res.users;
+        this.total = res.total;
+        this.page = res.page;
+        this.limit = res.limit;
+        this.last_page = res.last_page;
+        this.sort_column = params.sort_column;
+        this.sort_order = params.sort_order;
+        this.search_term = params.search_term;
       } catch (err: any) {
-        // ... (erro)
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar usuários.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getAllAccountUsers() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: UserAvatar[] = await getAllAccountUsers();
+        this.all_account_users = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar todos os usuários.';
+        throw err;
       } finally {
         this.loading = false;
       }

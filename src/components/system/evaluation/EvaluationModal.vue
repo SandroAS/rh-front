@@ -4,7 +4,7 @@ import { Form, Field } from '@/plugins/vee-validate';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { useDRDStore } from '@/stores/drd.store';
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from '@/stores/auth.store';
 import type Evaluation from '@/types/evaluation/evaluation.type';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
 

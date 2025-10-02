@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate'
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from '@/stores/auth.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import type { ProfileCompany } from '@/types/profile/profile-company.type';
 import { BrazilianStates, viaCepService, type ViaCepResponse } from '@/services/via-cep.service';

@@ -2,7 +2,7 @@
 import { reactive, watch, computed } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useEvaluationStore } from '@/stores/evaluation.store';
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from '@/stores/auth.store';
 import { useEvaluationApplicationStore, type EvaluationApplicationSavePayload } from '@/stores/evaluation.application.store';
 import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
 import { useAccountUserStore } from '@/stores/account-user.store';

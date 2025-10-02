@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import logo from '@/assets/logo.png';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from '@/stores/auth.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { Form, Field } from '@/plugins/vee-validate';
 
