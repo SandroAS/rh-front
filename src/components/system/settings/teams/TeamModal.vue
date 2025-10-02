@@ -27,7 +27,7 @@ const close = () => emit('update:modelValue', false)
 let team = reactive<TeamPayload>({
   uuid: props.selectedTeam?.uuid || undefined,
   name: props.selectedTeam?.name || '',
-  lead: props.selectedTeam?.lead?.uuid || '',
+  leader: props.selectedTeam?.leader?.uuid || '',
   sector_uuid: props.selectedTeam?.sector?.uuid || undefined,
   member_uuids: props.selectedTeam?.teamMembers?.map(teamMember => teamMember.uuid) || []
 });
@@ -35,7 +35,7 @@ let team = reactive<TeamPayload>({
 watch(() => props.selectedTeam, (val) => {
   team.uuid = val?.uuid || undefined;
   team.name = val?.name || '';
-  team.lead = val?.lead?.uuid || '';
+  team.leader = val?.leader?.uuid || '';
   team.sector_uuid = val?.sector?.uuid || undefined;
   team.member_uuids = val?.teamMembers?.map(teamMember => teamMember.uuid) || [];
 }, { immediate: true });
@@ -49,8 +49,8 @@ async function onSubmit(formValues: Record<string, any>) {
   } | undefined) => x!.value)
   const payload: TeamPayload = { ...formValues as TeamPayload, member_uuids };
 
-  const lead = accountUserStore.accountUsersOptions.find(x => x.value === payload.lead);
-  const leadUserAvatar = { uuid: lead!.value, name: lead!.title, profile_img_url: lead?.avatar };
+  const leader = accountUserStore.accountUsersOptions.find(x => x.value === payload.leader);
+  const leaderUserAvatar = { uuid: leader!.value, name: leader!.title, profile_img_url: leader?.avatar };
 
   let sector = undefined;
   if(payload.sector_uuid) {
@@ -59,7 +59,7 @@ async function onSubmit(formValues: Record<string, any>) {
   }
 console.log(payload, team)
   try {
-    await teamStore.saveTeam(payload, leadUserAvatar, sector, props.selectedTeam?.uuid);
+    await teamStore.saveTeam(payload, leaderUserAvatar, sector, props.selectedTeam?.uuid);
     snackbarStore.show('Time salvo com sucesso!', 'success');
     close();
   } catch (err: any) {
@@ -90,7 +90,7 @@ console.log(payload, team)
             />
           </Field>
 
-          <Field name="lead" label="Líder do Time" rules="required" v-slot="{ field, errorMessage }">
+          <Field name="leader" label="Líder do Time" rules="required" v-slot="{ field, errorMessage }">
             <v-autocomplete
               v-bind="field"
               :model-value="field.value" 

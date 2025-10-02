@@ -22,7 +22,7 @@ const openDialog = (item?: JobPositionsLevelsGroup) => {
   dialog.value = true;
 }
 
-const leadLevelsGrupos = async () => {
+const loadLevelsGrupos = async () => {
   await loadItems(
     { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
     searchTerm.value,
@@ -41,7 +41,7 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    leadLevelsGrupos();
+    loadLevelsGrupos();
   }, 300);
 });
 </script>
@@ -82,7 +82,7 @@ watch(searchTerm, (newVal) => {
       :loading="levelsGroupStore.loading"
       :page="currentPage"
       mobile-breakpoint="md"
-      @update:options="leadLevelsGrupos"
+      @update:options="loadLevelsGrupos"
     >
       <template v-slot:[`item.created_by_user`]="{ item }">
         <div class="mb-1">

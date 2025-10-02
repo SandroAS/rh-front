@@ -49,7 +49,7 @@ export const useTeamStore = defineStore('team', {
   },
 
   actions: {
-    async saveTeam(team: TeamPayload, lead: UserAvatar, sector?: Sector, uuid?: string) {
+    async saveTeam(team: TeamPayload, leader: UserAvatar, sector?: Sector, uuid?: string) {
       this.loading = true;
       this.error = null;
 
@@ -59,7 +59,7 @@ export const useTeamStore = defineStore('team', {
         const teamSaved = {
           uuid: res.uuid,
           name: team.name,
-          lead,
+          leader,
           sector,
           teamMembers: res.teamMembers
         }

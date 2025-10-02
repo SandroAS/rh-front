@@ -1,7 +1,7 @@
 export default interface TeamPayload {
   uuid?: string;
   name: string;
-  lead: string;
+  leader: string;
   sector_uuid?: string;
   member_uuids: string[];
 }

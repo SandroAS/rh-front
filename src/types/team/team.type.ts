@@ -5,7 +5,7 @@ import type { UserAvatar } from '../user/user-avatar.type';
 export default interface Team {
   uuid: string;
   name: string;
-  lead: UserAvatar;
+  leader: UserAvatar;
   sector?: Sector;
   teamMembers: TeamMember[];
 }
