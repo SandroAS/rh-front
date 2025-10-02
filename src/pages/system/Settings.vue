@@ -41,7 +41,7 @@ watch(selectedTab, (newTab) => {
     </v-tabs>
 
     <v-container class="py-12">
-      <v-tabs-window v-model="selectedTab">
+      <v-tabs-window v-model="selectedTab" class="px-1">
         <v-tabs-window-item value="usuarios">
           <UsersTab />
         </v-tabs-window-item>
