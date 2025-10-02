@@ -4,6 +4,7 @@ import type { UserAvatar } from '../user/user-avatar.type';
 
 export default interface Team {
   uuid: string;
+  createdBy: UserAvatar;
   name: string;
   leader: UserAvatar;
   sector?: Sector;

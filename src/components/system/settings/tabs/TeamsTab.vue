@@ -77,6 +77,7 @@ watch(searchTerm, (newVal) => {
     <v-data-table
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
+        { title: 'Criado por', value: 'created_by_user', align: 'start' },
         { title: 'Membros', value: 'users', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
@@ -90,6 +91,24 @@ watch(searchTerm, (newVal) => {
       mobile-breakpoint="md"
       @update:options="loadTeams"
     >
+      <template v-slot:[`item.created_by_user`]="{ item }">
+        <div class="mb-1">
+          <v-chip
+            pill
+            size="small"
+            class="mt-1"
+          >
+            <v-avatar v-if="item.createdBy.profile_img_url" start>
+              <v-img :src="item.createdBy.profile_img_url"></v-img>
+            </v-avatar>
+            <v-avatar v-else size="28" class="mr-2" color="primary">
+              <span class="text-caption font-weight-bold">{{ getInitials(item.createdBy.name) }}</span>
+            </v-avatar>
+
+            {{ item.createdBy.name }}
+          </v-chip>
+        </div>
+      </template>
       <template #item.users="{ item }">
         <div class="mb-1">
           <v-chip
@@ -98,7 +117,6 @@ watch(searchTerm, (newVal) => {
             size="small"
             class="mt-1"
           >
-            
             <v-avatar v-if="teamMember.user.profile_img_url" start>
               <v-img :src="teamMember.user.profile_img_url"></v-img>
             </v-avatar>

@@ -9,11 +9,13 @@ import { useSectorStore } from '@/stores/sector.store';
 import { getInitials } from '@/utils/getInitialsFromName.util';
 import type Team from '@/types/team/team.type';
 import type { UserAvatar } from '@/types/user/user-avatar.type';
+import { useUserStore } from '@/stores/auth.store'
 
 const teamStore = useTeamStore();
 const snackbarStore = useSnackbarStore();
 const accountUserStore = useAccountUserStore();
 const sectorStore = useSectorStore();
+const userStore = useUserStore();
 
 const props = defineProps<{
   modelValue: boolean,
@@ -26,6 +28,7 @@ const close = () => emit('update:modelValue', false)
 
 let team = reactive<TeamPayload>({
   uuid: props.selectedTeam?.uuid || undefined,
+  createdBy: userStore.userAvatar!,
   name: props.selectedTeam?.name || '',
   leader: props.selectedTeam?.leader?.uuid || '',
   sector_uuid: props.selectedTeam?.sector?.uuid || undefined,
@@ -47,7 +50,7 @@ async function onSubmit(formValues: Record<string, any>) {
       avatar?: UserAvatar["profile_img_url"];
       disabled?: boolean;
   } | undefined) => x!.value)
-  const payload: TeamPayload = { ...formValues as TeamPayload, member_uuids };
+  const payload: TeamPayload = { ...formValues as TeamPayload, member_uuids, createdBy: userStore.userAvatar!, };
 
   const leader = accountUserStore.accountUsersOptions.find(x => x.value === payload.leader);
   const leaderUserAvatar = { uuid: leader!.value, name: leader!.title, profile_img_url: leader?.avatar };

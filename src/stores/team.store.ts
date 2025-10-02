@@ -59,6 +59,7 @@ export const useTeamStore = defineStore('team', {
         const teamSaved = {
           uuid: res.uuid,
           name: team.name,
+          createdBy: team.createdBy,
           leader,
           sector,
           teamMembers: res.teamMembers

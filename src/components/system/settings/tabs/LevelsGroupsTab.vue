@@ -87,7 +87,6 @@ watch(searchTerm, (newVal) => {
       <template v-slot:[`item.created_by_user`]="{ item }">
         <div class="mb-1">
           <v-chip
-            link
             pill
             size="small"
             class="mt-1"
