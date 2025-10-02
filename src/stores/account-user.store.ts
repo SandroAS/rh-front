@@ -48,9 +48,7 @@ export const useAccountUserStore = defineStore('accountUser', {
           disabled: false
         }
       });
-      levelsGroupsMapped[1] = levelsGroupsMapped[0]
-      levelsGroupsMapped[2] = levelsGroupsMapped[0]
-      levelsGroupsMapped[3] = levelsGroupsMapped[0]
+
       return levelsGroupsMapped;
     }
   },
