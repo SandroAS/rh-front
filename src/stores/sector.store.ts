@@ -1,14 +1,13 @@
-import { getTeams, saveTeam } from '../services/teams.service';
+import { getSectors, saveSector } from '@/services/sector.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import { defineStore } from 'pinia';
-import type Team from '@/types/team/team.type';
-import type TeamPayload from '@/types/team/team-payload.type';
-import type TeamResponsePagination from '@/types/team/team-response-pagination.type';
-import type { UserAvatar } from '@/types/user/user-avatar.type';
 import type Sector from '@/types/sector/sector.type';
+import type SectorPayload from '@/types/sector/sector-payload.type';
+import type SectorResponsePagination from '@/types/sector/sector-response-pagination.type';
 
-interface TeamStoreState {
-  teams: Team[] | null;
+
+interface SectorStoreState {
+  sectors: Sector[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -20,9 +19,9 @@ interface TeamStoreState {
   search_term?: string;
 }
 
-export const useTeamStore = defineStore('team', {
-  state: (): TeamStoreState => ({
-    teams: null,
+export const useSectorStore = defineStore('sector', {
+  state: (): SectorStoreState => ({
+    sectors: null,
     loading: false,
     error: null,
     total: 0,
@@ -35,43 +34,40 @@ export const useTeamStore = defineStore('team', {
   }),
 
   getters: {
-    teamsOptions(): { value: Team, title: string, disabled: boolean }[] | [] {
-      if(!this.teams) return [];
-      const teamsMapped = this.teams.map(team => {
+    sectorsOptions(): { value: string, title: string, disabled: boolean }[] | [] {
+      if(!this.sectors) return [];
+      const sectorsMapped = this.sectors.map(sector => {
         return {
-          value: team,
-          title: team.name,
+          value: sector.uuid,
+          title: sector.name,
           disabled: false
         }
       });
-      return teamsMapped;
+      return sectorsMapped;
     }
   },
 
   actions: {
-    async saveTeam(team: TeamPayload, lead: UserAvatar, sector?: Sector, uuid?: string) {
+    async saveSector(sector: SectorPayload, uuid?: string) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res = await saveTeam(team, uuid);
-        if(!this.teams) this.teams = [];
-        const teamSaved = {
+        const res: { uuid: string } = await saveSector(sector, uuid);
+        if(!this.sectors) this.sectors = [];
+        const sectorSaved = {
           uuid: res.uuid,
-          name: team.name,
-          lead,
-          sector,
-          teamMembers: res.teamMembers
+          name: sector.name
         }
         if(uuid) {
-          const index = this.teams.findIndex(x => x.uuid === uuid);
+          const index = this.sectors.findIndex(x => x.uuid === uuid);
           if (index !== -1) {
-            this.teams.splice(index, 1, teamSaved);
+            this.sectors.splice(index, 1, sectorSaved);
           } else {
             console.error('UUID: '+uuid+' não encontrado para atualizar localmente.')
           }
         } else {
-          this.teams.unshift(teamSaved);
+          this.sectors.unshift(sectorSaved);
         }
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar atualizar serviço.';
@@ -81,13 +77,13 @@ export const useTeamStore = defineStore('team', {
       }
     },
 
-    async getTeams(params: DataTableFilterParams) {
+    async getSectors(params: DataTableFilterParams) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res: TeamResponsePagination = await getTeams(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
-        this.teams = res.data;
+        const res: SectorResponsePagination = await getSectors(params.page, params.limit, params.sort_column, params.sort_order, params.search_term);
+        this.sectors = res.data;
         this.total = res.total;
         this.page = res.page;
         this.limit = res.limit;
@@ -105,13 +101,13 @@ export const useTeamStore = defineStore('team', {
 
     async setPage(page: number) {
       this.page = page;
-      await this.getTeams({ page: this.page, limit: this.limit });
+      await this.getSectors({ page: this.page, limit: this.limit });
     },
 
     async setItemsPerPage(limit: number) {
       this.limit = limit;
       this.page = 1;
-      await this.getTeams({ page: this.page, limit: this.limit });
+      await this.getSectors({ page: this.page, limit: this.limit });
     }
   }
 });

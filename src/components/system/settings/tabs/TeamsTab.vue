@@ -92,7 +92,7 @@ watch(searchTerm, (newVal) => {
       <template #item.users="{ item }">
         <div class="mb-1">
           <v-chip
-            v-for="user in item.users"
+            v-for="teamMember in item.teamMembers"
             link
             pill
             size="small"
@@ -102,7 +102,7 @@ watch(searchTerm, (newVal) => {
               <v-img src="https://cdn.vuetifyjs.com/images/john.png"></v-img>
             </v-avatar>
 
-            {{ user.name }}
+            {{ teamMember.user.name }}
           </v-chip>
         </div>
       </template>
