@@ -5,6 +5,7 @@ import { useAccountUserStore } from '@/stores/account-user.store';
 import loadItems from '@/utils/loadItems.util'; 
 import type Team from '../../../../types/team/team.type';
 import TeamModal from '../teams/TeamModal.vue';
+import { getInitials } from '@/utils/getInitialsFromName.util';
 
 const teamStore = useTeamStore();
 const accountUserStore = useAccountUserStore();
@@ -93,13 +94,17 @@ watch(searchTerm, (newVal) => {
         <div class="mb-1">
           <v-chip
             v-for="teamMember in item.teamMembers"
-            link
             pill
             size="small"
             class="mt-1"
           >
-            <v-avatar start>
-              <v-img src="https://cdn.vuetifyjs.com/images/john.png"></v-img>
+            
+            <v-avatar v-if="teamMember.user.profile_img_url" start>
+              <v-img :src="teamMember.user.profile_img_url"></v-img>
+            </v-avatar>
+
+            <v-avatar v-else color="primary" class="mr-1">
+              <span class="text-white">{{ getInitials(teamMember.user.name) }}</span>
             </v-avatar>
 
             {{ teamMember.user.name }}

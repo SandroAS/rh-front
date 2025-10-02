@@ -160,26 +160,26 @@ console.log(payload, team)
               closable-chips
               multiple
               variant="solo-filled"
-              density="compact"
+
               :error="!!errorMessage"
               :error-messages="errorMessage"
             >
               <template v-slot:chip="{ props, item }">
-                <v-chip v-if="item.raw.avatar"
+                <v-chip
                   v-bind="props"
-                  :prepend-avatar="item.raw.avatar"
-                  :text="item.raw.title"
-                ></v-chip>
-
-                <v-chip v-else
-                  v-bind="props"
-                  :text="item.raw.title"
-                  class="pl-1"
+                  pill
+                  size="small"
+                  class="mt-1 pl-0"
                 >
-                  <v-avatar color="primary" class="mr-1">
+                  <v-avatar v-if="item.raw.avatar" start class="ml-0">
+                    <v-img :src="item.raw.avatar"></v-img>
+                  </v-avatar>
+
+                  <v-avatar v-else color="primary" class="mr-1">
                     <span class="text-white">{{ getInitials(item.raw.title) }}</span>
                   </v-avatar>
-                  <span>{{ item.raw.title }}</span>
+
+                  {{ item.raw.title }}
                 </v-chip>
               </template>
 
