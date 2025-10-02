@@ -8,6 +8,7 @@ import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSectorStore } from '@/stores/sector.store';
 import { getInitials } from '@/utils/getInitialsFromName.util';
 import type Team from '@/types/team/team.type';
+import type { UserAvatar } from '@/types/user/user-avatar.type';
 
 const teamStore = useTeamStore();
 const snackbarStore = useSnackbarStore();
@@ -40,15 +41,23 @@ watch(() => props.selectedTeam, (val) => {
 }, { immediate: true });
 
 async function onSubmit(formValues: Record<string, any>) {
-  const payload: TeamPayload = formValues as TeamPayload;
+  const member_uuids = formValues.member_uuids.map((x: {
+      value: string;
+      title: string;
+      avatar?: UserAvatar["profile_img_url"];
+      disabled?: boolean;
+  } | undefined) => x!.value)
+  const payload: TeamPayload = { ...formValues as TeamPayload, member_uuids };
+
   const lead = accountUserStore.accountUsersOptions.find(x => x.value === payload.lead);
   const leadUserAvatar = { uuid: lead!.value, name: lead!.title, profile_img_url: lead?.avatar };
+
   let sector = undefined;
   if(payload.sector_uuid) {
     sector = sectorStore.sectorsOptions.find(x => x.value === payload.sector_uuid);
     sector = { uuid: sector!.value, name: sector!.title }
   }
-
+console.log(payload, team)
   try {
     await teamStore.saveTeam(payload, leadUserAvatar, sector, props.selectedTeam?.uuid);
     snackbarStore.show('Time salvo com sucesso!', 'success');
@@ -138,7 +147,7 @@ async function onSubmit(formValues: Record<string, any>) {
             />
           </Field>
 
-          <Field name="users" label="Membros do Time" rules="required" v-slot="{ field, errorMessage }">
+          <Field name="member_uuids" label="Membros do Time" rules="required" v-slot="{ field, errorMessage }">
             <v-autocomplete
               :model-value="field.value" 
               @update:model-value="field.onChange"
