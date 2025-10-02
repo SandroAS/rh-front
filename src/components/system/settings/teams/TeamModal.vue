@@ -32,7 +32,7 @@ let team = reactive<TeamPayload>({
   name: props.selectedTeam?.name || '',
   leader: props.selectedTeam?.leader?.uuid || '',
   sector_uuid: props.selectedTeam?.sector?.uuid || undefined,
-  member_uuids: props.selectedTeam?.teamMembers?.map(teamMember => teamMember.uuid) || []
+  member_uuids: props.selectedTeam?.teamMembers?.map(teamMember => teamMember.user.uuid) || []
 });
 
 watch(() => props.selectedTeam, (val) => {
@@ -40,17 +40,11 @@ watch(() => props.selectedTeam, (val) => {
   team.name = val?.name || '';
   team.leader = val?.leader?.uuid || '';
   team.sector_uuid = val?.sector?.uuid || undefined;
-  team.member_uuids = val?.teamMembers?.map(teamMember => teamMember.uuid) || [];
+  team.member_uuids = val?.teamMembers?.map(teamMember => teamMember.user.uuid) || [];
 }, { immediate: true });
 
 async function onSubmit(formValues: Record<string, any>) {
-  const member_uuids = formValues.member_uuids.map((x: {
-      value: string;
-      title: string;
-      avatar?: UserAvatar["profile_img_url"];
-      disabled?: boolean;
-  } | undefined) => x!.value)
-  const payload: TeamPayload = { ...formValues as TeamPayload, member_uuids, createdBy: userStore.userAvatar!, };
+  const payload: TeamPayload = { ...formValues as TeamPayload, createdBy: userStore.userAvatar!, };
 
   const leader = accountUserStore.accountUsersOptions.find(x => x.value === payload.leader);
   const leaderUserAvatar = { uuid: leader!.value, name: leader!.title, profile_img_url: leader?.avatar };
@@ -60,7 +54,7 @@ async function onSubmit(formValues: Record<string, any>) {
     sector = sectorStore.sectorsOptions.find(x => x.value === payload.sector_uuid);
     sector = { uuid: sector!.value, name: sector!.title }
   }
-console.log(payload, team)
+
   try {
     await teamStore.saveTeam(payload, leaderUserAvatar, sector, props.selectedTeam?.uuid);
     snackbarStore.show('Time salvo com sucesso!', 'success');
@@ -157,13 +151,12 @@ console.log(payload, team)
               label="Membros do Time"
               :items="accountUserStore.accountUsersOptions"
               color="blue-grey-lighten-2"
-              item-title="name"
-              item-value="uuid"
+              item-title="title"
+              item-value="value"
               chips
               closable-chips
               multiple
               variant="solo-filled"
-
               :error="!!errorMessage"
               :error-messages="errorMessage"
             >
