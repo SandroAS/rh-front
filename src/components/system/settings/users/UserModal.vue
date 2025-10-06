@@ -24,16 +24,22 @@ const showConfirmPassword = ref(false);
 
 const userTypes = [
   {
-    value: RoleType.ASSISTANT,
-    title: 'Assistente',
-    subtitle: 'Pode criar usuários ilimitados',
+    value: RoleType.MANAGER,
+    title: 'Gerente',
+    subtitle: 'Gerencia times e pode ter acesso limitado a dados de outros times.',
     disabled: false
   },
   {
-    value: RoleType.HEALTHCARE_PROFESSIONAL,
-    title: 'Profissional de Saúde',
-    subtitle: 'Assine o plano multi para adicionar novos profissionais de saúde',
-    disabled: true
+    value: RoleType.LEADER,
+    title: 'Líder',
+    subtitle: 'Gerencia o próprio time e pode criar tarefas e relatórios.',
+    disabled: false
+  },
+  {
+    value: RoleType.MEMBER,
+    title: 'Membro',
+    subtitle: 'Acesso básico, focado em tarefas e atividades do próprio time.',
+    disabled: false
   },
 ];
 
@@ -44,20 +50,20 @@ let userAccount = reactive<AccountUserPayload>({
   cpf: props.selectedAccountUser?.cpf || '',
   password: props.selectedAccountUser?.password || '',
   confirmPassword: '',
-  role: props.selectedAccountUser?.role?.name || RoleType.ASSISTANT
+  role: props.selectedAccountUser?.role?.name || RoleType.MEMBER 
 })
 
 watch(() => props.selectedAccountUser, (val) => {
-  userAccount = {
-    name: props.selectedAccountUser?.name || '',
-    email: props.selectedAccountUser?.email || '',
-    cellphone: props.selectedAccountUser?.cellphone || '',
-    cpf: props.selectedAccountUser?.cpf || '',
-    password: props.selectedAccountUser?.password || '',
+  Object.assign(userAccount, {
+    name: val?.name || '',
+    email: val?.email || '',
+    cellphone: val?.cellphone || '',
+    cpf: val?.cpf || '',
+    password: '', 
     confirmPassword: '',
-    role: props.selectedAccountUser?.role?.name || RoleType.ASSISTANT
-  }
-})
+    role: val?.role?.name || RoleType.MEMBER
+  });
+}, { immediate: true });
 
 async function onSubmit(formValues: Record<string, any>) {
   const accountUser: AccountUserPayload = formValues as AccountUserPayload;

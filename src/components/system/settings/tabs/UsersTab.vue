@@ -166,8 +166,8 @@ onMounted(() => {
       </template>
 
       <template #item.is_active="{ item }">
-        <div class="d-flex justify-md-space-between justify-end align-center flex-md-row-reverse" style="min-width: 132px;">
-          <span class="text-subtitle-2 mr-2">
+        <div class="d-flex justify-md-start justify-end align-center flex-md-row-reverse" style="min-width: 132px;">
+          <span class="text-subtitle-2 ml-md-2">
             {{ item.is_active ? 'Ativado' : 'Desativado' }}
           </span>
           <v-switch
