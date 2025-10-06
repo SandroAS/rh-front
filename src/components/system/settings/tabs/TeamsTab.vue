@@ -77,7 +77,7 @@ watch(searchTerm, (newVal) => {
     <v-data-table
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
-        { title: 'Criado por', value: 'created_by_user', align: 'start' },
+        { title: 'Líder', value: 'leader', align: 'start' },
         { title: 'Membros', value: 'users', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
@@ -91,21 +91,22 @@ watch(searchTerm, (newVal) => {
       mobile-breakpoint="md"
       @update:options="loadTeams"
     >
-      <template v-slot:[`item.created_by_user`]="{ item }">
+      <template v-slot:[`item.leader`]="{ item }">
         <div class="mb-1">
           <v-chip
             pill
             size="small"
             class="mt-1"
+            :class="{'pl-0': !item.leader.profile_img_url}"
           >
-            <v-avatar v-if="item.createdBy.profile_img_url" start>
-              <v-img :src="item.createdBy.profile_img_url"></v-img>
+            <v-avatar v-if="item.leader.profile_img_url" start>
+              <v-img :src="item.leader.profile_img_url"></v-img>
             </v-avatar>
-            <v-avatar v-else size="28" class="mr-2" color="primary">
-              <span class="text-caption font-weight-bold">{{ getInitials(item.createdBy.name) }}</span>
+            <v-avatar v-else color="primary" class="mr-1">
+              <span class="text-white">{{ getInitials(item.leader.name) }}</span>
             </v-avatar>
 
-            {{ item.createdBy.name }}
+            {{ item.leader.name }}
           </v-chip>
         </div>
       </template>
@@ -116,11 +117,11 @@ watch(searchTerm, (newVal) => {
             pill
             size="small"
             class="mt-1"
+            :class="{'pl-0': !teamMember.user.profile_img_url}"
           >
             <v-avatar v-if="teamMember.user.profile_img_url" start>
               <v-img :src="teamMember.user.profile_img_url"></v-img>
             </v-avatar>
-
             <v-avatar v-else color="primary" class="mr-1">
               <span class="text-white">{{ getInitials(teamMember.user.name) }}</span>
             </v-avatar>
