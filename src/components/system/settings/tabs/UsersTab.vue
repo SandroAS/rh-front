@@ -158,7 +158,7 @@ onMounted(() => {
       </template>
 
       <template #item.cellphone="{ item }">
-        <div class="d-flex justify-end pr-2"> {{ item.cellphone }}</div>
+        <div class="d-flex justify-end pr-2 text-caption"> {{ item.cellphone }}</div>
       </template>
 
       <template #item.role.name="{ item }">
@@ -171,6 +171,7 @@ onMounted(() => {
             {{ item.is_active ? 'Ativado' : 'Desativado' }}
           </span>
           <v-switch
+            v-if="item.role.name !== 'ADMIN'"
             :model-value="item.is_active"
             :color="item.is_active ? 'green' : 'grey'"
             hide-details

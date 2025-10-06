@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import type AccountUserPayload from '@/types/account/account-user-payload.type';
 import type AccountUser from '@/types/account/account-user.type';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { RoleType } from '@/types/user/user-role.type';
+import { checkPasswordStrength, passwordScore } from '@/utils/checkPasswordStrength.util';
 
 const accountUserStore = useAccountUserStore();
 const snackbarStore = useSnackbarStore();
@@ -21,6 +22,7 @@ const close = () => emit('update:modelValue', false)
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
+const passwordField = ref(''); 
 
 const userTypes = [
   {
@@ -63,7 +65,17 @@ watch(() => props.selectedAccountUser, (val) => {
     confirmPassword: '',
     role: val?.role?.name || RoleType.MEMBER
   });
+  passwordField.value = '';
 }, { immediate: true });
+
+const passwordStrengthScore = computed(() => {
+  return checkPasswordStrength(passwordField.value);
+});
+
+const passwordIndicator = computed(() => {
+  const score = passwordStrengthScore.value;
+  return passwordScore(score);
+});
 
 async function onSubmit(formValues: Record<string, any>) {
   const accountUser: AccountUserPayload = formValues as AccountUserPayload;
@@ -87,7 +99,7 @@ async function onSubmit(formValues: Record<string, any>) {
           {{ !!selectedAccountUser ? 'Editar usuário' : 'Novo usuário' }}
         </v-card-title>
         <v-card-text>
-          <Field name="name" rules="required|min:3|alpha_spaces" v-slot="{ field, errorMessage }">
+          <Field name="name" label="Nome" rules="required|min:3|alpha_spaces" v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
               label="Nome"
@@ -100,7 +112,7 @@ async function onSubmit(formValues: Record<string, any>) {
             />
           </Field>
 
-          <Field name="email" rules="required|email" v-slot="{ field, errorMessage }">
+          <Field name="email" label="E-mail" rules="required|email" v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
               label="E-mail"
@@ -113,7 +125,7 @@ async function onSubmit(formValues: Record<string, any>) {
             />
           </Field>
 
-          <Field name="cellphone" rules="required|min:15|max:16" v-slot="{ field, errorMessage }">
+          <Field name="cellphone" label="Telefone" rules="required|min:15|max:16" v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
               label="Telefone"
@@ -143,9 +155,10 @@ async function onSubmit(formValues: Record<string, any>) {
             />
           </Field>
 
-          <Field name="password" :rules="!props.selectedAccountUser?.name ? 'required|min:6' : ''" v-slot="{ field, errorMessage }">
+          <Field name="password" label="Senha" :rules="!props.selectedAccountUser?.name ? 'required|min:6' : ''" v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
+              v-model="passwordField"
               label="Senha"
               :type="showPassword ? 'text' : 'password'"
               prepend-inner-icon="mdi-lock"
@@ -157,9 +170,20 @@ async function onSubmit(formValues: Record<string, any>) {
               class="mb-1"
             />
           </Field>
-          <div class="text-caption text-red mb-3">Nível de segurança da senha: <strong>Baixo</strong></div>
+          <v-progress-linear
+            v-if="!props.selectedAccountUser?.name || passwordField.length > 0"
+            :model-value="passwordIndicator.value"
+            :color="passwordIndicator.color"
+            height="6"
+            rounded
+            class="mb-2"
+          />
+          <div class="text-caption mb-3" :class="`text-${passwordIndicator.color}`">
+            Nível de segurança da senha: 
+            <strong class="text-capitalize">{{ passwordIndicator.text }}</strong>
+          </div>
 
-          <Field name="confirmPassword" :rules="!props.selectedAccountUser?.name ? 'required|confirmed:@password' : ''"
+          <Field name="confirmPassword" label="Confirmar senha" :rules="!props.selectedAccountUser?.name ? 'required|confirmed:@password' : ''"
             v-slot="{ field, errorMessage }">
             <v-text-field
               v-bind="field"
