@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useTeamStore } from '@/stores/team.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
@@ -8,7 +8,6 @@ import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSectorStore } from '@/stores/sector.store';
 import { getInitials } from '@/utils/getInitialsFromName.util';
 import type Team from '@/types/team/team.type';
-import type { UserAvatar } from '@/types/user/user-avatar.type';
 import { useUserStore } from '@/stores/auth.store'
 
 const teamStore = useTeamStore();
@@ -26,25 +25,43 @@ const emit = defineEmits(['update:modelValue'])
 
 const close = () => emit('update:modelValue', false)
 
+const currentLeader = ref(props.selectedTeam?.leader?.uuid || '');
+const currentMembers = ref(props.selectedTeam?.teamMembers?.map(teamMember => teamMember.user.uuid) || []);
+
 let team = reactive<TeamPayload>({
   uuid: props.selectedTeam?.uuid || undefined,
   createdBy: userStore.userAvatar!,
   name: props.selectedTeam?.name || '',
-  leader: props.selectedTeam?.leader?.uuid || '',
+  leader: currentLeader.value,
   sector_uuid: props.selectedTeam?.sector?.uuid || undefined,
-  member_uuids: props.selectedTeam?.teamMembers?.map(teamMember => teamMember.user.uuid) || []
+  member_uuids: currentMembers.value
 });
 
+function setLeaderFromItem(item: any): string {
+  const uuidValue = item?.value ?? (typeof item === 'string' ? item : '');
+  currentLeader.value = uuidValue;
+  return uuidValue;
+}
+
+function setMembers(newValue: string[]) {
+  currentMembers.value = newValue as any;
+}
+
 watch(() => props.selectedTeam, (val) => {
-  team.uuid = val?.uuid || undefined;
-  team.name = val?.name || '';
-  team.leader = val?.leader?.uuid || '';
-  team.sector_uuid = val?.sector?.uuid || undefined;
-  team.member_uuids = val?.teamMembers?.map(teamMember => teamMember.user.uuid) || [];
+  currentLeader.value = val?.leader?.uuid || '';
+  currentMembers.value = val?.teamMembers?.map(teamMember => teamMember.user.uuid) || [];
+  
+  Object.assign(team, {
+    uuid: val?.uuid || undefined,
+    name: val?.name || '',
+    leader: currentLeader.value,
+    sector_uuid: val?.sector?.uuid || undefined,
+    member_uuids: currentMembers.value
+  });
 }, { immediate: true });
 
 async function onSubmit(formValues: Record<string, any>) {
-  const payload: TeamPayload = { ...formValues as TeamPayload, createdBy: userStore.userAvatar!, };
+  const payload: TeamPayload = { ...formValues as TeamPayload, createdBy: userStore.userAvatar! };
 
   const leader = accountUserStore.accountUsersOptions.find(x => x.value === payload.leader);
   const leaderUserAvatar = { uuid: leader!.value, name: leader!.title, profile_img_url: leader?.avatar };
@@ -64,6 +81,40 @@ async function onSubmit(formValues: Record<string, any>) {
     snackbarStore.show(teamStore.error || 'Falha ao salvar time.', 'error');
   }
 };
+
+watch(currentLeader, (newLeader, oldLeader) => {
+  const members = new Set(currentMembers.value);
+
+  if (newLeader) {
+    members.add(newLeader);
+  }
+
+  if (oldLeader && newLeader !== oldLeader) {
+    members.delete(oldLeader);
+  }
+
+  const newMembersArray = Array.from(members);
+  
+  if (currentMembers.value.length !== newMembersArray.length || 
+      !newMembersArray.every(id => currentMembers.value.includes(id))) {
+      
+    currentMembers.value = newMembersArray;
+  }
+});
+
+
+watch(currentMembers, (newMembers, oldMembers) => {
+  const leaderId = currentLeader.value;
+  
+  if (leaderId && !newMembers.includes(leaderId)) {
+    currentLeader.value = '';
+    team.leader = '';
+  }
+});
+
+function leaderOnBlur(field: any) {
+  field.onBlur();
+}
 </script>
 
 <template>
@@ -89,9 +140,12 @@ async function onSubmit(formValues: Record<string, any>) {
 
           <Field name="leader" label="Líder do Time" rules="required" v-slot="{ field, errorMessage }">
             <v-autocomplete
-              v-bind="field"
-              :model-value="field.value" 
-              @update:model-value="field.onChange"
+              :model-value="currentLeader"
+              @update:model-value="(item: any) => {
+                const uuidValue = setLeaderFromItem(item);
+                field.onChange(uuidValue);
+              }"
+              @blur="leaderOnBlur(field)"
               label="Líder do Time"
               :items="accountUserStore.accountUsersOptions"
               color="blue-grey-lighten-2"
@@ -146,8 +200,11 @@ async function onSubmit(formValues: Record<string, any>) {
 
           <Field name="member_uuids" label="Membros do Time" rules="required" v-slot="{ field, errorMessage }">
             <v-autocomplete
-              :model-value="field.value" 
-              @update:model-value="field.onChange"
+              :model-value="currentMembers" 
+              @update:model-value="(newValue: any) => { 
+                setMembers(newValue); 
+                field.onChange(newValue); 
+              }"
               label="Membros do Time"
               :items="accountUserStore.accountUsersOptions"
               color="blue-grey-lighten-2"
