@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
@@ -21,16 +21,20 @@ const emit = defineEmits(['update:modelValue'])
 
 const close = () => emit('update:modelValue', false)
 
+const currentJobPositionsLevelsGroup = ref(props.selectedJobPosition?.levelsGroup?.uuid || undefined);
+
 let jobPosition = reactive<JobPositionPayload>({
   uuid: props.selectedJobPosition?.uuid || undefined,
   title: props.selectedJobPosition?.title || '',
   description: props.selectedJobPosition?.description || '',
   cbo_code: props.selectedJobPosition?.cbo_code || '',
   base_salary: props.selectedJobPosition?.base_salary || 0,
-  job_positions_levels_group_uuid: props.selectedJobPosition?.levelsGroup?.uuid || undefined
+  job_positions_levels_group_uuid: currentJobPositionsLevelsGroup.value
 })
 
 watch(() => props.selectedJobPosition, (val) => {
+  currentJobPositionsLevelsGroup.value = val?.levelsGroup?.uuid || undefined;
+
   jobPosition.uuid = val?.uuid || undefined
   jobPosition.title = val?.title || ''
   jobPosition.description = val?.description || ''
@@ -57,6 +61,16 @@ function handleCurrencyKeydown(event: KeyboardEvent, onChange: (value: any) => v
   const newValue = getCurrencyNumber(event, jobPosition.base_salary)
   jobPosition.base_salary = newValue;
   onChange(newValue);
+}
+
+function setjobPositionsLevelsGroup(item: any): string {
+  const uuidValue = item?.value ?? (typeof item === 'string' ? item : '');
+  currentJobPositionsLevelsGroup.value = uuidValue;
+  return uuidValue;
+}
+
+function jobPositionsLevelsGroupOnBlur(field: any) {
+  field.onBlur();
 }
 </script>
 
@@ -121,7 +135,12 @@ function handleCurrencyKeydown(event: KeyboardEvent, onChange: (value: any) => v
           </Field>
           <Field name="job_positions_levels_group_uuid" label="nível do cargo" v-slot="{ field, errorMessage }">
             <v-select
-              v-bind="field"
+              :model-value="currentJobPositionsLevelsGroup"
+              @update:model-value="(item: any) => {
+                const uuidValue = setjobPositionsLevelsGroup(item);
+                field.onChange(uuidValue);
+              }"
+              @blur="jobPositionsLevelsGroupOnBlur(field)"
               label="Níveis do Cargo"
               :items="levelsGroupStore.levelsGroupsOptions"
               item-value="value"
