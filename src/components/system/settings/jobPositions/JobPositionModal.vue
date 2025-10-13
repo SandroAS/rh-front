@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue';
+import { reactive, watch } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
@@ -27,7 +27,7 @@ let jobPosition = reactive<JobPositionPayload>({
   description: props.selectedJobPosition?.description || '',
   cbo_code: props.selectedJobPosition?.cbo_code || '',
   base_salary: props.selectedJobPosition?.base_salary || 0,
-  levelsGroup: props.selectedJobPosition?.levelsGroup || undefined
+  job_positions_levels_group_uuid: props.selectedJobPosition?.levelsGroup?.uuid || undefined
 })
 
 watch(() => props.selectedJobPosition, (val) => {
@@ -36,14 +36,15 @@ watch(() => props.selectedJobPosition, (val) => {
   jobPosition.description = val?.description || ''
   jobPosition.cbo_code = val?.cbo_code || ''
   jobPosition.base_salary = val?.base_salary || 0
-  jobPosition.levelsGroup = val?.levelsGroup || undefined
+  jobPosition.job_positions_levels_group_uuid = val?.levelsGroup?.uuid || undefined
 }, { immediate: true })
 
 async function onSubmit(formValues: Record<string, any>) {
+  const levelGroupSelected = levelsGroupStore.levels_groups?.find(x => x.uuid === formValues.job_positions_levels_group_uuid)
   const jobPosition: JobPositionPayload = formValues as JobPositionPayload;
 
   try {
-    await jobPositionStore.saveJobPosition(jobPosition, props.selectedJobPosition?.uuid);
+    await jobPositionStore.saveJobPosition(jobPosition, levelGroupSelected, props.selectedJobPosition?.uuid);
     snackbarStore.show('Cargo salvo com sucesso!', 'success');
     close();
   } catch (err: any) {
@@ -118,7 +119,7 @@ function handleCurrencyKeydown(event: KeyboardEvent, onChange: (value: any) => v
               @keydown.prevent="handleCurrencyKeydown($event, field.onChange)"
             />
           </Field>
-          <Field name="levelGroup" label="nível do cargo" v-slot="{ field, errorMessage }">
+          <Field name="job_positions_levels_group_uuid" label="nível do cargo" v-slot="{ field, errorMessage }">
             <v-select
               v-bind="field"
               label="Níveis do Cargo"

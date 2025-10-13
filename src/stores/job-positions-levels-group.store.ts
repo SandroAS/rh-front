@@ -34,11 +34,11 @@ export const useJobPositionsLevelsGroupStore = defineStore('jobPositionsLevelsGr
   }),
 
   getters: {
-    levelsGroupsOptions(): { value: JobPositionsLevelsGroup, title: string, disabled?: boolean }[] | [] {
+    levelsGroupsOptions(): { value: string, title: string, disabled?: boolean }[] | [] {
       if(!this.levels_groups) return [];
       const levelsGroupsMapped = this.levels_groups.map(level_group => {
         return {
-          value: level_group,
+          value: level_group.uuid,
           title: level_group.name,
         }
       });

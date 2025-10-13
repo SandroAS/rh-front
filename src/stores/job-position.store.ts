@@ -4,6 +4,7 @@ import { defineStore } from 'pinia';
 import type JobPosition from '@/types/jobPosition/job-position.type';
 import type JobPositionPayload from '@/types/jobPosition/job-position-payload.type';
 import type JobPositionResponsePagination from '@/types/jobPosition/job-position-response-pagination.type';
+import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
 
 interface JobPositionStoreState {
   job_positions: JobPosition[] | null;
@@ -47,7 +48,7 @@ export const useJobPositionStore = defineStore('jobPosition', {
   },
 
   actions: {
-    async saveJobPosition(jobPosition: JobPositionPayload, uuid?: string) {
+    async saveJobPosition(jobPosition: JobPositionPayload, levelsGroup?: JobPositionsLevelsGroup, uuid?: string) {
       this.loading = true;
       this.error = null;
 
@@ -60,7 +61,7 @@ export const useJobPositionStore = defineStore('jobPosition', {
           description: jobPosition.description,
           cbo_code: jobPosition.cbo_code,
           base_salary: jobPosition.base_salary,
-          levelsGroup: jobPosition.levelsGroup || undefined,
+          levelsGroup: levelsGroup || undefined,
           drd_uuid: ''
         }
         if(uuid) {

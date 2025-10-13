@@ -6,5 +6,5 @@ export default interface JobPositionPayload {
   description: string;
   cbo_code?: string;
   base_salary?: number;
-  levelsGroup?: JobPositionsLevelsGroup;
+  job_positions_levels_group_uuid?: string;
 }
