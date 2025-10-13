@@ -1,4 +1,4 @@
-import { getJobPositions, saveJobPosition } from '@/services/job-position.service';
+import { getAllJobPositions, getJobPositions, saveJobPosition } from '@/services/job-position.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import { defineStore } from 'pinia';
 import type JobPosition from '@/types/jobPosition/job-position.type';
@@ -82,7 +82,6 @@ export const useJobPositionStore = defineStore('jobPosition', {
     },
 
     async getJobPositions(params: DataTableFilterParams) {
-      console.log('jobpositionstore')
       this.loading = true;
       this.error = null;
 
@@ -96,6 +95,20 @@ export const useJobPositionStore = defineStore('jobPosition', {
         this.sort_column = params.sort_column;
         this.sort_order = params.sort_order;
         this.search_term = params.search_term;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getAllJobPositions() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        this.job_positions = await getAllJobPositions();
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
         throw err;

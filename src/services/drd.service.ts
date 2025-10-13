@@ -10,7 +10,7 @@ export const getDRDs = async (page: number = 1, limit: number = 10, sortColumn?:
   if (sortOrder) params.sort_order = sortOrder;
   if (searchTerm) params.search_term = searchTerm;
 
-  const response: AxiosResponse<DRDResponsePagination> = await api.get('/drds', { params });
+  const response: AxiosResponse<DRDResponsePagination> = await api.get('/drds/pagination', { params });
 
   return response.data;
 };

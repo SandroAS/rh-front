@@ -46,7 +46,7 @@ export const useDRDStore = defineStore('drd', {
         const DRDsaved = {
           uuid: res.uuid,
           rate: drd.rate,
-          jobPosition: drd.jobPosition,
+          jobPosition: drd.jobPosition!,
           drdTopics: drd.drdTopics,
           drdMetrics: drd.drdMetrics,
           createdByUser: drd.createdByUser

@@ -2,6 +2,7 @@ import type { AxiosResponse } from 'axios';
 import api from './api.service';
 import type JobPositionPayload from '@/types/jobPosition/job-position-payload.type';
 import type JobPositionResponsePagination from '@/types/jobPosition/job-position-response-pagination.type';
+import type JobPosition from '@/types/jobPosition/job-position.type';
 
 export const getJobPositions = async (page: number = 1, limit: number = 10, sortColumn?: string, sortOrder?: 'asc' | 'desc', searchTerm?: string): Promise<JobPositionResponsePagination> => {
   const params: any = { page, limit };
@@ -12,6 +13,11 @@ export const getJobPositions = async (page: number = 1, limit: number = 10, sort
 
   const response: AxiosResponse<JobPositionResponsePagination> = await api.get('/job-positions/pagination', { params });
 
+  return response.data;
+};
+
+export const getAllJobPositions = async (): Promise<JobPosition[]> => {
+  const response: AxiosResponse<JobPosition[]> = await api.get('/job-positions');
   return response.data;
 };
 

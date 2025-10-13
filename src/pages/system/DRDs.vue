@@ -22,16 +22,11 @@ const openDialog = (item?: DRD) => {
   dialog.value = true;
 }
 
-async function getDRDs() {
-  await DRDStore.getDRDs({ page: currentPage.value, limit: itemsPerPage.value });
+async function getAllJobPositions() {
+  await jobPositionStore.getAllJobPositions();
 }
 
-async function getJobPositions() {
-  await jobPositionStore.getJobPositions({ page: 1, limit: 1000 });
-}
-
-getDRDs();
-getJobPositions();
+getAllJobPositions();
 
 const loadDRDs = async () => {
   await loadItems(
