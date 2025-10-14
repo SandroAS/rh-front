@@ -45,7 +45,7 @@ watch(() => props.selectedJobPosition, (val) => {
 
 async function onSubmit(formValues: Record<string, any>) {
   const levelGroupSelected = levelsGroupStore.levels_groups?.find(x => x.uuid === formValues.job_positions_levels_group_uuid)
-  const jobPosition: JobPositionPayload = formValues as JobPositionPayload;
+  const jobPosition: JobPositionPayload = {...formValues, base_salary: +formValues.base_salary} as JobPositionPayload;
 
   try {
     await jobPositionStore.saveJobPosition(jobPosition, levelGroupSelected, props.selectedJobPosition?.uuid);
