@@ -23,12 +23,8 @@ const emit = defineEmits(['update:modelValue']);
 
 const close = () => emit('update:modelValue', false);
 
-// --- ESTADOS REATIVOS PARA A LÓGICA DE NÍVEIS ---
-// Ref para a opção do usuário
 const useJobLevelsAsBase = ref(false); 
-// Ref para armazenar o objeto completo do cargo selecionado (usado para checar o levelsGroup)
-const selectedJobPosition = ref<JobPosition | null>(null); 
-// ----------------------------------------------------
+const selectedJobPosition = ref<{ value: JobPosition, title: string, disabled: boolean } | null>(null); 
 
 const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => {
   const initialLevels = selectedDRD?.drdLevels && selectedDRD.drdLevels.length > 0
@@ -67,11 +63,11 @@ watch(() => props.selectedDRD, (val) => {
 }, { immediate: true });
 
 watch(() => selectedJobPosition.value, (newJobPosition) => {
-  if (newJobPosition?.levelsGroup?.jobPositionsLevels) {
+  if (newJobPosition?.value?.levelsGroup?.jobPositionsLevels) {
     if (!props.selectedDRD?.uuid || drd.drdLevels.every(l => !l.name)) {
       useJobLevelsAsBase.value = true;
       
-      const newLevels = newJobPosition.levelsGroup.jobPositionsLevels
+      const newLevels = newJobPosition.value.levelsGroup.jobPositionsLevels
         .map((level, index) => ({
           uuid: undefined,
           name: level.name,
@@ -235,12 +231,12 @@ async function onSubmit(formValues: Record<string, any>) {
           <h2 class="text-h6 mb-3">Níveis do DRD</h2>
 
           <v-alert
-            v-if="selectedJobPosition?.levelsGroup?.jobPositionsLevels?.length"
+            v-if="selectedJobPosition?.value?.levelsGroup?.jobPositionsLevels?.length"
             type="info"
             variant="tonal"
             class="mb-4"
           >
-            Vi que o cargo **{{ selectedJobPosition.title }}** possui um grupo de níveis vinculado.
+            Vi que o cargo **{{ selectedJobPosition?.value?.title }}** possui um grupo de níveis vinculado.
             <v-switch 
               v-model="useJobLevelsAsBase" 
               label="Usar estes níveis como base para o DRD"
