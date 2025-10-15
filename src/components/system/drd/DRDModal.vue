@@ -230,21 +230,21 @@ async function onSubmit(formValues: Record<string, any>) {
 
           <h2 class="text-h6 mb-3">Níveis do DRD</h2>
 
-          <v-alert
-            v-if="selectedJobPosition?.value?.levelsGroup?.jobPositionsLevels?.length"
-            type="info"
-            variant="tonal"
-            class="mb-4"
-          >
-            Vi que o cargo **{{ selectedJobPosition?.value?.title }}** possui um grupo de níveis vinculado.
+          <div v-if="selectedJobPosition?.value?.levelsGroup?.jobPositionsLevels?.length">
+            <div class="text-caption mr-2 mt-2">Vi que o cargo <b>{{ selectedJobPosition?.value?.title }}</b> possui um grupo de níveis vinculado, gostaria de usá-lo como base para criar os Níveis do DRD?</div>
             <v-switch 
               v-model="useJobLevelsAsBase" 
-              label="Usar estes níveis como base para o DRD"
               color="primary"
               hide-details
-              class="mt-2"
-            />
-          </v-alert>
+              density="compact"
+            >
+              <template v-slot:label>
+                <div class="text-caption" style="min-width: 20px;">
+                  {{ useJobLevelsAsBase ? 'Sim' : 'Não' }}
+                </div>
+              </template>
+            </v-switch>
+          </div>
 
           <div v-for="(drdLevel, index) in drd.drdLevels" :key="drdLevel.order" class="level-group mb-4 pa-4 border rounded d-flex align-center">            
             <Field :name="`drdLevels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
