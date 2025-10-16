@@ -7,7 +7,7 @@ import type DRDTopic from './drd-topic.type';
 export default interface DRDPayload {
   uuid?: string;
   rate: number;
-  jobPosition?: JobPosition;
+  job_position_uuid?: string;
   drdLevels: DRDLevel[];
   drdTopics: DRDTopic[];
   drdMetrics: DRDMetric[];

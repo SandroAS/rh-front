@@ -3,4 +3,5 @@ export default interface DRDMetric {
   name: string;
   classification: string;
   type: string;
+  order: number;
 }

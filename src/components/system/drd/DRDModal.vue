@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useDRDStore } from '@/stores/drd.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
@@ -7,7 +7,6 @@ import type DRDPayload from '@/types/drd/drd-payload.type';
 import type DRD from '@/types/drd/drd.type';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { useUserStore } from '@/stores/auth.store';
-import type JobPosition from '@/types/jobPosition/job-position.type';
 
 const drdStore = useDRDStore();
 const snackbarStore = useSnackbarStore();
@@ -24,7 +23,10 @@ const emit = defineEmits(['update:modelValue']);
 const close = () => emit('update:modelValue', false);
 
 const useJobLevelsAsBase = ref(false); 
-const selectedJobPosition = ref<{ value: JobPosition, title: string, disabled: boolean } | null>(null); 
+const selectedJobPosition = ref<string | null>(null);
+const selectedJobPositionObj = computed(() => {
+  return jobPositionStore.job_positions?.find(jobPosition => jobPosition.uuid === selectedJobPosition.value)
+});
 
 const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => {
   const initialLevels = selectedDRD?.drdLevels && selectedDRD.drdLevels.length > 0
@@ -34,18 +36,20 @@ const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => 
   return {
     uuid: selectedDRD?.uuid || undefined,
     rate: selectedDRD?.rate || 5,
-    jobPosition: selectedDRD?.jobPosition || undefined,
+    job_position_uuid: selectedDRD?.jobPosition?.uuid || undefined,
     drdLevels: initialLevels,
     drdTopics: selectedDRD?.drdTopics && selectedDRD.drdTopics.length > 0 ? selectedDRD.drdTopics : [{
       uuid: undefined,
       name: '',
-      drdTopicItems: [{ uuid: undefined, name: '' }]
+      order: 1,
+      drdTopicItems: [{ uuid: undefined, name: '', order: 1 }]
     }],
     drdMetrics: selectedDRD?.drdMetrics && selectedDRD.drdMetrics.length > 0 ? selectedDRD.drdMetrics : [{
       uuid: undefined,
       name: '',
       classification: '',
-      type: ''
+      type: '',
+      order: 1
     }],
     createdByUser: {
       name: userStore.user?.name || '',
@@ -62,12 +66,14 @@ watch(() => props.selectedDRD, (val) => {
   Object.assign(drd, getInitialDRDState(val));
 }, { immediate: true });
 
-watch(() => selectedJobPosition.value, (newJobPosition) => {
-  if (newJobPosition?.value?.levelsGroup?.jobPositionsLevels) {
+watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
+  console.log(newJobPositionUuid)
+  const newJobPosition = jobPositionStore.job_positions?.find(jobPosition => jobPosition.uuid === newJobPositionUuid)
+  if (newJobPosition?.levelsGroup?.jobPositionsLevels) {
     if (!props.selectedDRD?.uuid || drd.drdLevels.every(l => !l.name)) {
       useJobLevelsAsBase.value = true;
 
-      const newLevels = newJobPosition.value.levelsGroup.jobPositionsLevels.map((level, i) => ({
+      const newLevels = newJobPosition.levelsGroup.jobPositionsLevels.map((level, i) => ({
         uuid: undefined,
         name: level.name,
         order: ++i
@@ -114,10 +120,12 @@ const removeDRDLevel = (index: number) => {
 };
 
 const addDRDTopic = () => {
+  const newOrder = drd.drdTopics.length + 1;
   drd.drdTopics.push({
     uuid: undefined,
     name: '',
-    drdTopicItems: [{ uuid: undefined, name: '' }]
+    order: newOrder,
+    drdTopicItems: [{ uuid: undefined, name: '', order: 1 }]
   });
 };
 
@@ -130,9 +138,11 @@ const removeDRDTopic = (index: number) => {
 };
 
 const addDRDTopicItem = (index: number) => {
+  const newOrder = drd.drdTopics[index].drdTopicItems.length + 1;
   drd.drdTopics[index].drdTopicItems.push({
     uuid: undefined,
-    name: ''
+    name: '',
+    order: newOrder
   });
 };
 
@@ -145,11 +155,13 @@ const removeDRDTopicItem = (index: number, indexTopicItem: number) => {
 };
 
 const addDRDMetric = () => {
+  const newOrder = drd.drdMetrics.length + 1;
   drd.drdMetrics.push({
     uuid: undefined,
     name: '',
     classification: '',
-    type: ''
+    type: '',
+    order: newOrder
   });
 };
 
@@ -162,15 +174,15 @@ const removeDRDMetric = (index: number) => {
 };
 
 async function onSubmit(formValues: Record<string, any>) {
-  console.log('formValues', formValues)
+
   const payload: DRDPayload = {
     ...drd,
-    jobPosition: formValues.jobPosition, 
+    job_position_uuid: formValues.job_position_uuid,
     rate: formValues.rate,
-  } as DRDPayload; 
+  } as DRDPayload;
 
   const backendPayload: any = {
-      job_position_uuid: payload.jobPosition?.uuid,
+      job_position_uuid: payload.job_position_uuid,
       rate: payload.rate,
       levels: payload.drdLevels.map(level => ({ name: level.name, order: level.order })),
       metrics: payload.drdMetrics,
@@ -198,15 +210,15 @@ async function onSubmit(formValues: Record<string, any>) {
         <v-card-text>
           <div class="d-flex gap-4">
             <div class="w-100">
-              <Field name="jobPosition" label="Cargo" rules="required" v-slot="{ field, errorMessage }">
+              <Field name="job_position_uuid" label="Cargo" rules="required" v-slot="{ field, errorMessage }">
                 <v-select
                   v-bind="field"
                   v-model="selectedJobPosition"
                   label="Cargo"
                   :items="jobPositionStore.jobPositionsOptions"
-                  item-value="raw"
+                  item-value="value"
                   item-title="title"
-                  :return-object="true"
+                  :return-object="false"
                   variant="solo-filled"
                   density="compact"
                   persistent-placeholder
@@ -244,8 +256,8 @@ async function onSubmit(formValues: Record<string, any>) {
 
           <h2 class="text-subtitle-1 mb-3">Níveis do DRD</h2>
 
-          <div v-if="selectedJobPosition?.value?.levelsGroup?.jobPositionsLevels?.length">
-            <div class="text-caption mr-2 mt-2">Vi que o cargo <b>{{ selectedJobPosition?.value?.title }}</b> possui um grupo de níveis vinculado, gostaria de usá-lo como base para criar os Níveis do DRD?</div>
+          <div v-if="selectedJobPositionObj?.levelsGroup?.jobPositionsLevels?.length">
+            <div class="text-caption mr-2 mt-2">Vi que o cargo <b>{{ selectedJobPositionObj?.title }}</b> possui um grupo de níveis vinculado, gostaria de usá-lo como base para criar os Níveis do DRD?</div>
             <v-switch 
               v-model="useJobLevelsAsBase" 
               color="primary"
@@ -369,7 +381,7 @@ async function onSubmit(formValues: Record<string, any>) {
           <v-btn
             color="primary"
             variant="outlined"
-            @click="addDRDTopic"
+            @click="addDRDTopic()"
             block
             class="mt-4"
           >

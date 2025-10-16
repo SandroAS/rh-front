@@ -34,12 +34,13 @@ export const useJobPositionStore = defineStore('jobPosition', {
   }),
 
   getters: {
-    jobPositionsOptions(): { value: JobPosition, title: string, disabled: boolean }[] | [] {
+    jobPositionsOptions(): { value: string, title: string, disabled: boolean }[] | [] {
       if(!this.job_positions) return [];
       const jobPositionsMapped = this.job_positions.map(job_position => {
         return {
-          value: job_position,
+          value: job_position.uuid,
           title: job_position.title,
+          levelsGroup: job_position.levelsGroup,
           disabled: !!job_position.drd_uuid
         }
       });

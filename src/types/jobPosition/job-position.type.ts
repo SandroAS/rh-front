@@ -1,4 +1,4 @@
-import type LevelsGroup from '../jobPositionsLevelsGroup/job-positions-levels-group.type';
+import type JobPositionsLevelsGroup from '../jobPositionsLevelsGroup/job-positions-levels-group.type';
 
 export default interface JobPosition {
   uuid: string;
@@ -6,6 +6,6 @@ export default interface JobPosition {
   description: string;
   cbo_code?: string;
   base_salary?: number;
-  levelsGroup?: LevelsGroup;
+  levelsGroup?: JobPositionsLevelsGroup;
   drd_uuid?: string;
 }
