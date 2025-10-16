@@ -66,16 +66,26 @@ watch(() => selectedJobPosition.value, (newJobPosition) => {
   if (newJobPosition?.value?.levelsGroup?.jobPositionsLevels) {
     if (!props.selectedDRD?.uuid || drd.drdLevels.every(l => !l.name)) {
       useJobLevelsAsBase.value = true;
-      
-      const newLevels = newJobPosition.value.levelsGroup.jobPositionsLevels
-        .map((level, index) => ({
-          uuid: undefined,
-          name: level.name,
-          order: ++index
-        }));
-      
+
+      const newLevels = newJobPosition.value.levelsGroup.jobPositionsLevels.map((level, i) => ({
+        uuid: undefined,
+        name: level.name,
+        order: ++i
+      }));
+
       drd.drdLevels = newLevels;
-        
+
+      // Garante que o vee-validate vai atualizar o valor
+      setTimeout(() => {
+        newLevels.forEach((level, i) => {
+          const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
+          input.focus();
+
+          input.value = level.name;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        })
+      }, 50)
     } else {
       useJobLevelsAsBase.value = false;
     }
@@ -187,48 +197,53 @@ async function onSubmit(formValues: Record<string, any>) {
           {{ !!selectedDRD?.uuid ? 'Editar DRD' : 'Novo DRD' }}
         </v-card-title>
         <v-card-text>
-          <Field name="jobPosition" label="Cargo" rules="required" v-slot="{ field, errorMessage }">
-            <v-select
-              v-bind="field"
-              v-model="selectedJobPosition"
-              label="Cargo"
-              :items="jobPositionStore.jobPositionsOptions"
-              item-value="raw"
-              item-title="title"
-              :return-object="true"
-              variant="solo-filled"
-              density="compact"
-              persistent-placeholder
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-              class="flex-grow-1"
-            >
-              <template v-slot:item="{ item, props: itemProps }">
-                <v-list-item v-bind="itemProps" :title="item.title" :disabled="item.raw.disabled" />
-              </template>
-            </v-select>
-          </Field>
-
-          <Field name="rate" label="Rate" rules="required" v-slot="{ field, errorMessage }">
-            <v-slider
-              v-bind="field"
-              v-model="drd.rate"
-              label="Escala do DRD"
-              :max="5"
-              :min="1"
-              :ticks="[1,2,3,4,5]"
-              show-ticks="always"
-              step="1"
-              tick-size="4"
-              color="primary"
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-            ></v-slider>
-          </Field>
+          <div class="d-flex gap-4">
+            <div class="w-100">
+              <Field name="jobPosition" label="Cargo" rules="required" v-slot="{ field, errorMessage }">
+                <v-select
+                  v-bind="field"
+                  v-model="selectedJobPosition"
+                  label="Cargo"
+                  :items="jobPositionStore.jobPositionsOptions"
+                  item-value="raw"
+                  item-title="title"
+                  :return-object="true"
+                  variant="solo-filled"
+                  density="compact"
+                  persistent-placeholder
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                  class="flex-grow-1"
+                >
+                  <template v-slot:item="{ item, props: itemProps }">
+                    <v-list-item v-bind="itemProps" :title="item.title" :disabled="item.raw.disabled" />
+                  </template>
+                </v-select>
+              </Field>
+            </div>
+            <div class="w-100">
+              <div class="text-caption">Escala do DRD</div>
+              <Field name="rate" label="Rate" rules="required" v-slot="{ field, errorMessage }">
+                <v-slider
+                  v-bind="field"
+                  v-model="drd.rate"
+                  :max="5"
+                  :min="1"
+                  :ticks="[1,2,3,4,5]"
+                  show-ticks="always"
+                  step="1"
+                  tick-size="4"
+                  color="primary"
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                />
+              </Field>
+            </div>
+          </div>
 
           <v-divider class="my-4" />
 
-          <h2 class="text-h6 mb-3">Níveis do DRD</h2>
+          <h2 class="text-subtitle-1 mb-3">Níveis do DRD</h2>
 
           <div v-if="selectedJobPosition?.value?.levelsGroup?.jobPositionsLevels?.length">
             <div class="text-caption mr-2 mt-2">Vi que o cargo <b>{{ selectedJobPosition?.value?.title }}</b> possui um grupo de níveis vinculado, gostaria de usá-lo como base para criar os Níveis do DRD?</div>
@@ -249,6 +264,7 @@ async function onSubmit(formValues: Record<string, any>) {
           <div v-for="(drdLevel, index) in drd.drdLevels" :key="drdLevel.order" class="level-group mb-4 pa-4 border rounded d-flex align-center">            
             <Field :name="`drdLevels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
               <v-text-field
+                :id="`drdLevels_${index}_name`"
                 v-bind="field"
                 v-model="drdLevel.name"
                 :label="`Nome do Nível ${drdLevel.order}`"
