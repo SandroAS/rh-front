@@ -79,10 +79,7 @@ watch(() => selectedJobPosition.value, (newJobPosition) => {
       setTimeout(() => {
         newLevels.forEach((level, i) => {
           const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
-          input.focus();
-
           input.value = level.name;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
           input.dispatchEvent(new Event('change', { bubbles: true }));
         })
       }, 50)
@@ -95,20 +92,22 @@ watch(() => selectedJobPosition.value, (newJobPosition) => {
 }, { deep: true });
 
 const addDRDLevel = () => {
-  useJobLevelsAsBase.value = false; 
+  useJobLevelsAsBase.value = false;
   const newOrder = drd.drdLevels.length + 1;
   drd.drdLevels.push({ uuid: undefined, name: `Nível ${newOrder}`, order: newOrder });
 };
 
 const removeDRDLevel = (index: number) => {
-  useJobLevelsAsBase.value = false; 
+  useJobLevelsAsBase.value = false;
   if (drd.drdLevels.length > 1) {
     drd.drdLevels.splice(index, 1);
 
-    drd.drdLevels.forEach((level, idx) => {
-      level.order = idx + 1;
-    });
-
+    drd.drdLevels.forEach((level, i) => {
+      level.order = i + 1;
+      const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
+      input.value = level.name;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    })
   } else {
     snackbarStore.show('É necessário ter pelo menos um nível de avaliação.', 'warning');
   }
@@ -261,7 +260,7 @@ async function onSubmit(formValues: Record<string, any>) {
             </v-switch>
           </div>
 
-          <div v-for="(drdLevel, index) in drd.drdLevels" :key="drdLevel.order" class="level-group mb-4 pa-4 border rounded d-flex align-center">            
+          <div v-for="(drdLevel, index) in drd.drdLevels" :key="index" class="level-group mb-4 pa-4 border rounded d-flex align-center">            
             <Field :name="`drdLevels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
               <v-text-field
                 :id="`drdLevels_${index}_name`"
