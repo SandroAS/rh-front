@@ -42,14 +42,15 @@ const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => 
       uuid: undefined,
       name: '',
       order: 1,
-      drdTopicItems: [{ uuid: undefined, name: '', order: 1 }]
+      drdTopicItems: [{ uuid: undefined, name: '', min_score: 3, order: 1 }]
     }],
     drdMetrics: selectedDRD?.drdMetrics && selectedDRD.drdMetrics.length > 0 ? selectedDRD.drdMetrics : [{
       uuid: undefined,
       name: '',
       classification: '',
       type: '',
-      order: 1
+      min_score: 3,
+      order: 1,
     }],
     createdByUser: {
       name: userStore.user?.name || '',
@@ -125,7 +126,7 @@ const addDRDTopic = () => {
     uuid: undefined,
     name: '',
     order: newOrder,
-    drdTopicItems: [{ uuid: undefined, name: '', order: 1 }]
+    drdTopicItems: [{ uuid: undefined, name: '', min_score: 3, order: 1 }]
   });
 };
 
@@ -142,6 +143,7 @@ const addDRDTopicItem = (index: number) => {
   drd.drdTopics[index].drdTopicItems.push({
     uuid: undefined,
     name: '',
+    min_score: 3,
     order: newOrder
   });
 };
@@ -161,6 +163,7 @@ const addDRDMetric = () => {
     name: '',
     classification: '',
     type: '',
+    min_score: 3,
     order: newOrder
   });
 };
@@ -174,7 +177,6 @@ const removeDRDMetric = (index: number) => {
 };
 
 async function onSubmit(formValues: Record<string, any>) {
-
   const payload: DRDPayload = {
     ...drd,
     job_position_uuid: formValues.job_position_uuid,
@@ -182,11 +184,11 @@ async function onSubmit(formValues: Record<string, any>) {
   } as DRDPayload;
 
   const backendPayload: any = {
-      job_position_uuid: payload.job_position_uuid,
-      rate: payload.rate,
-      levels: payload.drdLevels.map(level => ({ name: level.name, order: level.order })),
-      metrics: payload.drdMetrics,
-      topics: payload.drdTopics,
+    job_position_uuid: payload.job_position_uuid,
+    rate: payload.rate,
+    levels: payload.drdLevels.map(level => ({ name: level.name, order: level.order })),
+    metrics: payload.drdMetrics,
+    topics: payload.drdTopics,
   };
 
   try {
@@ -247,7 +249,11 @@ async function onSubmit(formValues: Record<string, any>) {
                   color="primary"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
-                />
+                >
+                  <template v-slot:tick-label="{ tick }">
+                    <div class="text-caption">{{ tick.value }}</div>
+                  </template>
+                </v-slider>
               </Field>
             </div>
           </div>
@@ -354,7 +360,30 @@ async function onSubmit(formValues: Record<string, any>) {
                   class="mb-1 w-100"
                 />
               </Field>
-              
+
+              <div class="w-50 ml-4">
+                <div class="text-caption">Escore Mínimo</div>
+                <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].min_score`" label="Escore Mínimo" v-slot="{ field }">
+                  <v-slider
+                    v-bind="field"
+                    v-model="drdTopicItem.min_score"
+                    :max="drd.rate"
+                    :min="1"
+                    :ticks="[1,2,3,4,5]"
+                    show-ticks="always"
+                    step="1"
+                    tick-size="4"
+                    color="secondary"
+                    density="compact"
+                    hide-details
+                  >
+                    <template v-slot:tick-label="{ tick }">
+                      <div class="text-caption">{{ tick.value }}</div>
+                    </template>
+                  </v-slider>                
+                </Field>
+              </div>
+
               <v-btn
                 v-if="drdTopic.drdTopicItems.length > 1" icon
                 variant="text"
