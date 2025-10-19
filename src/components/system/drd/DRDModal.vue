@@ -445,22 +445,24 @@ async function onSubmit(formValues: Record<string, any>) {
                 />
               </Field>
 
-              <div class="text-caption">Escore Mínimo</div>
-              <Field :name="`drdMetrics[${index}].min_score`" label="Escore Mínimo" v-slot="{ field, errorMessage }">
-                <v-slider
-                  v-bind="field"
-                  v-model="drdMetric.min_score"
-                  :max="drd.rate"
-                  :min="1"
-                  :ticks="[1,2,3,4,5]"
-                  show-ticks="always"
-                  step="1"
-                  tick-size="4"
-                  color="secondary"
-                  :error="!!errorMessage"
-                  :error-messages="errorMessage"
-                />
-              </Field>
+              <div class="w-50 ml-4">
+                <div class="text-caption">Escore Mínimo</div>
+                <Field :name="`drdMetrics[${index}].min_score`" label="Escore Mínimo" v-slot="{ field, errorMessage }">
+                  <v-slider
+                    v-bind="field"
+                    v-model="drdMetric.min_score"
+                    :max="drd.rate"
+                    :min="1"
+                    :ticks="minScoreOptions"
+                    show-ticks="always"
+                    step="1"
+                    tick-size="4"
+                    color="secondary"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  />
+                </Field>
+              </div>
 
               <v-btn
                 v-if="drd.drdMetrics.length > 1" icon
