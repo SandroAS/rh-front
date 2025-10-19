@@ -646,8 +646,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 />
               </Field>
             </div>
-
-            </div>
+          </div>
 
           <v-btn
             color="primary"
@@ -658,7 +657,7 @@ async function onSubmit(formValues: Record<string, any>) {
           >
             <v-icon left>mdi-plus</v-icon> Adicionar Métrica
           </v-btn>
-          
+
         </v-card-text>
         <v-card-actions>
           <v-spacer />
