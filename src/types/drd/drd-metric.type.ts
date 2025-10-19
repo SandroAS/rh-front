@@ -3,6 +3,5 @@ export default interface DRDMetric {
   name: string;
   classification: string;
   type: string;
-  min_score: number;
   order: number;
 }

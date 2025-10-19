@@ -31,26 +31,46 @@ const selectedJobPositionObj = computed(() => {
 const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => {
   const initialLevels = selectedDRD?.drdLevels && selectedDRD.drdLevels.length > 0
     ? selectedDRD.drdLevels
-    : [{ uuid: undefined, name: null, order: 1 }];
+    : [{ uuid: undefined, name: 'Nível 1', order: 1 }];
 
   return {
     uuid: selectedDRD?.uuid || undefined,
     rate: selectedDRD?.rate || 5,
     job_position_uuid: selectedDRD?.jobPosition?.uuid || undefined,
     drdLevels: initialLevels,
-    drdTopics: selectedDRD?.drdTopics && selectedDRD.drdTopics.length > 0 ? selectedDRD.drdTopics : [{
-      uuid: undefined,
-      name: '',
-      order: 1,
-      drdTopicItems: [{ uuid: undefined, name: '', min_score: 3, order: 1 }]
-    }],
-    drdMetrics: selectedDRD?.drdMetrics && selectedDRD.drdMetrics.length > 0 ? selectedDRD.drdMetrics : [{
+    drdTopics: selectedDRD?.drdTopics && selectedDRD.drdTopics.length > 0 
+      ? selectedDRD.drdTopics 
+      : [{
+        uuid: undefined,
+        name: '',
+        order: 1,
+        drdTopicItems: [{ uuid: undefined, name: '', order: 1,
+          scoresByLevel: [{
+            drd_level_order: 1,
+            drd_topic_item_uuid: undefined,
+            drd_topic_item_order: 1,
+            drd_metric_uuid: undefined,
+            drd_metric_order: undefined,
+            min_score: 3
+          }]
+        }]
+      }],
+    drdMetrics: selectedDRD?.drdMetrics && selectedDRD.drdMetrics.length > 0 
+      ? selectedDRD.drdMetrics 
+      : [{
       uuid: undefined,
       name: '',
       classification: '',
       type: '',
-      min_score: 3,
       order: 1,
+      scoresByLevel: [{
+        drd_level_order: 1,
+        drd_topic_item_uuid: undefined,
+        drd_topic_item_order: undefined,
+        drd_metric_uuid: undefined,
+        drd_metric_order: 1,
+        min_score: 3
+      }]
     }],
     createdByUser: {
       name: userStore.user?.name || '',
@@ -74,12 +94,23 @@ const minScoreOptions = computed(() => {
   }
 });
 
+const createMinScoresByLevel = (entity: string, order: number) => {
+  return drd.drdLevels.map((level) => ({
+    drd_level_uuid: undefined,
+    drd_level_order: level.order,
+    drd_topic_item_uuid: undefined,
+    drd_topic_item_order: entity === 'topicItem' ? order : undefined,
+    drd_metric_uuid: undefined,
+    drd_metric_order: entity === 'metric' ? order : undefined,
+    min_score: 3
+  }));
+};
+
 watch(() => props.selectedDRD, (val) => {
   Object.assign(drd, getInitialDRDState(val));
 }, { immediate: true });
 
 watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
-  console.log(newJobPositionUuid)
   const newJobPosition = jobPositionStore.job_positions?.find(jobPosition => jobPosition.uuid === newJobPositionUuid)
   if (newJobPosition?.levelsGroup?.jobPositionsLevels) {
     if (!props.selectedDRD?.uuid || drd.drdLevels.every(l => !l.name)) {
@@ -101,6 +132,38 @@ watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
           input.dispatchEvent(new Event('change', { bubbles: true }));
         })
       }, 50)
+
+      drd.drdTopics.forEach(topic => {
+        topic.drdTopicItems.forEach(item => {
+          item.scoresByLevel = [];
+          newLevels.forEach(level => {
+            item.scoresByLevel.push({
+              drd_level_uuid: undefined,
+              drd_level_order: level.order,
+              drd_topic_item_uuid: undefined,
+              drd_topic_item_order: item.order,
+              drd_metric_uuid: undefined,
+              drd_metric_order: undefined,
+              min_score: 3
+            })
+          })
+        });
+      });
+
+      drd.drdMetrics.forEach(metric => {
+        metric.scoresByLevel = [];
+        newLevels.forEach(level => {
+          metric.scoresByLevel.push({
+            drd_level_uuid: undefined,
+            drd_level_order: level.order,
+            drd_topic_item_uuid: undefined,
+            drd_topic_item_order: undefined,
+            drd_metric_uuid: undefined,
+            drd_metric_order: metric.order,
+            min_score: 3
+          });
+        })
+      });
     } else {
       useJobLevelsAsBase.value = false;
     }
@@ -112,20 +175,73 @@ watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
 const addDRDLevel = () => {
   useJobLevelsAsBase.value = false;
   const newOrder = drd.drdLevels.length + 1;
-  drd.drdLevels.push({ uuid: undefined, name: `Nível ${newOrder}`, order: newOrder });
+  const newLevel = { uuid: undefined, name: `Nível ${newOrder}`, order: newOrder };
+  drd.drdLevels.push(newLevel);
+
+  setTimeout(() => {
+    drd.drdLevels.forEach((level, i) => {
+      const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
+      input.value = level.name;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    })
+  }, 50)
+
+  drd.drdTopics.forEach(topic => {
+    topic.drdTopicItems.forEach(item => {
+      item.scoresByLevel.push({
+        drd_level_uuid: undefined,
+        drd_level_order: newLevel.order,
+        drd_topic_item_uuid: undefined,
+        drd_topic_item_order: item.order,
+        drd_metric_uuid: undefined,
+        drd_metric_order: undefined,
+        min_score: 3
+      });
+    });
+  });
+
+  drd.drdMetrics.forEach(metric => {
+    metric.scoresByLevel.push({
+      drd_level_uuid: undefined,
+      drd_level_order: newLevel.order,
+      drd_topic_item_uuid: undefined,
+      drd_topic_item_order: undefined,
+      drd_metric_uuid: undefined,
+      drd_metric_order: metric.order,
+      min_score: 3
+    });
+  });
 };
 
 const removeDRDLevel = (index: number) => {
   useJobLevelsAsBase.value = false;
   if (drd.drdLevels.length > 1) {
+    const removedLevelOrder = drd.drdLevels[index].order;
+    
     drd.drdLevels.splice(index, 1);
 
     drd.drdLevels.forEach((level, i) => {
       level.order = i + 1;
+      
       const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
       input.value = level.name;
       input.dispatchEvent(new Event('change', { bubbles: true }));
-    })
+    });
+
+    drd.drdTopics.forEach(topic => {
+      topic.drdTopicItems.forEach(item => {
+        item.scoresByLevel = item.scoresByLevel
+          .filter(score => score.drd_level_order !== removedLevelOrder)
+          .map((score, i) => ({ ...score, drd_level_order: i + 1 }));
+      });
+    });
+    
+    drd.drdMetrics.forEach(metric => {
+      metric.scoresByLevel = metric.scoresByLevel
+        .filter(score => score.drd_level_order !== removedLevelOrder)
+        .map((score, i) => ({ ...score, drd_level_order: i + 1 }));
+    });
+
   } else {
     snackbarStore.show('É necessário ter pelo menos um nível de avaliação.', 'warning');
   }
@@ -137,7 +253,16 @@ const addDRDTopic = () => {
     uuid: undefined,
     name: '',
     order: newOrder,
-    drdTopicItems: [{ uuid: undefined, name: '', min_score: 3, order: 1 }]
+    drdTopicItems: [{ uuid: undefined, name: '', order: 1,
+      scoresByLevel: [{
+        drd_level_order: 1,
+        drd_topic_item_uuid: undefined,
+        drd_topic_item_order: 1,
+        drd_metric_uuid: undefined,
+        drd_metric_order: undefined,
+        min_score: 3
+      }]
+    }]
   });
 };
 
@@ -154,8 +279,8 @@ const addDRDTopicItem = (index: number) => {
   drd.drdTopics[index].drdTopicItems.push({
     uuid: undefined,
     name: '',
-    min_score: 3,
-    order: newOrder
+    order: newOrder,
+    scoresByLevel: createMinScoresByLevel('topicItem', newOrder)
   });
 };
 
@@ -174,8 +299,8 @@ const addDRDMetric = () => {
     name: '',
     classification: '',
     type: '',
-    min_score: 3,
-    order: newOrder
+    order: newOrder,
+    scoresByLevel: createMinScoresByLevel('metric', newOrder)
   });
 };
 
@@ -372,27 +497,35 @@ async function onSubmit(formValues: Record<string, any>) {
                 />
               </Field>
 
-              <div class="w-50 ml-4">
-                <div class="text-caption">Escore Mínimo</div>
-                <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].min_score`" label="Escore Mínimo" v-slot="{ field }">
-                  <v-slider
-                    v-bind="field"
-                    v-model="drdTopicItem.min_score"
-                    :max="drd.rate"
-                    :min="1"
-                    :ticks="minScoreOptions"
-                    show-ticks="always"
-                    step="1"
-                    tick-size="4"
-                    color="secondary"
-                    density="compact"
-                    hide-details
-                  >
-                    <template v-slot:tick-label="{ tick }">
-                      <div class="text-caption">{{ tick.value }}</div>
-                    </template>
-                  </v-slider>                
-                </Field>
+              <div class="d-flex overflow-x-auto py-2 flex-shrink-0" style="max-width: 40%; min-width: 400px; gap: 1rem;">
+                <div
+                  v-for="(score, levelIndex) in drdTopicItem.scoresByLevel" 
+                  :key="levelIndex" 
+                  class="text-center" 
+                  style="min-width: 120px;"
+                >
+                <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1].name }}</div>
+                  <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].scoresByLevel[${levelIndex}].min_score`" rules="required" v-slot="{ field }">
+                    <v-slider
+                      v-bind="field"
+                      v-model="score.min_score"
+                      :max="drd.rate"
+                      :min="1"
+                      :ticks="minScoreOptions"
+                      show-ticks="always"
+                      step="1"
+                      tick-size="4"
+                      color="secondary"
+                      density="compact"
+                      hide-details
+                    >
+                      <template v-slot:tick-label="{ tick }">
+                        <div class="text-caption">{{ tick.value }}</div>
+                      </template>
+                    </v-slider>
+                  </Field>
+                  <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].scoresByLevel[${levelIndex}].drd_level_order`" type="hidden" />
+                </div>
               </div>
 
               <v-btn
@@ -432,11 +565,12 @@ async function onSubmit(formValues: Record<string, any>) {
 
           <h2 class="text-h6 mb-3">Métricas de Avaliação</h2>
           <div v-for="(drdMetric, index) in drd.drdMetrics" :key="index" class="metric-group mb-4 pa-4 border rounded">
-            <div class="d-flex justify-space-between align-center mb-2">
+            <div class="d-flex justify-space-between align-center mb-2 gap-2">
               <Field :name="`drdMetrics[${index}].name`" :label="'métrica '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
                   v-bind="field"
-                  v-model="drdMetric.name" :label="`Métrica ${index + 1}`"
+                  v-model="drdMetric.name"
+                  :label="`Métrica ${index + 1}`"
                   variant="solo-filled"
                   density="compact"
                   :error="!!errorMessage"
@@ -445,27 +579,42 @@ async function onSubmit(formValues: Record<string, any>) {
                 />
               </Field>
 
-              <div class="w-50 ml-4">
-                <div class="text-caption">Escore Mínimo</div>
-                <Field :name="`drdMetrics[${index}].min_score`" label="Escore Mínimo" v-slot="{ field, errorMessage }">
-                  <v-slider
-                    v-bind="field"
-                    v-model="drdMetric.min_score"
-                    :max="drd.rate"
-                    :min="1"
-                    :ticks="minScoreOptions"
-                    show-ticks="always"
-                    step="1"
-                    tick-size="4"
-                    color="secondary"
-                    :error="!!errorMessage"
-                    :error-messages="errorMessage"
-                  />
-                </Field>
+              <div class="d-flex overflow-x-auto py-2 flex-shrink-0" style="max-width: 40%; min-width: 400px; gap: 1rem;">
+                <div
+                  v-for="(score, levelIndex) in drdMetric.scoresByLevel" 
+                  :key="levelIndex" 
+                  class="text-center" 
+                  style="min-width: 120px;"
+                >
+                  <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1].name }}</div>
+                  <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].min_score`" rules="required" v-slot="{ field, errorMessage }">
+                    <v-slider
+                      v-bind="field"
+                      v-model="score.min_score"
+                      :max="drd.rate"
+                      :min="1"
+                      :ticks="minScoreOptions"
+                      show-ticks="always"
+                      step="1"
+                      tick-size="4"
+                      color="secondary"
+                      density="compact"
+                      hide-details
+                      :error="!!errorMessage"
+                      :error-messages="errorMessage"
+                    >
+                      <template v-slot:tick-label="{ tick }">
+                        <div class="text-caption">{{ tick.value }}</div>
+                      </template>
+                    </v-slider>
+                  </Field>
+                  <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].drd_level_order`" type="hidden" />
+                </div>
               </div>
 
               <v-btn
-                v-if="drd.drdMetrics.length > 1" icon
+                v-if="drd.drdMetrics.length > 1"
+                icon
                 variant="text"
                 color="error"
                 @click="removeDRDMetric(index)"

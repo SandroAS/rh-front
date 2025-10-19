@@ -1,7 +1,6 @@
-import type JobPosition from '../jobPosition/job-position.type';
 import type User from '../user/user.type';
 import type DRDLevel from './drd-level.type';
-import type DRDMetric from './drd-metric.type';
+import type DRDMetricPayload from './drd-metric-payload.type';
 import type DRDTopic from './drd-topic.type';
 
 export default interface DRDPayload {
@@ -10,6 +9,6 @@ export default interface DRDPayload {
   job_position_uuid?: string;
   drdLevels: DRDLevel[];
   drdTopics: DRDTopic[];
-  drdMetrics: DRDMetric[];
+  drdMetrics: DRDMetricPayload[];
   createdByUser: User;
 }

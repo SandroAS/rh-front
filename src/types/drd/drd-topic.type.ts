@@ -1,8 +1,8 @@
-import type DRDTopicItem from './drd-topic-item.type';
+import type DRDTopicItemPayload from './drd-topic-item-payload.type';
 
 export default interface DRDTopic {
   uuid?: string;
   name: string;
   order: number;
-  drdTopicItems: DRDTopicItem[];
+  drdTopicItems: DRDTopicItemPayload[];
 }
