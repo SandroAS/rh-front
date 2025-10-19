@@ -63,6 +63,17 @@ const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => 
 
 const drd = reactive<DRDPayload>(getInitialDRDState(props.selectedDRD));
 
+const minScoreOptions = computed(() => {
+  switch (drd.rate) {
+    case 1: return [1];
+    case 2: return [1,2];
+    case 3: return [1,2,3];
+    case 4: return [1,2,3,4];
+    case 5: return [1,2,3,4,5];
+    default: return [1,2,3,4,5];
+  }
+});
+
 watch(() => props.selectedDRD, (val) => {
   Object.assign(drd, getInitialDRDState(val));
 }, { immediate: true });
@@ -203,7 +214,7 @@ async function onSubmit(formValues: Record<string, any>) {
 </script>
 
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" max-width="800px">
+  <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" max-width="1000px">
     <Form @submit="onSubmit" :initial-values="drd">
       <v-card>
         <v-card-title class="text-h6">
@@ -236,7 +247,7 @@ async function onSubmit(formValues: Record<string, any>) {
             </div>
             <div class="w-100">
               <div class="text-caption">Escala do DRD</div>
-              <Field name="rate" label="Rate" rules="required" v-slot="{ field, errorMessage }">
+              <Field name="rate" label="Rate" rules="required|min_value:3" v-slot="{ field, errorMessage }">
                 <v-slider
                   v-bind="field"
                   v-model="drd.rate"
@@ -369,7 +380,7 @@ async function onSubmit(formValues: Record<string, any>) {
                     v-model="drdTopicItem.min_score"
                     :max="drd.rate"
                     :min="1"
-                    :ticks="[1,2,3,4,5]"
+                    :ticks="minScoreOptions"
                     show-ticks="always"
                     step="1"
                     tick-size="4"
@@ -433,6 +444,24 @@ async function onSubmit(formValues: Record<string, any>) {
                   class="mb-1 flex-grow-1"
                 />
               </Field>
+
+              <div class="text-caption">Escore Mínimo</div>
+              <Field :name="`drdMetrics[${index}].min_score`" label="Escore Mínimo" v-slot="{ field, errorMessage }">
+                <v-slider
+                  v-bind="field"
+                  v-model="drdMetric.min_score"
+                  :max="drd.rate"
+                  :min="1"
+                  :ticks="[1,2,3,4,5]"
+                  show-ticks="always"
+                  step="1"
+                  tick-size="4"
+                  color="secondary"
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                />
+              </Field>
+
               <v-btn
                 v-if="drd.drdMetrics.length > 1" icon
                 variant="text"
