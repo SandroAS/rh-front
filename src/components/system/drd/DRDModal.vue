@@ -7,6 +7,7 @@ import type DRDPayload from '@/types/drd/drd-payload.type';
 import type DRD from '@/types/drd/drd.type';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { useUserStore } from '@/stores/auth.store';
+import { MetricPrefix } from '@/types/drd/drd-metric.type';
 
 const drdStore = useDRDStore();
 const snackbarStore = useSnackbarStore();
@@ -62,6 +63,7 @@ const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => 
       name: '',
       classification: '',
       type: '',
+      prefix: MetricPrefix.MAIOR_OU_IGUAL,
       order: 1,
       scoresByLevel: [{
         drd_level_order: 1,
@@ -93,6 +95,16 @@ const minScoreOptions = computed(() => {
     default: return [1,2,3,4,5];
   }
 });
+
+const metricTypeOptions = [
+  { value: 'PERCENTAGE', title: 'Pct.', icon: 'mdi-percent-outline', classification: 'NUMBER' },
+  { value: 'QUANTITY', title: 'Qtd.', icon: 'mdi-tune-variant', classification: 'NUMBER' },
+  { value: 'DURATION_DAYS', title: 'Dias', icon: 'mdi-clock-outline', classification: 'DURATION' },
+  { value: 'DURATION_HOURS', title: 'Hrs.', icon: 'mdi-clock-outline', classification: 'DURATION' },
+  { value: 'DURATION_MINUTES', title: 'Min.', icon: 'mdi-clock-outline', classification: 'DURATION' },
+];
+
+const prefixOptions = [MetricPrefix.MAIOR_OU_IGUAL, MetricPrefix.MENOR_OU_IGUAL];
 
 const createMinScoresByLevel = (entity: string, order: number) => {
   return drd.drdLevels.map((level) => ({
@@ -253,16 +265,7 @@ const addDRDTopic = () => {
     uuid: undefined,
     name: '',
     order: newOrder,
-    drdTopicItems: [{ uuid: undefined, name: '', order: 1,
-      scoresByLevel: [{
-        drd_level_order: 1,
-        drd_topic_item_uuid: undefined,
-        drd_topic_item_order: 1,
-        drd_metric_uuid: undefined,
-        drd_metric_order: undefined,
-        min_score: 3
-      }]
-    }]
+    drdTopicItems: [{ uuid: undefined, name: '', order: 1, scoresByLevel: createMinScoresByLevel('topicItem', 1)}]
   });
 };
 
@@ -299,6 +302,7 @@ const addDRDMetric = () => {
     name: '',
     classification: '',
     type: '',
+    prefix: MetricPrefix.MAIOR_OU_IGUAL,
     order: newOrder,
     scoresByLevel: createMinScoresByLevel('metric', newOrder)
   });
@@ -575,7 +579,53 @@ async function onSubmit(formValues: Record<string, any>) {
                   density="compact"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
-                  class="mb-1 flex-grow-1"
+                  class="flex-grow-1"
+                />
+              </Field>
+
+              <Field :name="`drdMetrics[${index}].type`" label="Tipo" rules="required" v-slot="{ field, errorMessage }">
+                <v-select
+                  v-bind="field"
+                  v-model="drdMetric.type"
+                  label="Tipo"
+                  :items="metricTypeOptions"
+                  item-value="value"
+                  item-title="title"
+                  variant="solo-filled"
+                  density="compact"
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                  class="flex-grow-1"
+                  style="max-width: 135px;"
+                >
+                  <template v-slot:selection="{ item }">
+                    <div class="d-flex align-center">
+                      <v-icon :icon="item.raw.icon" size="small" class="mr-2" />
+                      {{ item.title }}
+                    </div>
+                  </template>
+
+                  <template v-slot:item="{ item, props: itemProps }">
+                    <v-list-item v-bind="itemProps">
+                      <template v-slot:prepend>
+                        <v-icon :icon="item.raw.icon" size="small" />
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-select>
+              </Field>
+
+              <Field :name="`drdMetrics[${index}].prefix`" label="Prefixo" rules="required" v-slot="{ field, errorMessage }">
+                <v-select
+                  v-bind="field"
+                  v-model="drdMetric.prefix"
+                  label="Prefixo"
+                  :items="prefixOptions"
+                  variant="solo-filled"
+                  density="compact"
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                  style="max-width: 135px;"
                 />
               </Field>
 
@@ -629,17 +679,8 @@ async function onSubmit(formValues: Record<string, any>) {
               <Field :name="`drdMetrics[${index}].classification`" label="Classificação" v-slot="{ field }">
                 <v-text-field
                   v-bind="field"
-                  v-model="drdMetric.classification" label="Classificação (Ex: Comportamental)"
-                  variant="solo-filled"
-                  density="compact"
-                  class="flex-grow-1"
-                />
-              </Field>
-
-              <Field :name="`drdMetrics[${index}].type`" label="Tipo" v-slot="{ field }">
-                <v-text-field
-                  v-bind="field"
-                  v-model="drdMetric.type" label="Tipo (Ex: Soft Skill)"
+                  v-model="drdMetric.classification"
+                  label="Classificação"
                   variant="solo-filled"
                   density="compact"
                   class="flex-grow-1"
