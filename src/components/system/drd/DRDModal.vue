@@ -569,7 +569,7 @@ async function onSubmit(formValues: Record<string, any>) {
 
           <h2 class="text-h6 mb-3">Métricas de Avaliação</h2>
           <div v-for="(drdMetric, index) in drd.drdMetrics" :key="index" class="metric-group mb-4 pa-4 border rounded">
-            <div class="d-flex justify-space-between align-center mb-2 gap-2">
+            <div class="d-flex justify-space-between align-start gap-2">
               <Field :name="`drdMetrics[${index}].name`" :label="'métrica '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
                   v-bind="field"
@@ -579,7 +579,7 @@ async function onSubmit(formValues: Record<string, any>) {
                   density="compact"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
-                  class="flex-grow-1"
+                  class="flex-grow-1 mt-5"
                 />
               </Field>
 
@@ -595,7 +595,7 @@ async function onSubmit(formValues: Record<string, any>) {
                   density="compact"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
-                  class="flex-grow-1"
+                  class="flex-grow-1 mt-5"
                   style="max-width: 135px;"
                 >
                   <template v-slot:selection="{ item }">
@@ -625,11 +625,12 @@ async function onSubmit(formValues: Record<string, any>) {
                   density="compact"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
+                  class="mt-5"
                   style="max-width: 135px;"
                 />
               </Field>
 
-              <div class="d-flex overflow-x-auto py-2 flex-shrink-0" style="max-width: 40%; min-width: 400px; gap: 1rem;">
+              <div class="d-flex overflow-x-auto pb-2 flex-shrink-0" style="max-width: 40%; min-width: 400px; gap: 1rem;">
                 <div
                   v-for="(score, levelIndex) in drdMetric.scoresByLevel" 
                   :key="levelIndex" 
@@ -637,26 +638,16 @@ async function onSubmit(formValues: Record<string, any>) {
                   style="min-width: 120px;"
                 >
                   <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1].name }}</div>
-                  <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].min_score`" rules="required" v-slot="{ field, errorMessage }">
-                    <v-slider
+                  <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].min_score`" :label="drd.drdLevels[score.drd_level_order - 1].name" rules="required" v-slot="{ field, errorMessage }">
+                    <v-text-field
                       v-bind="field"
                       v-model="score.min_score"
-                      :max="drd.rate"
-                      :min="1"
-                      :ticks="minScoreOptions"
-                      show-ticks="always"
-                      step="1"
-                      tick-size="4"
-                      color="secondary"
+                      variant="solo-filled"
                       density="compact"
-                      hide-details
                       :error="!!errorMessage"
                       :error-messages="errorMessage"
-                    >
-                      <template v-slot:tick-label="{ tick }">
-                        <div class="text-caption">{{ tick.value }}</div>
-                      </template>
-                    </v-slider>
+                      class="flex-grow-1 mt-2"
+                    />
                   </Field>
                   <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].drd_level_order`" type="hidden" />
                 </div>
