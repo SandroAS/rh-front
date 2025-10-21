@@ -486,9 +486,12 @@ async function onSubmit(formValues: Record<string, any>) {
               </v-btn>
             </div>
 
-            <h3 class="text-subtitle-2 mb-3 ml-4">Itens do Tópico</h3>
+            <div class="d-flex ml-4 align-start gap-2">
+              <h3 class="text-subtitle-2 w-100">Itens do Tópico</h3>
+              <h3 class="text-subtitle-2" style="max-width: 40%;" :style="{'min-width': (drdTopic.drdTopicItems.length > 1 ? 450 : 400)+'px'}">Avaliação mínima por nível</h3>
+            </div>
 
-            <div v-for="(drdTopicItem, drdTopicItemIndex) in drdTopic.drdTopicItems" :key="drdTopicItemIndex" class="d-flex ml-4 align-center gap-2">
+            <div v-for="(drdTopicItem, drdTopicItemIndex) in drdTopic.drdTopicItems" :key="drdTopicItemIndex" class="d-flex ml-4 align-start gap-2">
               <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].name`" :label="'item '+(drdTopicItemIndex+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
                   v-bind="field"
@@ -497,7 +500,7 @@ async function onSubmit(formValues: Record<string, any>) {
                   density="compact"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
-                  class="mb-1 w-100"
+                  class="mt-5 w-100"
                 />
               </Field>
 
@@ -521,7 +524,6 @@ async function onSubmit(formValues: Record<string, any>) {
                       tick-size="4"
                       color="secondary"
                       density="compact"
-                      hide-details
                     >
                       <template v-slot:tick-label="{ tick }">
                         <div class="text-caption">{{ tick.value }}</div>
@@ -642,6 +644,7 @@ async function onSubmit(formValues: Record<string, any>) {
                     <v-text-field
                       v-bind="field"
                       v-model="score.min_score"
+                      label="Espera-se"
                       variant="solo-filled"
                       density="compact"
                       :error="!!errorMessage"
