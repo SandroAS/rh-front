@@ -418,34 +418,36 @@ async function onSubmit(formValues: Record<string, any>) {
             </v-switch>
           </div>
 
-          <div v-for="(drdLevel, index) in drd.drdLevels" :key="index" class="level-group mb-4 pa-4 border rounded d-flex align-center">            
-            <Field :name="`drdLevels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
-              <v-text-field
-                :id="`drdLevels_${index}_name`"
-                v-bind="field"
-                v-model="drdLevel.name"
-                :label="`Nome do Nível ${drdLevel.order}`"
-                variant="solo-filled"
-                density="compact"
-                :error="!!errorMessage"
-                :error-messages="errorMessage"
-                class="mb-1 flex-grow-1"
-              />
-            </Field>
-
-            <Field :name="`drdLevels[${index}].order`" type="hidden" />
-
-            <v-btn
-              v-if="drd.drdLevels.length > 1 && !useJobLevelsAsBase"
-              icon
-              variant="text"
-              color="error"
-              @click="removeDRDLevel(index)"
-              size="small"
-              class="ml-2"
-            >
-              <v-icon>mdi-delete</v-icon>
-            </v-btn>
+          <div class="d-flex flex-row gap-2 overflow-x-auto">
+            <div v-for="(drdLevel, index) in drd.drdLevels" :key="index" class="level-group mb-4 px-4 pt-4 border rounded d-flex align-center min-w-25">
+              <Field :name="`drdLevels[${index}].name`" :label="'nível '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
+                <v-text-field
+                  :id="`drdLevels_${index}_name`"
+                  v-bind="field"
+                  v-model="drdLevel.name"
+                  :label="`Nome do Nível ${drdLevel.order}`"
+                  variant="solo-filled"
+                  density="compact"
+                  :error="!!errorMessage"
+                  :error-messages="errorMessage"
+                  class="mb-1 flex-grow-1"
+                />
+              </Field>
+  
+              <Field :name="`drdLevels[${index}].order`" type="hidden" />
+  
+              <v-btn
+                v-if="drd.drdLevels.length > 1 && !useJobLevelsAsBase"
+                icon
+                variant="text"
+                color="error"
+                @click="removeDRDLevel(index)"
+                size="small"
+                class="ml-2"
+              >
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </div>
           </div>
 
           <v-btn

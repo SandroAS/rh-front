@@ -59,3 +59,23 @@
 html {
   overflow-y: auto !important;
 }
+
+.min-w-0 {
+  min-width: 0px;
+}
+
+.min-w-25 {
+  min-width: 25%;
+}
+
+.min-w-50 {
+  min-width: 50%;
+}
+
+.min-w-75 {
+  min-width: 75%;
+}
+
+.min-w-100 {
+  min-width: 100%
+}
