@@ -99,7 +99,9 @@ const minScoreOptions = computed(() => {
 const metricTypeOptions = [
   { value: 'PERCENTAGE', title: 'Pct.', icon: 'mdi-percent-outline', classification: 'NUMBER' },
   { value: 'QUANTITY', title: 'Qtd.', icon: 'mdi-tune-variant', classification: 'NUMBER' },
-  { value: 'DURATION_DAYS', title: 'Dias', icon: 'mdi-calendar-multiselect', classification: 'DURATION' },
+  { value: 'DURATION_MONTHS', title: 'Min.', icon: 'mdi-calendar-month', classification: 'DURATION' },
+  { value: 'DURATION_WEEKS', title: 'Min.', icon: 'mdi-calendar-range', classification: 'DURATION' },
+  { value: 'DURATION_DAYS', title: 'Dias', icon: 'mdi-calendar', classification: 'DURATION' },
   { value: 'DURATION_HOURS', title: 'Hrs.', icon: 'mdi-clock-outline', classification: 'DURATION' },
   { value: 'DURATION_MINUTES', title: 'Min.', icon: 'mdi-timer-outline', classification: 'DURATION' },
 ];
@@ -122,7 +124,9 @@ function getMetricMinScoreAppendIcon(metricType: string) {
   switch (metricType) {
     case 'PERCENTAGE': return 'mdi-percent-outline';
     case 'QUANTITY': return 'mdi-tune-variant';
-    case 'DURATION_DAYS': return 'mdi-calendar-multiselect';
+    case 'DURATION_MONTHS': return 'mdi-calendar-month';
+    case 'DURATION_WEEKS': return 'mdi-calendar-range';
+    case 'DURATION_DAYS': return 'mdi-calendar';
     case 'DURATION_HOURS': return 'mdi-clock-outline';
     case 'DURATION_MINUTES': return 'mdi-timer-outline';
   }
