@@ -71,7 +71,7 @@ const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => 
         drd_topic_item_order: undefined,
         drd_metric_uuid: undefined,
         drd_metric_order: 1,
-        min_score: 3
+        min_score: 0
       }]
     }],
     createdByUser: {
@@ -99,9 +99,9 @@ const minScoreOptions = computed(() => {
 const metricTypeOptions = [
   { value: 'PERCENTAGE', title: 'Pct.', icon: 'mdi-percent-outline', classification: 'NUMBER' },
   { value: 'QUANTITY', title: 'Qtd.', icon: 'mdi-tune-variant', classification: 'NUMBER' },
-  { value: 'DURATION_DAYS', title: 'Dias', icon: 'mdi-clock-outline', classification: 'DURATION' },
+  { value: 'DURATION_DAYS', title: 'Dias', icon: 'mdi-calendar-multiselect', classification: 'DURATION' },
   { value: 'DURATION_HOURS', title: 'Hrs.', icon: 'mdi-clock-outline', classification: 'DURATION' },
-  { value: 'DURATION_MINUTES', title: 'Min.', icon: 'mdi-clock-outline', classification: 'DURATION' },
+  { value: 'DURATION_MINUTES', title: 'Min.', icon: 'mdi-timer-outline', classification: 'DURATION' },
 ];
 
 const prefixOptions = [MetricPrefix.MAIOR_OU_IGUAL, MetricPrefix.MENOR_OU_IGUAL];
@@ -114,8 +114,18 @@ const createMinScoresByLevel = (entity: string, order: number) => {
     drd_topic_item_order: entity === 'topicItem' ? order : undefined,
     drd_metric_uuid: undefined,
     drd_metric_order: entity === 'metric' ? order : undefined,
-    min_score: 3
+    min_score: entity === 'metric' ? 0 : 3,
   }));
+};
+
+function getMetricMinScoreAppendIcon(metricType: string) {
+  switch (metricType) {
+    case 'PERCENTAGE': return 'mdi-percent-outline';
+    case 'QUANTITY': return 'mdi-tune-variant';
+    case 'DURATION_DAYS': return 'mdi-calendar-multiselect';
+    case 'DURATION_HOURS': return 'mdi-clock-outline';
+    case 'DURATION_MINUTES': return 'mdi-timer-outline';
+  }
 };
 
 watch(() => props.selectedDRD, (val) => {
@@ -162,6 +172,19 @@ watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
         });
       });
 
+      // Garante que o vee-validate vai atualizar o valor
+      setTimeout(() => {
+        drd.drdTopics.forEach((topic, index) => {
+          topic.drdTopicItems.forEach((item, idx) => {
+            newLevels.forEach((level, i) => {
+              const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+              input.value = '3';
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+            })
+          })
+        })
+      }, 50)
+
       drd.drdMetrics.forEach(metric => {
         metric.scoresByLevel = [];
         newLevels.forEach(level => {
@@ -172,10 +195,21 @@ watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
             drd_topic_item_order: undefined,
             drd_metric_uuid: undefined,
             drd_metric_order: metric.order,
-            min_score: 3
+            min_score: 0
           });
         })
       });
+
+      // Garante que o vee-validate vai atualizar o valor
+      setTimeout(() => {
+        drd.drdMetrics.forEach((metric, index) => {
+          newLevels.forEach((level, i) => {
+            const input = document.querySelector(`#drdMetrics_${index}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+            input.value = '0';
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          })
+        })
+      }, 50)
     } else {
       useJobLevelsAsBase.value = false;
     }
@@ -285,6 +319,19 @@ const addDRDTopicItem = (index: number) => {
     order: newOrder,
     scoresByLevel: createMinScoresByLevel('topicItem', newOrder)
   });
+
+  // Garante que o vee-validate vai atualizar o valor
+  setTimeout(() => {
+  drd.drdTopics.forEach((topic, index) => {
+    topic.drdTopicItems.forEach((item, idx) => {
+      drd.drdLevels.forEach((level, i) => {
+        const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+        input.value = '3';
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      })
+    })
+  })
+}, 50)
 };
 
 const removeDRDTopicItem = (index: number, indexTopicItem: number) => {
@@ -490,7 +537,7 @@ async function onSubmit(formValues: Record<string, any>) {
 
             <div class="d-flex ml-4 align-start gap-2">
               <h3 class="text-subtitle-2 w-100">Itens do Tópico</h3>
-              <h3 class="text-subtitle-2" style="max-width: 40%;" :style="{'min-width': (drdTopic.drdTopicItems.length > 1 ? 450 : 400)+'px'}">Avaliação mínima por nível</h3>
+              <h3 class="text-subtitle-2" style="max-width: 40%;" :style="{'min-width': (drdTopic.drdTopicItems.length > 1 ? 450 : 400)+'px'}">Avaliação mínima esperada por nível do DRD</h3>
             </div>
 
             <div v-for="(drdTopicItem, drdTopicItemIndex) in drdTopic.drdTopicItems" :key="drdTopicItemIndex" class="d-flex ml-4 align-start gap-2">
@@ -515,7 +562,9 @@ async function onSubmit(formValues: Record<string, any>) {
                 >
                 <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1].name }}</div>
                   <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].scoresByLevel[${levelIndex}].min_score`" rules="required" v-slot="{ field }">
+                    {{ field.value }}uai {{ score.min_score }}uai
                     <v-slider
+                      :id="`drdTopics_${index}_drdTopicItems_${drdTopicItemIndex}_scoresByLevel_${levelIndex}_min_score`"
                       v-bind="field"
                       v-model="score.min_score"
                       :max="drd.rate"
@@ -644,11 +693,15 @@ async function onSubmit(formValues: Record<string, any>) {
                   <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1].name }}</div>
                   <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].min_score`" :label="drd.drdLevels[score.drd_level_order - 1].name" rules="required" v-slot="{ field, errorMessage }">
                     <v-text-field
+                      :id="`drdMetrics_${index}_scoresByLevel_${levelIndex}_min_score`"
                       v-bind="field"
                       v-model="score.min_score"
-                      label="Espera-se"
+                      :label="drdMetric.type ? '' : 'Espera-se'"
                       variant="solo-filled"
                       density="compact"
+                      type="number"
+                      :prepend-inner-icon="`mdi-${drdMetric.prefix === '<=' ? 'less-than-or-equal' : 'greater-than-or-equal'}`"
+                      :append-inner-icon="getMetricMinScoreAppendIcon(drdMetric.type)"
                       :error="!!errorMessage"
                       :error-messages="errorMessage"
                       class="flex-grow-1 mt-2"
