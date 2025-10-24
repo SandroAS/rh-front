@@ -99,9 +99,9 @@ const minScoreOptions = computed(() => {
 const metricTypeOptions = [
   { value: 'PERCENTAGE', title: 'Pct.', icon: 'mdi-percent-outline', classification: 'NUMBER' },
   { value: 'QUANTITY', title: 'Qtd.', icon: 'mdi-tune-variant', classification: 'NUMBER' },
-  { value: 'DURATION_MONTHS', title: 'Min.', icon: 'mdi-calendar-month', classification: 'DURATION' },
-  { value: 'DURATION_WEEKS', title: 'Min.', icon: 'mdi-calendar-range', classification: 'DURATION' },
-  { value: 'DURATION_DAYS', title: 'Dias', icon: 'mdi-calendar', classification: 'DURATION' },
+  { value: 'DURATION_MONTHS', title: 'Mês', icon: 'mdi-calendar-month', classification: 'DURATION' },
+  { value: 'DURATION_WEEKS', title: 'Sem.', icon: 'mdi-calendar-range', classification: 'DURATION' },
+  { value: 'DURATION_DAYS', title: 'Dia', icon: 'mdi-calendar', classification: 'DURATION' },
   { value: 'DURATION_HOURS', title: 'Hrs.', icon: 'mdi-clock-outline', classification: 'DURATION' },
   { value: 'DURATION_MINUTES', title: 'Min.', icon: 'mdi-timer-outline', classification: 'DURATION' },
 ];
@@ -326,16 +326,16 @@ const addDRDTopicItem = (index: number) => {
 
   // Garante que o vee-validate vai atualizar o valor
   setTimeout(() => {
-  drd.drdTopics.forEach((topic, index) => {
-    topic.drdTopicItems.forEach((item, idx) => {
-      drd.drdLevels.forEach((level, i) => {
-        const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
-        input.value = '3';
-        input.dispatchEvent(new Event('change', { bubbles: true }));
+    drd.drdTopics.forEach((topic, index) => {
+      topic.drdTopicItems.forEach((item, idx) => {
+        drd.drdLevels.forEach((level, i) => {
+          const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+          input.value = '3';
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        })
       })
     })
-  })
-}, 50)
+  }, 50)
 };
 
 const removeDRDTopicItem = (index: number, indexTopicItem: number) => {
@@ -357,6 +357,15 @@ const addDRDMetric = () => {
     order: newOrder,
     scoresByLevel: createMinScoresByLevel('metric', newOrder)
   });
+
+  // Garante que o vee-validate vai atualizar o valor
+  setTimeout(() => {
+    drd.drdMetrics.forEach((metric, index) => {
+      const input = document.querySelector(`#drdMetrics_${index}_prefixe`) as HTMLInputElement;
+      input.value = MetricPrefix.MAIOR_OU_IGUAL;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    })
+  }, 50)
 };
 
 const removeDRDMetric = (index: number) => {
@@ -674,6 +683,7 @@ async function onSubmit(formValues: Record<string, any>) {
 
               <Field :name="`drdMetrics[${index}].prefix`" label="Prefixo" rules="required" v-slot="{ field, errorMessage }">
                 <v-select
+                  :id="`drdMetrics_${index}_prefix`"
                   v-bind="field"
                   v-model="drdMetric.prefix"
                   label="Prefixo"
