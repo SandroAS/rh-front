@@ -77,9 +77,6 @@ function removeCareerPlanY(index: number) {
 };
 
 const someCareerPlanYActive = computed(() => {
-  console.log(careerPlan.jobPositionsInCareer.some(jobPositionInCareer => {
-    return jobPositionInCareer.careerPlanY
-  }))
   return careerPlan.jobPositionsInCareer.some(jobPositionInCareer => {
     return jobPositionInCareer.careerPlanY
   })

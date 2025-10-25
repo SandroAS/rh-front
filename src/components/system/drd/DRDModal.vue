@@ -81,11 +81,9 @@ const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> 
       uuid: fetchedDrd?.uuid || undefined,
       rate: fetchedDrd?.rate || 5,
       job_position_uuid: fetchedDrd?.jobPosition?.uuid || undefined,
-      
       drdLevels: (fetchedDrd?.drdLevels && fetchedDrd?.drdLevels.length > 0)
         ? fetchedDrd?.drdLevels
         : [{ uuid: undefined, name: 'Nível 1', order: 1 }],
-        
       drdTopics: (fetchedDrd?.drdTopics && fetchedDrd?.drdTopics.length > 0)
         ? fetchedDrd?.drdTopics 
         : [{
@@ -130,6 +128,63 @@ const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> 
         profile_img_url: userStore.user?.profile_img_url || ''
       }
     });
+
+    // Garante que o vee-validate vai atualizar o valor
+    setTimeout(() => {
+      drd.drdLevels.forEach((level, i) => {
+        const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
+        if(input) {
+          input.value = level.name;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      })
+
+      drd.drdTopics.forEach((topic, index) => {
+        const input = document.querySelector(`#drdTopics_${index}_name`) as HTMLInputElement;
+        if(input) {
+          input.value = topic.name;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          topic.drdTopicItems.forEach((item, idx) => {
+            const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_name`) as HTMLInputElement;
+            input.value = item.name;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            drd.drdLevels.forEach((level, i) => {
+              const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+              input.value = item.scoresByLevel[i].min_score.toString();
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+            })
+          })
+        }
+      })
+
+      drd.drdMetrics.forEach((metric, index) => {
+        const inputName = document.querySelector(`#drdMetrics_${index}_name`) as HTMLInputElement;
+        if(inputName) {
+          inputName.value = metric.name;
+          inputName.dispatchEvent(new Event('change', { bubbles: true }));
+          const inputType = document.querySelector(`#drdMetrics_${index}_type`) as HTMLInputElement;
+          if(inputType) {
+            inputType.value = metric.type;
+            inputType.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const inputPrefix = document.querySelector(`#drdMetrics_${index}_prefixe`) as HTMLInputElement;
+          if(inputPrefix) {
+            inputPrefix.value = metric.prefix;
+            inputPrefix.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const inputClassification = document.querySelector(`#drdMetrics_${index}_classification`) as HTMLInputElement;
+          if(inputClassification) {
+            inputClassification.value = metric.classification;
+            inputClassification.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          drd.drdLevels.forEach((level, i) => {
+            const input = document.querySelector(`#drdMetrics_${index}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+            input.value = metric.scoresByLevel[i].min_score.toString();
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          })
+        }
+      })
+    }, 50)
 
   } catch (err) {
     console.error('Falha ao carregar o DRD completo para edição:', err);
@@ -584,6 +639,7 @@ async function onSubmit(formValues: Record<string, any>) {
             <div class="d-flex justify-space-between align-center mb-2">
               <Field :name="`drdTopics[${index}].name`" :label="'tópico '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
+                  :id="`drdTopics_${index}_name`"
                   v-bind="field"
                   v-model="drdTopic.name" :label="`Tópico ${index + 1}`"
                   variant="solo-filled"
@@ -613,6 +669,7 @@ async function onSubmit(formValues: Record<string, any>) {
             <div v-for="(drdTopicItem, drdTopicItemIndex) in drdTopic.drdTopicItems" :key="drdTopicItemIndex" class="d-flex ml-4 align-start gap-2">
               <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].name`" :label="'item '+(drdTopicItemIndex+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
+                  :id="`drdTopics_${index}_drdTopicItems_${drdTopicItemIndex}_name`"
                   v-bind="field"
                   v-model="drdTopicItem.name" :label="`Item ${drdTopicItemIndex + 1}`"
                   variant="solo-filled"
@@ -630,7 +687,7 @@ async function onSubmit(formValues: Record<string, any>) {
                   class="text-center" 
                   style="min-width: 120px;"
                 >
-                <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1].name }}</div>
+                <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1]?.name }}</div>
                   <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].scoresByLevel[${levelIndex}].min_score`" rules="required" v-slot="{ field }">
                     <v-slider
                       :id="`drdTopics_${index}_drdTopicItems_${drdTopicItemIndex}_scoresByLevel_${levelIndex}_min_score`"
@@ -694,6 +751,7 @@ async function onSubmit(formValues: Record<string, any>) {
             <div class="d-flex justify-space-between align-start gap-2">
               <Field :name="`drdMetrics[${index}].name`" :label="'métrica '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
+                  :id="`drdMetrics_${index}_name`"
                   v-bind="field"
                   v-model="drdMetric.name"
                   :label="`Métrica ${index + 1}`"
@@ -707,6 +765,7 @@ async function onSubmit(formValues: Record<string, any>) {
 
               <Field :name="`drdMetrics[${index}].type`" label="Tipo" rules="required" v-slot="{ field, errorMessage }">
                 <v-select
+                  :id="`drdMetrics_${index}_type`"
                   v-bind="field"
                   v-model="drdMetric.type"
                   label="Tipo"
@@ -760,8 +819,8 @@ async function onSubmit(formValues: Record<string, any>) {
                   class="text-center" 
                   style="min-width: 120px;"
                 >
-                  <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1].name }}</div>
-                  <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].min_score`" :label="drd.drdLevels[score.drd_level_order - 1].name" rules="required" v-slot="{ field, errorMessage }">
+                  <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1]?.name }}</div>
+                  <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].min_score`" :label="drd.drdLevels[score.drd_level_order - 1]?.name" rules="required" v-slot="{ field, errorMessage }">
                     <v-text-field
                       :id="`drdMetrics_${index}_scoresByLevel_${levelIndex}_min_score`"
                       v-bind="field"
@@ -797,6 +856,7 @@ async function onSubmit(formValues: Record<string, any>) {
             <div class="d-flex gap-4">
               <Field :name="`drdMetrics[${index}].classification`" label="Classificação" v-slot="{ field }">
                 <v-text-field
+                  :id="`drdMetrics_${index}_classification`"
                   v-bind="field"
                   v-model="drdMetric.classification"
                   label="Classificação"
