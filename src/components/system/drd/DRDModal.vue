@@ -575,7 +575,6 @@ async function onSubmit(formValues: Record<string, any>) {
                 >
                 <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1].name }}</div>
                   <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].scoresByLevel[${levelIndex}].min_score`" rules="required" v-slot="{ field }">
-                    {{ field.value }}uai {{ score.min_score }}uai
                     <v-slider
                       :id="`drdTopics_${index}_drdTopicItems_${drdTopicItemIndex}_scoresByLevel_${levelIndex}_min_score`"
                       v-bind="field"
