@@ -8,6 +8,7 @@ import type DRD from '@/types/drd/drd.type';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { useUserStore } from '@/stores/auth.store';
 import { MetricPrefix } from '@/types/drd/drd-metric.type';
+import type DRDSimple from '@/types/drd/drd-simple.type';
 
 const drdStore = useDRDStore();
 const snackbarStore = useSnackbarStore();
@@ -16,74 +17,130 @@ const userStore = useUserStore();
 
 const props = defineProps<{
   modelValue: boolean,
-  selectedDRD?: DRD | null
+  selectedDRD?: DRDSimple | null
 }>();
 
 const emit = defineEmits(['update:modelValue']);
 
 const close = () => emit('update:modelValue', false);
 
+const drd = reactive<DRDPayload>({
+  uuid: undefined,
+  rate: 5,
+  job_position_uuid: undefined,
+  drdLevels: [{ uuid: undefined, name: 'Nível 1', order: 1 }],
+  drdTopics: [{
+    uuid: undefined,
+    name: '',
+    order: 1,
+    drdTopicItems: [{ uuid: undefined, name: '', order: 1,
+      scoresByLevel: [{
+        drd_level_order: 1,
+        drd_topic_item_uuid: undefined,
+        drd_topic_item_order: 1,
+        drd_metric_uuid: undefined,
+        drd_metric_order: undefined,
+        min_score: 3
+      }]
+    }]
+  }],
+  drdMetrics: [{
+    uuid: undefined,
+    name: '',
+    classification: '',
+    type: '',
+    prefix: MetricPrefix.MAIOR_OU_IGUAL,
+    order: 1,
+    scoresByLevel: [{
+      drd_level_order: 1,
+      drd_topic_item_uuid: undefined,
+      drd_topic_item_order: undefined,
+      drd_metric_uuid: undefined,
+      drd_metric_order: 1,
+      min_score: 0
+    }]
+  }],
+  createdByUser: {
+    name: userStore.user?.name || '',
+    email: userStore.user?.email || '',
+    cellphone: userStore.user?.cellphone || '',
+    profile_img_url: userStore.user?.profile_img_url || ''
+  }
+} as DRDPayload);
+
+const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> => {  
+  try {
+    const isEditing = !!selectedDRD?.uuid;
+    let fetchedDrd: DRD | undefined;
+
+    if (isEditing) {
+      fetchedDrd = await drdStore.getDRD(selectedDRD!.uuid!);
+    }
+
+    Object.assign(drd, {
+      uuid: fetchedDrd?.uuid || undefined,
+      rate: fetchedDrd?.rate || 5,
+      job_position_uuid: fetchedDrd?.jobPosition?.uuid || undefined,
+      
+      drdLevels: (fetchedDrd?.drdLevels && fetchedDrd?.drdLevels.length > 0)
+        ? fetchedDrd?.drdLevels
+        : [{ uuid: undefined, name: 'Nível 1', order: 1 }],
+        
+      drdTopics: (fetchedDrd?.drdTopics && fetchedDrd?.drdTopics.length > 0)
+        ? fetchedDrd?.drdTopics 
+        : [{
+          uuid: undefined,
+          name: '',
+          order: 1,
+          drdTopicItems: [{ uuid: undefined, name: '', order: 1,
+            scoresByLevel: [{
+              drd_level_order: 1,
+              drd_topic_item_uuid: undefined,
+              drd_topic_item_order: 1,
+              drd_metric_uuid: undefined,
+              drd_metric_order: undefined,
+              min_score: 3
+            }]
+          }]
+        }],
+        
+      drdMetrics: (fetchedDrd?.drdMetrics && fetchedDrd?.drdMetrics.length > 0)
+        ? fetchedDrd?.drdMetrics 
+        : [{
+          uuid: undefined,
+          name: '',
+          classification: '',
+          type: '',
+          prefix: MetricPrefix.MAIOR_OU_IGUAL,
+          order: 1,
+          scoresByLevel: [{
+            drd_level_order: 1,
+            drd_topic_item_uuid: undefined,
+            drd_topic_item_order: undefined,
+            drd_metric_uuid: undefined,
+            drd_metric_order: 1,
+            min_score: 0
+          }]
+        }],
+        
+      createdByUser: {
+        name: userStore.user?.name || '',
+        email: userStore.user?.email || '',
+        cellphone: userStore.user?.cellphone || '',
+        profile_img_url: userStore.user?.profile_img_url || ''
+      }
+    });
+
+  } catch (err) {
+    console.error('Falha ao carregar o DRD completo para edição:', err);
+  }
+};
+
 const useJobLevelsAsBase = ref(false); 
 const selectedJobPosition = ref<string | null>(null);
 const selectedJobPositionObj = computed(() => {
   return jobPositionStore.job_positions?.find(jobPosition => jobPosition.uuid === selectedJobPosition.value)
 });
-
-const getInitialDRDState = (selectedDRD: DRD | null | undefined): DRDPayload => {
-  const initialLevels = selectedDRD?.drdLevels && selectedDRD.drdLevels.length > 0
-    ? selectedDRD.drdLevels
-    : [{ uuid: undefined, name: 'Nível 1', order: 1 }];
-
-  return {
-    uuid: selectedDRD?.uuid || undefined,
-    rate: selectedDRD?.rate || 5,
-    job_position_uuid: selectedDRD?.jobPosition?.uuid || undefined,
-    drdLevels: initialLevels,
-    drdTopics: selectedDRD?.drdTopics && selectedDRD.drdTopics.length > 0 
-      ? selectedDRD.drdTopics 
-      : [{
-        uuid: undefined,
-        name: '',
-        order: 1,
-        drdTopicItems: [{ uuid: undefined, name: '', order: 1,
-          scoresByLevel: [{
-            drd_level_order: 1,
-            drd_topic_item_uuid: undefined,
-            drd_topic_item_order: 1,
-            drd_metric_uuid: undefined,
-            drd_metric_order: undefined,
-            min_score: 3
-          }]
-        }]
-      }],
-    drdMetrics: selectedDRD?.drdMetrics && selectedDRD.drdMetrics.length > 0 
-      ? selectedDRD.drdMetrics 
-      : [{
-      uuid: undefined,
-      name: '',
-      classification: '',
-      type: '',
-      prefix: MetricPrefix.MAIOR_OU_IGUAL,
-      order: 1,
-      scoresByLevel: [{
-        drd_level_order: 1,
-        drd_topic_item_uuid: undefined,
-        drd_topic_item_order: undefined,
-        drd_metric_uuid: undefined,
-        drd_metric_order: 1,
-        min_score: 0
-      }]
-    }],
-    createdByUser: {
-      name: userStore.user?.name || '',
-      email: userStore.user?.email || '',
-      cellphone: userStore.user?.cellphone || '',
-      profile_img_url: userStore.user?.profile_img_url || ''
-    }
-  } as DRDPayload;
-}
-
-const drd = reactive<DRDPayload>(getInitialDRDState(props.selectedDRD));
 
 const minScoreOptions = computed(() => {
   switch (drd.rate) {
@@ -132,8 +189,8 @@ function getMetricMinScoreAppendIcon(metricType: string) {
   }
 };
 
-watch(() => props.selectedDRD, (val) => {
-  Object.assign(drd, getInitialDRDState(val));
+watch(() => props.selectedDRD, (newVal) => {
+  getInitialDRDState(newVal ?? null); 
 }, { immediate: true });
 
 watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
@@ -405,7 +462,7 @@ async function onSubmit(formValues: Record<string, any>) {
 <template>
   <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" max-width="1000px">
     <Form @submit="onSubmit" :initial-values="drd">
-      <v-card>
+      <v-card :loading="drdStore.loading">
         <v-card-title class="text-h6">
           {{ !!selectedDRD?.uuid ? 'Editar DRD' : 'Novo DRD' }}
         </v-card-title>

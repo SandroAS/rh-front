@@ -2,23 +2,23 @@
 import { onMounted, ref, watch } from 'vue'
 import { useDRDStore } from '@/stores/drd.store';
 import loadItems from '@/utils/loadItems.util';
-import type DRD from '@/types/drd/drd.type';
 import DRDModal from '@/components/system/drd/DRDModal.vue';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { getInitials } from '@/utils/getInitialsFromName.util';
+import type DRDSimple from '@/types/drd/drd-simple.type';
 
 const DRDStore = useDRDStore();
 const jobPositionStore = useJobPositionStore();
 
 const dialog = ref(false);
-const selectedDRD = ref<DRD | null>(null);
+const selectedDRD = ref<DRDSimple | null>(null);
 
 const currentPage = ref(DRDStore.page);
 const itemsPerPage = ref(DRDStore.limit);
 const searchTerm = ref(DRDStore.search_term || '');
 const sortBy = ref(DRDStore.sort_column ? [{ key: DRDStore.sort_column, order: DRDStore.sort_order }] : []);
 
-const openDialog = (item?: DRD) => {
+const openDialog = (item?: DRDSimple) => {
   selectedDRD.value = item || null;
   dialog.value = true;
 }
@@ -84,7 +84,7 @@ onMounted(async () => {
 
     <v-data-table
       :headers="[
-        { title: 'Cargo', value: 'jobPosition', sortable: true },
+        { title: 'Cargo', value: 'jobPosition.title', sortable: true },
         { title: 'Criado por', value: 'createdByUser', sortable: true },
         { title: 'Escala do DRD', value: 'rate', align: 'end' },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
@@ -99,9 +99,6 @@ onMounted(async () => {
       mobile-breakpoint="md"
       @update:options="loadDRDs"
     >
-      <template #item.jobPosition="{ item }">
-        {{ item.jobPosition.title }}
-      </template>
       <template #item.createdByUser="{ item }">
         <div class="d-flex align-center gap-3 flex-row-reverse flex-md-row">
           <v-avatar color="primary" size="36" class="mr-2 ml-sm-2 mr-sm-0"> <template v-if="item.createdByUser.profile_img_url">

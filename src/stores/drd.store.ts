@@ -1,13 +1,14 @@
-import { getDRDs, saveDRD } from '@/services/drd.service';
+import { getDRD, getDRDs, saveDRD } from '@/services/drd.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type DRDPayload from '@/types/drd/drd-payload.type';
 import type DRDResponsePagination from '@/types/drd/drd-response-pagination.type';
+import type DRDSimple from '@/types/drd/drd-simple.type';
 import type DRD from '@/types/drd/drd.type';
 import { defineStore } from 'pinia';
 
 
 interface DRDStoreState {
-  drds: DRD[] | null;
+  drds: DRDSimple[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -41,15 +42,13 @@ export const useDRDStore = defineStore('drd', {
       this.error = null;
 
       try {
-        const res: { uuid: string } = await saveDRD(drd, uuid);
+        const res = await saveDRD(drd, uuid);
         if(!this.drds) this.drds = [];
         const DRDsaved = {
           uuid: res.uuid,
           rate: drd.rate,
-          jobPosition: drd.jobPosition!,
-          drdTopics: drd.drdTopics,
-          drdMetrics: drd.drdMetrics,
-          createdByUser: drd.createdByUser
+          jobPosition: res.jobPosition,
+          createdByUser: res.createdByUser
         }
         if(uuid) {
           const index = this.drds.findIndex(x => x.uuid === uuid);
@@ -84,7 +83,21 @@ export const useDRDStore = defineStore('drd', {
         this.sort_order = params.sort_order;
         this.search_term = params.search_term;
       } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar DRDs.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getDRD(uuid: string) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        return await getDRD(uuid);
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar DRD.';
         throw err;
       } finally {
         this.loading = false;
