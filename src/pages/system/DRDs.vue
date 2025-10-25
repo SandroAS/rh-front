@@ -5,6 +5,7 @@ import loadItems from '@/utils/loadItems.util';
 import type DRD from '@/types/drd/drd.type';
 import DRDModal from '@/components/system/drd/DRDModal.vue';
 import { useJobPositionStore } from '@/stores/job-position.store';
+import { getInitials } from '@/utils/getInitialsFromName.util';
 
 const DRDStore = useDRDStore();
 const jobPositionStore = useJobPositionStore();
@@ -83,9 +84,9 @@ onMounted(async () => {
 
     <v-data-table
       :headers="[
-        { title: 'Nome', value: 'name', sortable: true },
-        { title: 'Descrição', value: 'description', sortable: true },
-        { title: 'Valor (R$)', value: 'price', align: 'end' },
+        { title: 'Cargo', value: 'jobPosition', sortable: true },
+        { title: 'Criado por', value: 'createdByUser', sortable: true },
+        { title: 'Escala do DRD', value: 'rate', align: 'end' },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
       :items="DRDStore.drds || []"
@@ -98,6 +99,24 @@ onMounted(async () => {
       mobile-breakpoint="md"
       @update:options="loadDRDs"
     >
+      <template #item.jobPosition="{ item }">
+        {{ item.jobPosition.title }}
+      </template>
+      <template #item.createdByUser="{ item }">
+        <div class="d-flex align-center gap-3 flex-row-reverse flex-md-row">
+          <v-avatar color="primary" size="36" class="mr-2 ml-sm-2 mr-sm-0"> <template v-if="item.createdByUser.profile_img_url">
+              <v-img :src="item.createdByUser.profile_img_url"></v-img>
+            </template>
+            <template v-else>
+              {{ getInitials(item.createdByUser.name) }}
+            </template>
+          </v-avatar>
+          <div class="text-md-left text-right text-left">
+            <div class="font-weight-medium">{{ item.createdByUser.name }}</div>
+            <div class="text-caption text-medium-emphasis">{{ item.createdByUser.email }}</div>
+          </div>
+        </div>
+      </template>
       <template v-slot:[`item.actions`]="{ item }">
         <div>
           <v-btn icon @click="openDialog(item)">
