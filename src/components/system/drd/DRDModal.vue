@@ -146,6 +146,12 @@ const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> 
           input.value = fetchedDrd?.jobPosition?.uuid ?? '';
           input.dispatchEvent(new Event('change', { bubbles: true }));
         }
+
+        const inputRate = document.querySelector(`#drd_rate`) as HTMLInputElement;
+        if(inputRate) {
+          inputRate.value = fetchedDrd?.rate.toString() ?? '5';
+          inputRate.dispatchEvent(new Event('change', { bubbles: true }));
+        }
   
         drd.drdLevels.forEach((level, i) => {
           const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
@@ -516,7 +522,7 @@ async function onSubmit(formValues: Record<string, any>) {
   const payload: DRDPayload = {
     ...drd,
     job_position_uuid: formValues.job_position_uuid,
-    rate: formValues.rate,
+    rate: +(formValues.rate),
   } as DRDPayload;
 
   const backendPayload: any = {
@@ -574,7 +580,9 @@ async function onSubmit(formValues: Record<string, any>) {
             <div class="w-100">
               <div class="text-caption">Escala do DRD</div>
               <Field name="rate" label="Rate" rules="required|min_value:3" v-slot="{ field, errorMessage }">
+                {{ field.value }}uai{{ drd.rate }}
                 <v-slider
+                  id="drd_rate"
                   v-bind="field"
                   v-model="drd.rate"
                   :max="5"
