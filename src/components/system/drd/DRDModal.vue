@@ -579,7 +579,6 @@ async function onSubmit(formValues: Record<string, any>) {
             <div class="w-100">
               <div class="text-caption">Escala do DRD</div>
               <Field name="rate" label="Rate" rules="required|min_value:3" v-slot="{ field, errorMessage }">
-                {{ field.value }}uai{{ drd.rate }}
                 <v-slider
                   id="drd_rate"
                   v-bind="field"
