@@ -171,8 +171,10 @@ const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> 
               input.dispatchEvent(new Event('change', { bubbles: true }));
               drd.drdLevels.forEach((level, i) => {
                 const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
-                input.value = item.scoresByLevel[i].min_score.toString();
-                input.dispatchEvent(new Event('change', { bubbles: true }));
+                if(input && item.scoresByLevel[i]) {
+                  input.value = item.scoresByLevel[i].min_score.toString();
+                  input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
               })
             })
           }
@@ -200,8 +202,10 @@ const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> 
             }
             drd.drdLevels.forEach((level, i) => {
               const input = document.querySelector(`#drdMetrics_${index}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
-              input.value = metric.scoresByLevel[i].min_score.toString();
-              input.dispatchEvent(new Event('change', { bubbles: true }));
+              if(input && metric.scoresByLevel[i]) {
+                input.value = metric.scoresByLevel[i].min_score.toString();
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+              }
             })
           }
         })
@@ -323,8 +327,10 @@ watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
           topic.drdTopicItems.forEach((item, idx) => {
             newLevels.forEach((level, i) => {
               const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
-              input.value = '3';
-              input.dispatchEvent(new Event('change', { bubbles: true }));
+              if(input) {
+                input.value = '3';
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+              }
             })
           })
         })
@@ -408,12 +414,12 @@ const removeDRDLevel = (index: number) => {
   useJobLevelsAsBase.value = false;
   if (drd.drdLevels.length > 1) {
     const removedLevelOrder = drd.drdLevels[index].order;
-    
+
     drd.drdLevels.splice(index, 1);
 
     drd.drdLevels.forEach((level, i) => {
       level.order = i + 1;
-      
+
       const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
       input.value = level.name;
       input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -423,14 +429,14 @@ const removeDRDLevel = (index: number) => {
       topic.drdTopicItems.forEach(item => {
         item.scoresByLevel = item.scoresByLevel
           .filter(score => score.drd_level_order !== removedLevelOrder)
-          .map((score, i) => ({ ...score, drd_level_order: i + 1 }));
+          .map((score, i) => ({ ...score, drd_level_order: drd.drdLevels[i].order }));
       });
     });
-    
+
     drd.drdMetrics.forEach(metric => {
       metric.scoresByLevel = metric.scoresByLevel
         .filter(score => score.drd_level_order !== removedLevelOrder)
-        .map((score, i) => ({ ...score, drd_level_order: i + 1 }));
+        .map((score, i) => ({ ...score, drd_level_order: drd.drdLevels[i].order }));
     });
 
   } else {
@@ -451,6 +457,23 @@ const addDRDTopic = () => {
 const removeDRDTopic = (index: number) => {
   if (drd.drdTopics.length > 1) {
     drd.drdTopics.splice(index, 1);
+    
+    drd.drdTopics.forEach((topic, i) => {
+      topic.order = i + 1;
+    });
+
+    drd.drdTopics.forEach((topic, index) => {
+      const input = document.querySelector(`#drdTopics_${index}_name`) as HTMLInputElement;
+      if(input) {
+        input.value = topic.name;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        topic.drdTopicItems.forEach((item, idx) => {
+          const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_name`) as HTMLInputElement;
+          input.value = item.name;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        })
+      }
+    })
   } else {
     snackbarStore.show('Não é possível remover todos os tópicos de drd. Adicione um novo para poder remover este.', 'warning');
   }
@@ -471,8 +494,10 @@ const addDRDTopicItem = (index: number) => {
       topic.drdTopicItems.forEach((item, idx) => {
         drd.drdLevels.forEach((level, i) => {
           const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
-          input.value = '3';
-          input.dispatchEvent(new Event('change', { bubbles: true }));
+          if(input) {
+            input.value = '3';
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
         })
       })
     })
@@ -482,6 +507,21 @@ const addDRDTopicItem = (index: number) => {
 const removeDRDTopicItem = (index: number, indexTopicItem: number) => {
   if (drd.drdTopics[index].drdTopicItems.length > 1) {
     drd.drdTopics[index].drdTopicItems.splice(indexTopicItem, 1);
+
+    drd.drdTopics[index].drdTopicItems.forEach((item, i) => {
+      item.order = i + 1;
+    });
+
+    // Garante que o vee-validate vai atualizar o valor
+    drd.drdTopics.forEach((topic, topicIndex) => {
+      topic.drdTopicItems.forEach((item, idx) => {
+        const input = document.querySelector(`#drdTopics_${topicIndex}_drdTopicItems_${idx}_name`) as HTMLInputElement;
+        if(input) {
+          input.value = item.name;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      })
+    })
   } else {
     snackbarStore.show('Não é possível remover todos os items do tópico de drd. Adicione um novo para poder remover este.', 'warning');
   }
@@ -512,6 +552,41 @@ const addDRDMetric = () => {
 const removeDRDMetric = (index: number) => {
   if (drd.drdMetrics.length > 1) {
     drd.drdMetrics.splice(index, 1);
+
+    drd.drdMetrics.forEach((metric, i) => {
+      metric.order = i + 1;
+    });
+
+    // Garante que o vee-validate vai atualizar o valor
+    drd.drdMetrics.forEach((metric, index) => {
+      const inputName = document.querySelector(`#drdMetrics_${index}_name`) as HTMLInputElement;
+      if(inputName) {
+        inputName.value = metric.name;
+        inputName.dispatchEvent(new Event('change', { bubbles: true }));
+        const inputType = document.querySelector(`#drdMetrics_${index}_type`) as HTMLInputElement;
+        if(inputType) {
+          inputType.value = metric.type;
+          inputType.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const inputPrefix = document.querySelector(`#drdMetrics_${index}_prefix`) as HTMLInputElement;
+        if(inputPrefix) {
+          inputPrefix.value = metric.prefix;
+          inputPrefix.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const inputClassification = document.querySelector(`#drdMetrics_${index}_classification`) as HTMLInputElement;
+        if(inputClassification) {
+          inputClassification.value = metric.classification;
+          inputClassification.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        drd.drdLevels.forEach((level, i) => {
+          const input = document.querySelector(`#drdMetrics_${index}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+          if(input && metric.scoresByLevel[i]) {
+            input.value = metric.scoresByLevel[i].min_score.toString();
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        })
+      }
+    })
   } else {
     snackbarStore.show('É necessário ter pelo menos uma métrica de avaliação.', 'warning');
   }
