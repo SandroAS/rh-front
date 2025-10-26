@@ -19,8 +19,15 @@ export const getDRDs = async (page: number = 1, limit: number = 10, sortColumn?:
 
 export const getDRD = async (uuid: string): Promise<DRD> => {
   const response: AxiosResponse<DRD> = await api.get(`/drds/${uuid}`);
+
+  response.data.drdTopics.forEach(topic => {
+    if (topic.drdTopicItems && Array.isArray(topic.drdTopicItems)) {
+      topic.drdTopicItems.sort((a, b) => a.order - b.order);
+    }
+  });
+
   return response.data;
-}
+};
 
 export const saveDRD = async (drd: DRDPayload, uuid?: string) => {
   const response: AxiosResponse<DRDSimple> = uuid 
