@@ -255,8 +255,21 @@ function getMetricMinScoreAppendIcon(metricType: string) {
   }
 };
 
+watch(() => drd, (newVal) => {
+  drd.drdTopics.forEach(topic => {
+    topic.drdTopicItems.forEach(item => {
+      item.scoresByLevel.forEach(minScore => {
+        const min_score = typeof minScore.min_score === 'string' ? parseInt(minScore.min_score) : minScore.min_score
+        if(min_score > newVal.rate) {
+          minScore.min_score = drd.rate;
+        }
+      })
+    })
+  })
+}, { deep: true });
+
 watch(() => props.selectedDRD, (newVal) => {
-  getInitialDRDState(newVal ?? null); 
+  getInitialDRDState(newVal ?? null);
 }, { immediate: true });
 
 watch(() => selectedJobPosition.value, (newJobPositionUuid) => {
@@ -701,6 +714,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 >
                 <div class="text-caption font-weight-bold mb-n2">{{ drd.drdLevels[score.drd_level_order - 1]?.name }}</div>
                   <Field :name="`drdTopics[${index}].drdTopicItems[${drdTopicItemIndex}].scoresByLevel[${levelIndex}].min_score`" rules="required" v-slot="{ field }">
+                    {{ field.value }}uai{{ score.min_score }}
                     <v-slider
                       :id="`drdTopics_${index}_drdTopicItems_${drdTopicItemIndex}_scoresByLevel_${levelIndex}_min_score`"
                       v-bind="field"
