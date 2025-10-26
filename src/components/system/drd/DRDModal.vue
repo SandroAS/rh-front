@@ -183,7 +183,7 @@ const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> 
               inputType.value = metric.type;
               inputType.dispatchEvent(new Event('change', { bubbles: true }));
             }
-            const inputPrefix = document.querySelector(`#drdMetrics_${index}_prefixe`) as HTMLInputElement;
+            const inputPrefix = document.querySelector(`#drdMetrics_${index}_prefix`) as HTMLInputElement;
             if(inputPrefix) {
               inputPrefix.value = metric.prefix;
               inputPrefix.dispatchEvent(new Event('change', { bubbles: true }));
@@ -497,7 +497,7 @@ const addDRDMetric = () => {
   // Garante que o vee-validate vai atualizar o valor
   setTimeout(() => {
     drd.drdMetrics.forEach((metric, index) => {
-      const input = document.querySelector(`#drdMetrics_${index}_prefixe`) as HTMLInputElement;
+      const input = document.querySelector(`#drdMetrics_${index}_prefix`) as HTMLInputElement;
       input.value = MetricPrefix.MAIOR_OU_IGUAL;
       input.dispatchEvent(new Event('change', { bubbles: true }));
     })
@@ -705,7 +705,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 />
               </Field>
 
-              <div class="d-flex overflow-x-auto py-2 flex-shrink-0" style="max-width: 40%; min-width: 400px; gap: 1rem;">
+              <div class="d-flex overflow-x-auto py-2 pl-2 flex-shrink-0" style="max-width: 40%; min-width: 400px; gap: 1rem;">
                 <div
                   v-for="(score, levelIndex) in drdTopicItem.scoresByLevel" 
                   :key="levelIndex" 
