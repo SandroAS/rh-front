@@ -9,6 +9,7 @@ import { useJobPositionStore } from '@/stores/job-position.store';
 import { useUserStore } from '@/stores/auth.store';
 import { MetricPrefix } from '@/types/drd/drd-metric.type';
 import type DRDSimple from '@/types/drd/drd-simple.type';
+import mergeArrays from '@/utils/mergeArrays.util';
 
 const drdStore = useDRDStore();
 const snackbarStore = useSnackbarStore();
@@ -67,6 +68,12 @@ const drd = reactive<DRDPayload>({
     profile_img_url: userStore.user?.profile_img_url || ''
   }
 } as DRDPayload);
+
+const useJobLevelsAsBase = ref(false); 
+const selectedJobPosition = ref<string | null>(null);
+const selectedJobPositionObj = computed(() => {
+  return jobPositionStore.job_positions?.find(jobPosition => jobPosition.uuid === selectedJobPosition.value)
+});
 
 const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> => {  
   try {
@@ -129,73 +136,77 @@ const getInitialDRDState = async (selectedDRD: DRDSimple | null): Promise<void> 
       }
     });
 
+    selectedJobPosition.value = fetchedDrd?.jobPosition?.uuid ?? null;
+
     // Garante que o vee-validate vai atualizar o valor
-    setTimeout(() => {
-      drd.drdLevels.forEach((level, i) => {
-        const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
+    if(!!selectedDRD?.uuid) {
+      setTimeout(() => {
+        const input = document.querySelector(`#job_position_uuid`) as HTMLInputElement;
         if(input) {
-          input.value = level.name;
+          input.value = fetchedDrd?.jobPosition?.uuid ?? '';
           input.dispatchEvent(new Event('change', { bubbles: true }));
         }
-      })
-
-      drd.drdTopics.forEach((topic, index) => {
-        const input = document.querySelector(`#drdTopics_${index}_name`) as HTMLInputElement;
-        if(input) {
-          input.value = topic.name;
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          topic.drdTopicItems.forEach((item, idx) => {
-            const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_name`) as HTMLInputElement;
-            input.value = item.name;
+  
+        drd.drdLevels.forEach((level, i) => {
+          const input = document.querySelector(`#drdLevels_${i}_name`) as HTMLInputElement;
+          if(input) {
+            input.value = level.name;
             input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        })
+  
+        drd.drdTopics.forEach((topic, index) => {
+          const input = document.querySelector(`#drdTopics_${index}_name`) as HTMLInputElement;
+          if(input) {
+            input.value = topic.name;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            topic.drdTopicItems.forEach((item, idx) => {
+              const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_name`) as HTMLInputElement;
+              input.value = item.name;
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+              drd.drdLevels.forEach((level, i) => {
+                const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+                input.value = item.scoresByLevel[i].min_score.toString();
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+              })
+            })
+          }
+        })
+  
+        drd.drdMetrics.forEach((metric, index) => {
+          const inputName = document.querySelector(`#drdMetrics_${index}_name`) as HTMLInputElement;
+          if(inputName) {
+            inputName.value = metric.name;
+            inputName.dispatchEvent(new Event('change', { bubbles: true }));
+            const inputType = document.querySelector(`#drdMetrics_${index}_type`) as HTMLInputElement;
+            if(inputType) {
+              inputType.value = metric.type;
+              inputType.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            const inputPrefix = document.querySelector(`#drdMetrics_${index}_prefixe`) as HTMLInputElement;
+            if(inputPrefix) {
+              inputPrefix.value = metric.prefix;
+              inputPrefix.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            const inputClassification = document.querySelector(`#drdMetrics_${index}_classification`) as HTMLInputElement;
+            if(inputClassification) {
+              inputClassification.value = metric.classification;
+              inputClassification.dispatchEvent(new Event('change', { bubbles: true }));
+            }
             drd.drdLevels.forEach((level, i) => {
-              const input = document.querySelector(`#drdTopics_${index}_drdTopicItems_${idx}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
-              input.value = item.scoresByLevel[i].min_score.toString();
+              const input = document.querySelector(`#drdMetrics_${index}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
+              input.value = metric.scoresByLevel[i].min_score.toString();
               input.dispatchEvent(new Event('change', { bubbles: true }));
             })
-          })
-        }
-      })
-
-      drd.drdMetrics.forEach((metric, index) => {
-        const inputName = document.querySelector(`#drdMetrics_${index}_name`) as HTMLInputElement;
-        if(inputName) {
-          inputName.value = metric.name;
-          inputName.dispatchEvent(new Event('change', { bubbles: true }));
-          const inputType = document.querySelector(`#drdMetrics_${index}_type`) as HTMLInputElement;
-          if(inputType) {
-            inputType.value = metric.type;
-            inputType.dispatchEvent(new Event('change', { bubbles: true }));
           }
-          const inputPrefix = document.querySelector(`#drdMetrics_${index}_prefixe`) as HTMLInputElement;
-          if(inputPrefix) {
-            inputPrefix.value = metric.prefix;
-            inputPrefix.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          const inputClassification = document.querySelector(`#drdMetrics_${index}_classification`) as HTMLInputElement;
-          if(inputClassification) {
-            inputClassification.value = metric.classification;
-            inputClassification.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          drd.drdLevels.forEach((level, i) => {
-            const input = document.querySelector(`#drdMetrics_${index}_scoresByLevel_${i}_min_score`) as HTMLInputElement;
-            input.value = metric.scoresByLevel[i].min_score.toString();
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-          })
-        }
-      })
-    }, 50)
+        })
+      }, 50)
+    }
 
   } catch (err) {
     console.error('Falha ao carregar o DRD completo para edição:', err);
   }
 };
-
-const useJobLevelsAsBase = ref(false); 
-const selectedJobPosition = ref<string | null>(null);
-const selectedJobPositionObj = computed(() => {
-  return jobPositionStore.job_positions?.find(jobPosition => jobPosition.uuid === selectedJobPosition.value)
-});
 
 const minScoreOptions = computed(() => {
   switch (drd.rate) {
@@ -498,8 +509,8 @@ async function onSubmit(formValues: Record<string, any>) {
   const backendPayload: any = {
     job_position_uuid: payload.job_position_uuid,
     rate: payload.rate,
-    levels: payload.drdLevels.map(level => ({ name: level.name, order: level.order })),
-    metrics: payload.drdMetrics,
+    levels: payload.drdLevels.map(level => ({ uuid: level.uuid, name: level.name, order: level.order })),
+    metrics: payload.drdMetrics.map((metric, index) => ({ ...metric, order: ++index})),
     topics: payload.drdTopics,
   };
 
@@ -526,6 +537,7 @@ async function onSubmit(formValues: Record<string, any>) {
             <div class="w-100">
               <Field name="job_position_uuid" label="Cargo" rules="required" v-slot="{ field, errorMessage }">
                 <v-select
+                  id="job_position_uuid"
                   v-bind="field"
                   v-model="selectedJobPosition"
                   label="Cargo"
