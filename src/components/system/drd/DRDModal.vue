@@ -9,7 +9,6 @@ import { useJobPositionStore } from '@/stores/job-position.store';
 import { useUserStore } from '@/stores/auth.store';
 import { MetricPrefix } from '@/types/drd/drd-metric.type';
 import type DRDSimple from '@/types/drd/drd-simple.type';
-import mergeArrays from '@/utils/mergeArrays.util';
 
 const drdStore = useDRDStore();
 const snackbarStore = useSnackbarStore();
