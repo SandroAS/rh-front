@@ -46,7 +46,7 @@ onMounted(() => {
 
     <v-spacer />
 
-    <NotificationMenu />
+    <!-- <NotificationMenu /> -->
     <AvatarMenu />
   </v-app-bar>
 
