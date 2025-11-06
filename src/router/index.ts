@@ -18,7 +18,7 @@ import TeamPanel from '@/pages/system/TeamPanel.vue'
 import UserPanel from '@/pages/system/UserPanel.vue'
 import Evaluations from '@/pages/system/Evaluations.vue'
 import LayoutForms from '@/layouts/LayoutForms.vue'
-import EvaluationForm from '@/pages/forms/EvaluationForm.vue'
+import EvaluationApplicationForm from '@/pages/forms/EvaluationApplicationForm.vue'
 
 const SISTEM_NAME = 'RH';
 
@@ -122,7 +122,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'evaluationForm',
-        component: EvaluationForm,
+        component: EvaluationApplicationForm,
         meta: { isPublic: true, title: 'Formulário de Avaliação - ' + SISTEM_NAME }
       }
     ]
