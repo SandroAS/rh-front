@@ -62,7 +62,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <v-container fluid>
     <div class="flex-column flex-md-row d-flex justify-space-between mb-4 mt-2 align-center">
       <v-text-field
         v-model="searchTerm"
@@ -112,5 +112,5 @@ onMounted(async () => {
     </v-data-table>
 
     <EvaluationModal v-model="dialog" :selectedEvaluation="selectedEvaluation" />
-  </div>
+  </v-container>
 </template>

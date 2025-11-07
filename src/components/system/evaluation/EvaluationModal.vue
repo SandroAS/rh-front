@@ -7,7 +7,24 @@ import { useDRDStore } from '@/stores/drd.store';
 import { useUserStore } from '@/stores/auth.store';
 import type Evaluation from '@/types/evaluation/evaluation.type';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
-import { QuestionType } from '@/types/evaluation/evaluation-question.type';
+import { QuestionType, type EvaluationQuestion, type QuestionOption } from '@/types/evaluation/evaluation-question.type';
+
+interface EvaluationFormTopic {
+  uuid?: string;
+  title: string;
+  description: string;
+  evaluation_questions: EvaluationQuestion[];
+}
+
+interface EvaluationFormData {
+  uuid?: string;
+  title: string;
+  description: string;
+  created_by_user_uuid: string;
+  rate: number;
+  drd_uuid?: string;
+  evaluation_topics: EvaluationFormTopic[];
+}
 
 const evaluationStore = useEvaluationStore();
 const snackbarStore = useSnackbarStore();
@@ -23,7 +40,7 @@ const emit = defineEmits(['update:modelValue']);
 
 const close = () => emit('update:modelValue', false);
 
-const evaluationFormData = reactive<EvaluationPayload>({
+const evaluationFormData = reactive<EvaluationFormData>({
   uuid: props.selectedEvaluation?.uuid || undefined,
   title: props.selectedEvaluation?.title || '',
   description: props.selectedEvaluation?.description || '',
@@ -31,36 +48,49 @@ const evaluationFormData = reactive<EvaluationPayload>({
   rate: props.selectedEvaluation?.rate || 5,
   drd_uuid: props.selectedEvaluation?.drd_uuid || undefined,
   
-  evaluation_topics: props.selectedEvaluation?.evaluation_topics || [{
+  evaluation_topics: props.selectedEvaluation?.evaluation_topics?.map(topic => ({
+    uuid: topic.uuid,
+    title: topic.title,
+    description: topic.description,
+    evaluation_questions: topic.evaluation_questions.map(question => ({
+      uuid: question.uuid,
+      title: question.title,
+      description: question.description,
+      type: question.type,
+      options: question.options?.map((opt, index) => 
+        typeof opt === 'string' 
+          ? { uuid: undefined, text: opt, order: index + 1 }
+          : opt
+      ) || []
+    }))
+  })) || [{
     uuid: undefined,
     title: '',
     description: '',
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.SHORT_TEXT, options: [] }] 
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, options: [] }] 
   }],
 });
 
 const frontendQuestionTypes = [
-  { text: 'Valor Numérico (Rate)', value: QuestionType.SHORT_TEXT },
-  { text: 'Múltipla Escolha (Caixa de seleção)', value: QuestionType.MULTI_CHOICE },
-  { text: 'Escolha Única (Rádio)', value: QuestionType.SINGLE_CHOICE },
-  { text: 'Lista Suspensa (Dropdown)', value: QuestionType.DROPDOWN },
-  { text: 'Resposta Curta (Texto)', value: QuestionType.SHORT_TEXT },
-  { text: 'Resposta Longa (Parágrafo)', value: QuestionType.LONG_TEXT },
-];
+  { value: QuestionType.RATE, text: 'Classificação', icon: 'mdi-star-outline' },
+  { value: QuestionType.SHORT_TEXT, text: 'Resposta curta', icon: 'mdi-text-short' },
+  { value: QuestionType.LONG_TEXT, text: 'Parágrafo', icon: 'mdi-text' },
+  { value: QuestionType.SINGLE_CHOICE, text: 'Múltipla escolha', icon: 'mdi-radiobox-marked' },
+  { value: QuestionType.MULTI_CHOICE, text: 'Caixas de seleção', icon: 'mdi-checkbox-marked-outline' },
+  { value: QuestionType.DROPDOWN, text: 'Lista suspensa', icon: 'mdi-arrow-down-drop-circle-outline' },
+]
 
 const radio = ref('fromDRD');
 
 const isEditing = computed(() => !!props.selectedEvaluation);
 const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
-const hasDrdLoaded = computed(() => !!drdStore.drds);
 
 const drdOptions = computed(() => {
   if (!drdStore.drds) return [];
   return drdStore.drds.map(drd => ({
-    title: `${drd.jobPosition?.name || 'DRD sem cargo'} - ${drd.rate} estrelas`,
+    title: `${drd.jobPosition?.title || 'DRD sem cargo'} - ${drd.rate} estrelas`,
     value: drd.uuid,
-    rate: drd.rate, // Adiciona o rate para uso fácil
-    drdTopics: drd.drdTopics, // Adiciona os tópicos do DRD
+    rate: drd.rate,
   }));
 });
 
@@ -71,39 +101,63 @@ watch(() => props.selectedEvaluation, (val) => {
   evaluationFormData.created_by_user_uuid = val?.created_by_user_uuid || userStore.user?.uuid || '';
   evaluationFormData.rate = val?.rate || 5;
   evaluationFormData.drd_uuid = val?.drd_uuid || undefined;
-    evaluationFormData.evaluation_topics = val?.evaluation_topics || [{
+  evaluationFormData.evaluation_topics = val?.evaluation_topics?.map(topic => ({
+    uuid: topic.uuid,
+    title: topic.title,
+    description: topic.description,
+    evaluation_questions: topic.evaluation_questions.map(question => ({
+      uuid: question.uuid,
+      title: question.title,
+      description: question.description,
+      type: question.type,
+      options: question.options?.map((opt, index) => 
+        typeof opt === 'string' 
+          ? { uuid: undefined, text: opt, order: index + 1 }
+          : opt
+      ) || []
+    }))
+  })) || [{
     uuid: undefined,
     title: '',
     description: '',
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.SHORT_TEXT, options: [] }]
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, options: [] }]
   }];
 }, { immediate: true });
 
-watch(() => evaluationFormData.drd_uuid, (newDrdUuid) => {
+watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
   const defaultTopics = [{
     uuid: undefined,
     title: '',
     description: '',
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.SHORT_TEXT, options: [] }]
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, options: [] }]
   }];
 
-  if (newDrdUuid && drdStore.drds) {
-    const selectedDrd = drdStore.drds.find(drd => drd.uuid === newDrdUuid);
-    if (selectedDrd) {
-      evaluationFormData.rate = selectedDrd.rate;
-      
-      evaluationFormData.evaluation_topics = selectedDrd.drdTopics.map(drdTopic => ({
-        uuid: undefined,
-        title: drdTopic.name,
-        description: '',
-        evaluation_questions: drdTopic.drdTopicItems.map(drdItem => ({
+  if (newDrdUuid) {
+    try {
+      // Buscar o DRD completo para ter acesso aos drdTopics
+      const fullDrd = await drdStore.getDRD(newDrdUuid);
+      if (fullDrd) {
+        evaluationFormData.rate = fullDrd.rate;
+        
+        evaluationFormData.evaluation_topics = fullDrd.drdTopics.map((drdTopic) => ({
           uuid: undefined,
-          title: drdItem.name,
+          title: drdTopic.name,
           description: '',
-          type: QuestionType.SHORT_TEXT,
-          options: []
-        }))
-      }));
+          evaluation_questions: drdTopic.drdTopicItems.map((drdItem) => ({
+            uuid: undefined,
+            title: drdItem.name,
+            description: '',
+            type: QuestionType.RATE,
+            options: []
+          }))
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao buscar DRD:', error);
+      if (!isEditing.value) {
+        evaluationFormData.evaluation_topics = defaultTopics;
+        evaluationFormData.rate = 5;
+      }
     }
   } else if (!isEditing.value) {
     evaluationFormData.evaluation_topics = defaultTopics;
@@ -122,7 +176,7 @@ const addEvaluationTopic = () => {
     uuid: undefined,
     title: '',
     description: '',
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.SHORT_TEXT, options: [] }]
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, options: [] }]
   });
 };
 
@@ -139,7 +193,7 @@ const addQuestion = (topicIndex: number) => {
     uuid: undefined,
     title: '',
     description: '',
-    type: QuestionType.SHORT_TEXT,
+    type: QuestionType.RATE,
     options: []
   });
 };
@@ -154,19 +208,36 @@ const removeQuestion = (topicIndex: number, questionIndex: number) => {
   }
 };
 
+// Helper para garantir que options seja sempre QuestionOption[]
+const normalizeOptions = (options: string[] | QuestionOption[] | undefined): QuestionOption[] => {
+  if (!options) return [];
+  if (options.length === 0) return [];
+  // Se for string[], converte para QuestionOption[]
+  if (typeof options[0] === 'string') {
+    return (options as string[]).map((opt, index) => ({
+      uuid: undefined,
+      text: opt,
+      order: index + 1
+    }));
+  }
+  // Se já for QuestionOption[], retorna como está
+  return options as QuestionOption[];
+};
+
 const addQuestionOption = (topicIndex: number, questionIndex: number) => {
   const question = evaluationFormData.evaluation_topics[topicIndex].evaluation_questions[questionIndex];
-  if (!question.options) {
-    question.options = [];
-  }
-  question.options.push({ uuid: undefined, text: '', order: question.options.length + 1 });
+  const normalizedOptions = normalizeOptions(question.options);
+  normalizedOptions.push({ uuid: undefined, text: '', order: normalizedOptions.length + 1 });
+  question.options = normalizedOptions;
 };
 
 const removeQuestionOption = (topicIndex: number, questionIndex: number, optionIndex: number) => {
   const question = evaluationFormData.evaluation_topics[topicIndex].evaluation_questions[questionIndex];
-  if (question.options && question.options.length > 1) {
-    question.options.splice(optionIndex, 1);
-    question.options.forEach((opt, idx) => opt.order = idx + 1);
+  const normalizedOptions = normalizeOptions(question.options);
+  if (normalizedOptions.length > 1) {
+    normalizedOptions.splice(optionIndex, 1);
+    normalizedOptions.forEach((opt, idx) => opt.order = idx + 1);
+    question.options = normalizedOptions;
   } else {
     snackbarStore.show('Não é possível remover todas as opções da pergunta. Adicione uma nova para poder remover esta.', 'warning');
   }
@@ -192,11 +263,20 @@ async function onSubmit(formValues: Record<string, any>) {
       evaluation_questions: topic.evaluation_questions.map((question: any) => {
         const isSelection = [QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type);
         
+        // Normalizar opções e converter para string[]
+        const normalizedOpts = normalizeOptions(question.options);
+        const optionsAsStrings = isSelection && normalizedOpts.length > 0
+          ? normalizedOpts
+              .sort((a, b) => a.order - b.order)
+              .map((opt) => opt.text)
+              .filter((text: string) => text.trim() !== '')
+          : [];
+        
         return {
           title: question.title,
           description: question.description,
           type: question.type,
-          options: isSelection ? question.options : [], 
+          options: optionsAsStrings, 
         };
       })
     })),
@@ -214,6 +294,15 @@ async function onSubmit(formValues: Record<string, any>) {
   } catch (err: any) {
     console.error('Erro no registro do modelo de avaliação:', err);
     snackbarStore.show(evaluationStore.error || 'Falha ao salvar modelo de avaliação.', 'error');
+  }
+}
+
+function getIconQuestionType(questionType: QuestionType) {
+  switch (questionType) {
+    case QuestionType.SINGLE_CHOICE: return 'mdi-checkbox-blank-circle-outline';
+    case QuestionType.MULTI_CHOICE: return 'mdi-checkbox-blank-outline';
+    case QuestionType.DROPDOWN: return 'mdi-arrow-down-drop-circle-outline';
+    default: 'mdi-checkbox-blank-circle-outline';
   }
 }
 </script>
@@ -347,7 +436,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 text="Os tópicos e questões foram preenchidos com base no DRD selecionado. Desvincule o DRD para editar ou criar tópicos e questões manualmente."
               ></v-alert>
 
-              <div v-if="evaluationFormData.evaluation_topics">
+              <div v-if="evaluationFormData.evaluation_topics" class="w-100">
                   <div v-for="(topic, topicIndex) in evaluationFormData.evaluation_topics" :key="topicIndex" class="mb-4 pa-3 border rounded w-100">
                     <div class="d-flex align-start mb-2">
                       <div class="flex-grow-1">
@@ -356,8 +445,9 @@ async function onSubmit(formValues: Record<string, any>) {
                             v-bind="field"
                             v-model="topic.title"
                             :label="`Título do Tópico ${topicIndex + 1}`"
-                            variant="outlined"
+                            variant="underlined"
                             density="compact"
+                            persistent-placeholder
                             :error="!!errorMessage"
                             :error-messages="errorMessage"
                             class="mb-1 w-100"
@@ -369,9 +459,10 @@ async function onSubmit(formValues: Record<string, any>) {
                             v-bind="field"
                             v-model="topic.description"
                             :label="`Descrição do Tópico ${topicIndex + 1} (Opcional)`"
-                            variant="outlined"
+                            variant="underlined"
                             density="compact"
-                            rows="1"
+                            persistent-placeholder
+                            rows="2"
                             :error="!!errorMessage"
                             :error-messages="errorMessage"
                             class="mb-1 w-100"
@@ -398,51 +489,69 @@ async function onSubmit(formValues: Record<string, any>) {
                       <div v-for="(question, questionIndex) in topic.evaluation_questions" :key="questionIndex" class="pa-3 border rounded ml-4 mb-3">
                         <div class="d-flex align-start">
                           <div class="flex-grow-1">
-                            <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].title`" :label="`Título da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
-                              <v-text-field
-                                v-bind="field"
-                                v-model="question.title"
-                                :label="`Título da Questão ${questionIndex + 1}`"
-                                variant="solo-filled"
-                                density="compact"
-                                :error="!!errorMessage"
-                                :error-messages="errorMessage"
-                                class="mb-1 w-100"
-                                :disabled="isDrdSelected"
-                              />
-                            </Field>
-
-                            <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].type`" :label="`Tipo da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
-                              <v-select
-                                v-bind="field"
-                                v-model="question.type"
-                                :items="frontendQuestionTypes"
-                                item-title="text"
-                                item-value="value"
-                                label="Tipo da Questão"
-                                variant="solo-filled"
-                                density="compact"
-                                :error="!!errorMessage"
-                                :error-messages="errorMessage"
-                                class="mb-1 w-100"
-                                :disabled="isDrdSelected"
-                              >
-                                <template v-slot:append-inner>
-                                  <v-tooltip text="Recomendamos o tipo 'Valor Numérico (Rate)' para métricas objetivas de DRD.">
-                                    <v-icon icon="mdi-information-outline"></v-icon>
-                                  </v-tooltip>
-                                </template>
-                              </v-select>
-                            </Field>
+                            <div class="d-flex gap-2">
+                              <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].title`" :label="`Título da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                                <v-text-field
+                                  v-bind="field"
+                                  v-model="question.title"
+                                  :label="`Título da Questão ${questionIndex + 1}`"
+                                  variant="underlined"
+                                  density="compact"
+                                  :error="!!errorMessage"
+                                  :error-messages="errorMessage"
+                                  class="mb-1 w-100"
+                                  :disabled="isDrdSelected"
+                                  persistent-placeholder
+                                />
+                              </Field>
+  
+                              <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].type`" :label="`Tipo da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                                <v-select
+                                  v-bind="field"
+                                  v-model="question.type"
+                                  :items="frontendQuestionTypes"
+                                  item-title="text"
+                                  item-value="value"
+                                  label="Tipo da Questão"
+                                  variant="outlined"
+                                  density="compact"
+                                  :error="!!errorMessage"
+                                  :error-messages="errorMessage"
+                                  class="mb-1 question-type-select"
+                                  :disabled="isDrdSelected"
+                                  style="min-width: 226px;"
+                                >
+                                  <template v-slot:append-inner>
+                                    <v-tooltip text="Recomendamos o tipo 'Classificação (Rate)' para métricas objetivas de DRD.">
+                                      <v-icon icon="mdi-information-outline"></v-icon>
+                                    </v-tooltip>
+                                  </template>
+  
+                                  <template v-slot:item="{ props, item }">
+                                    <v-list-item v-bind="props">
+                                      <template #prepend>
+                                        <v-icon :icon="item.raw.icon" class="mr-2"></v-icon>
+                                      </template>
+                                    </v-list-item>
+                                  </template>
+  
+                                  <template v-slot:selection="{ item }">
+                                    <v-icon :icon="item.raw.icon" class="mr-1"></v-icon>
+                                    <span>{{ item.raw.text }}</span>
+                                  </template>
+                                </v-select>
+                              </Field>
+                            </div>
 
                             <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].description`" :label="`Descrição da Questão ${questionIndex + 1}`" v-slot="{ field, errorMessage }">
                               <v-textarea
                                 v-bind="field"
                                 v-model="question.description"
                                 :label="`Descrição da Questão ${questionIndex + 1} (Opcional)`"
-                                variant="outlined"
+                                variant="underlined"
                                 density="compact"
-                                rows="1"
+                                persistent-placeholder
+                                rows="2"
                                 :error="!!errorMessage"
                                 :error-messages="errorMessage"
                                 class="mb-1 w-100"
@@ -450,16 +559,61 @@ async function onSubmit(formValues: Record<string, any>) {
                               />
                             </Field>
 
+                            <div v-if="question.type === QuestionType.RATE">
+                              <Field name="rate" label="Rate da Avaliação" rules="required" v-slot="{ field, errorMessage }">
+                                <div class="d-flex align-center">
+                                  <v-rating
+                                    v-bind="field"
+                                    v-model="evaluationFormData.rate"
+                                    color="primary"
+                                    density="compact"
+                                    half-increments
+                                    hover
+                                    :length="5"
+                                    size="x-large"
+                                  ></v-rating>
+                                  <span class="ml-2 text-h6">{{ evaluationFormData.rate }}</span>
+                                </div>
+                                <v-messages v-if="errorMessage" :value="[errorMessage]" color="error"></v-messages>
+                              </Field>
+                            </div>
+
+                            <div v-if="question.type === QuestionType.SHORT_TEXT">
+                              <v-text-field
+                                variant="underlined"
+                                density="compact"
+                                persistent-placeholder
+                                class="mb-1 w-100"
+                                readonly
+                              />
+                            </div>
+
+                            <div v-if="question.type === QuestionType.LONG_TEXT">
+                              <v-textarea
+                                variant="underlined"
+                                density="compact"
+                                persistent-placeholder
+                                rows="2"
+                                readonly
+                              />
+                            </div>
+
                             <div v-if="[QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type!)">
                               <h5 class="text-subtitle-2 ml-4 mb-2">Opções de Resposta</h5>
-                              <div v-for="(option, optionIndex) in question.options" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
+                              <div v-for="(option, optionIndex) in normalizeOptions(question.options)" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
                                 <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                                   <v-text-field
                                     v-bind="field"
-                                    v-model="option.text"
+                                    :model-value="option.text"
+                                    @update:model-value="(val: string) => {
+                                      const normalized = normalizeOptions(question.options);
+                                      normalized[optionIndex].text = val;
+                                      question.options = normalized;
+                                    }"
                                     :label="`Opção ${optionIndex + 1}`"
-                                    variant="solo-filled"
+                                    variant="underlined"
                                     density="compact"
+                                    :prepend-icon="getIconQuestionType(question.type)"
                                     :error="!!errorMessage"
                                     :error-messages="errorMessage"
                                     class="mb-1 w-100"
@@ -467,7 +621,7 @@ async function onSubmit(formValues: Record<string, any>) {
                                   />
                                 </Field>
                                 <v-btn
-                                  v-if="question.options!.length > 1 && !isDrdSelected"
+                                  v-if="normalizeOptions(question.options).length > 1 && !isDrdSelected"
                                   icon
                                   variant="text"
                                   color="error"
@@ -554,5 +708,8 @@ async function onSubmit(formValues: Record<string, any>) {
 }
 .rounded {
   border-radius: 4px;
+}
+::v-deep(textarea) {
+  font-size: 14px;
 }
 </style>
