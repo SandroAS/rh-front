@@ -183,22 +183,18 @@ const addEvaluationTopic = () => {
 const removeEvaluationTopic = (index: number) => {
   if (evaluationFormData.evaluation_topics.length > 1) {
     evaluationFormData.evaluation_topics.splice(index, 1);
-  } else {
-    snackbarStore.show('Não é possível remover todos os tópicos. Adicione um novo para poder remover este.', 'warning');
-  }
 
-  evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
-    topic.order = topicIndex + 1;
-  })
+    evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+      topic.order = topicIndex + 1;
+    })
 
-  setTimeout(() => {
     evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
       const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
       if(inputTopicTitle) {
         inputTopicTitle.value = topic.title;
         inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
+      const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
       if(inputTopicDescription) {
         inputTopicDescription.value = topic.description;
         inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
@@ -220,15 +216,17 @@ const removeEvaluationTopic = (index: number) => {
           inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
         }
         question.options?.forEach((option, optionIndex) => {
-          const input = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
-          if(input && option.text !== '') {
-            input.value = option.text;
-            input.dispatchEvent(new Event('change', { bubbles: true }));
+          const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+          if(inputQuestionOption && option.text !== '') {
+            inputQuestionOption.value = option.text;
+            inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
           }
         })
       })
     })
-  }, 50)
+  } else {
+    snackbarStore.show('Não é possível remover todos os tópicos. Adicione um novo para poder remover este.', 'warning');
+  }
 };
 
 const addQuestion = (topicIndex: number) => {
@@ -480,6 +478,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                     <div class="d-flex align-start mb-2">
                       <div class="flex-grow-1">
                         <Field :name="`evaluation_topics[${topicIndex}].title`" :label="`Título do Tópico ${topicIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                          {{ topic.title }}uai {{ field.value }}
                           <v-text-field
                             :id="`evaluation_topics_${topicIndex}_title`"
                             v-bind="field"
@@ -647,6 +646,9 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                                     :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`"
                                     v-bind="field"
                                     :model-value="option.text"
+                                    @update:model-value="(val: string) => {
+                                      option.text = val
+                                    }"
                                     :label="`Opção ${optionIndex + 1}`"
                                     variant="underlined"
                                     density="compact"
