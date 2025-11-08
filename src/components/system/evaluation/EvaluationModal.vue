@@ -47,7 +47,6 @@ const evaluationFormData = reactive<EvaluationFormData>({
   created_by_user_uuid: props.selectedEvaluation?.created_by_user_uuid || userStore.user?.uuid || '',
   rate: props.selectedEvaluation?.rate || 5,
   drd_uuid: props.selectedEvaluation?.drd_uuid || undefined,
-  
   evaluation_topics: props.selectedEvaluation?.evaluation_topics?.map(topic => ({
     uuid: topic.uuid,
     title: topic.title,
@@ -57,11 +56,15 @@ const evaluationFormData = reactive<EvaluationFormData>({
       title: question.title,
       description: question.description,
       type: question.type,
-      options: question.options?.map((opt, index) => 
-        typeof opt === 'string' 
-          ? { uuid: undefined, text: opt, order: index + 1 }
-          : opt
-      ) || []
+      options: question.options?.map(option => ({
+        uuid: option.uuid,
+        text: option.text,
+        order: option.order,
+      })) || [{
+        uuid: undefined,
+        text: '',
+        order: 1,
+      }]
     }))
   })) || [{
     uuid: undefined,
@@ -305,6 +308,31 @@ function getIconQuestionType(questionType: QuestionType) {
     default: 'mdi-checkbox-blank-circle-outline';
   }
 }
+
+function onChangeQuestionType(question: EvaluationQuestion) {
+  question = {
+    ...question,
+    options: question.options?.map((opt, index) => 
+      typeof opt === 'string' 
+        ? { uuid: undefined, text: opt, order: index + 1 }
+        : opt
+    ) || []
+  };
+
+  setTimeout(() => {
+    evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+      topic.evaluation_questions.forEach((item, questionIndex) => {
+        item.options?.forEach((option, optionIndex) => {
+          const input = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+          if(input && option.text !== '') {
+            input.value = option.text;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        })
+      })
+    })
+  }, 50)
+}
 </script>
 
 <template>
@@ -404,7 +432,7 @@ function getIconQuestionType(questionType: QuestionType) {
               </v-col>
 
               <v-col cols="12" sm="12">
-                <small>Defina a escala máxima (Rate) que será usada em todas as perguntas do tipo Rate.</small>
+                <small>Defina a escala máxima que será usada em todas as perguntas do tipo Classificação (<v-icon>mdi-star-outline</v-icon>).</small>
                 <Field name="rate" label="Rate da Avaliação" rules="required" v-slot="{ field, errorMessage }">
                   <div class="d-flex align-center">
                     <v-rating
@@ -520,6 +548,7 @@ function getIconQuestionType(questionType: QuestionType) {
                                   class="mb-1 question-type-select"
                                   :disabled="isDrdSelected"
                                   style="min-width: 226px;"
+                                  @update:model-value="onChangeQuestionType(question)"
                                 >
                                   <template v-slot:append-inner>
                                     <v-tooltip text="Recomendamos o tipo 'Classificação (Rate)' para métricas objetivas de DRD.">
@@ -560,22 +589,18 @@ function getIconQuestionType(questionType: QuestionType) {
                             </Field>
 
                             <div v-if="question.type === QuestionType.RATE">
-                              <Field name="rate" label="Rate da Avaliação" rules="required" v-slot="{ field, errorMessage }">
-                                <div class="d-flex align-center">
-                                  <v-rating
-                                    v-bind="field"
-                                    v-model="evaluationFormData.rate"
-                                    color="primary"
-                                    density="compact"
-                                    half-increments
-                                    hover
-                                    :length="5"
-                                    size="x-large"
-                                  ></v-rating>
-                                  <span class="ml-2 text-h6">{{ evaluationFormData.rate }}</span>
-                                </div>
-                                <v-messages v-if="errorMessage" :value="[errorMessage]" color="error"></v-messages>
-                              </Field>
+                              <div class="d-flex align-center">
+                                <v-rating
+                                  color="primary"
+                                  density="compact"
+                                  half-increments
+                                  hover
+                                  :length="evaluationFormData.rate"
+                                  size="x-large"
+                                  readonly
+                                ></v-rating>
+                                <span class="ml-2 text-h6">0</span>
+                              </div>
                             </div>
 
                             <div v-if="question.type === QuestionType.SHORT_TEXT">
@@ -603,6 +628,7 @@ function getIconQuestionType(questionType: QuestionType) {
                               <div v-for="(option, optionIndex) in normalizeOptions(question.options)" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
                                 <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                                   <v-text-field
+                                    :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`"
                                     v-bind="field"
                                     :model-value="option.text"
                                     @update:model-value="(val: string) => {

@@ -18,5 +18,5 @@ export interface EvaluationQuestion {
   title: string;
   description: string;
   type: QuestionType;
-  options?: string[] | QuestionOption[];
+  options?: QuestionOption[];
 }
