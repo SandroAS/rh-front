@@ -1,3 +1,5 @@
+import type EvaluationQuestionOption from './evaluation-question-option.type';
+
 export enum QuestionType {
   RATE = 'RATE',
   SHORT_TEXT = 'SHORT_TEXT',
@@ -7,16 +9,11 @@ export enum QuestionType {
   DROPDOWN = 'DROPDOWN',
 }
 
-export interface QuestionOption {
-  uuid?: string;
-  text: string;
-  order: number;
-}
-
 export interface EvaluationQuestion {
   uuid?: string;
   title: string;
   description: string;
   type: QuestionType;
-  options?: QuestionOption[];
+  order: number;
+  options?: EvaluationQuestionOption[];
 }

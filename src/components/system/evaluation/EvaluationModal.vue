@@ -7,24 +7,7 @@ import { useDRDStore } from '@/stores/drd.store';
 import { useUserStore } from '@/stores/auth.store';
 import type Evaluation from '@/types/evaluation/evaluation.type';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
-import { QuestionType, type EvaluationQuestion, type QuestionOption } from '@/types/evaluation/evaluation-question.type';
-
-interface EvaluationFormTopic {
-  uuid?: string;
-  title: string;
-  description: string;
-  evaluation_questions: EvaluationQuestion[];
-}
-
-interface EvaluationFormData {
-  uuid?: string;
-  title: string;
-  description: string;
-  created_by_user_uuid: string;
-  rate: number;
-  drd_uuid?: string;
-  evaluation_topics: EvaluationFormTopic[];
-}
+import { QuestionType, type EvaluationQuestion } from '@/types/evaluation/evaluation-question.type';
 
 const evaluationStore = useEvaluationStore();
 const snackbarStore = useSnackbarStore();
@@ -40,7 +23,7 @@ const emit = defineEmits(['update:modelValue']);
 
 const close = () => emit('update:modelValue', false);
 
-const evaluationFormData = reactive<EvaluationFormData>({
+const evaluationFormData = reactive<EvaluationPayload>({
   uuid: props.selectedEvaluation?.uuid || undefined,
   title: props.selectedEvaluation?.title || '',
   description: props.selectedEvaluation?.description || '',
@@ -51,11 +34,13 @@ const evaluationFormData = reactive<EvaluationFormData>({
     uuid: topic.uuid,
     title: topic.title,
     description: topic.description,
+    order: topic.order,
     evaluation_questions: topic.evaluation_questions.map(question => ({
       uuid: question.uuid,
       title: question.title,
       description: question.description,
       type: question.type,
+      order: question.order,
       options: question.options?.map(option => ({
         uuid: option.uuid,
         text: option.text,
@@ -70,7 +55,19 @@ const evaluationFormData = reactive<EvaluationFormData>({
     uuid: undefined,
     title: '',
     description: '',
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, options: [] }] 
+    order: 1,
+    evaluation_questions: [{
+      uuid: undefined,
+      title: '',
+      description: '',
+      type: QuestionType.RATE,
+      order: 1,
+      options: [{
+        uuid: undefined,
+        text: '',
+        order: 1,
+      }]
+    }] 
   }],
 });
 
@@ -83,7 +80,7 @@ const frontendQuestionTypes = [
   { value: QuestionType.DROPDOWN, text: 'Lista suspensa', icon: 'mdi-arrow-down-drop-circle-outline' },
 ]
 
-const radio = ref('fromDRD');
+const evaluationMode = ref('fromDRD');
 
 const isEditing = computed(() => !!props.selectedEvaluation);
 const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
@@ -189,6 +186,49 @@ const removeEvaluationTopic = (index: number) => {
   } else {
     snackbarStore.show('Não é possível remover todos os tópicos. Adicione um novo para poder remover este.', 'warning');
   }
+
+  evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+    topic.order = topicIndex + 1;
+  })
+
+  setTimeout(() => {
+    evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+      const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
+      if(inputTopicTitle) {
+        inputTopicTitle.value = topic.title;
+        inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
+      if(inputTopicDescription) {
+        inputTopicDescription.value = topic.description;
+        inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      topic.evaluation_questions.forEach((question, questionIndex) => {
+        const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
+        if(inputQuestionTitle) {
+          inputQuestionTitle.value = question.title;
+          inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
+        if(inputQuestionDescription) {
+          inputQuestionDescription.value = question.description;
+          inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
+        if(inputQuestionType) {
+          inputQuestionType.value = question.type;
+          inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        question.options?.forEach((option, optionIndex) => {
+          const input = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+          if(input && option.text !== '') {
+            input.value = option.text;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        })
+      })
+    })
+  }, 50)
 };
 
 const addQuestion = (topicIndex: number) => {
@@ -211,36 +251,16 @@ const removeQuestion = (topicIndex: number, questionIndex: number) => {
   }
 };
 
-// Helper para garantir que options seja sempre QuestionOption[]
-const normalizeOptions = (options: string[] | QuestionOption[] | undefined): QuestionOption[] => {
-  if (!options) return [];
-  if (options.length === 0) return [];
-  // Se for string[], converte para QuestionOption[]
-  if (typeof options[0] === 'string') {
-    return (options as string[]).map((opt, index) => ({
-      uuid: undefined,
-      text: opt,
-      order: index + 1
-    }));
-  }
-  // Se já for QuestionOption[], retorna como está
-  return options as QuestionOption[];
-};
-
 const addQuestionOption = (topicIndex: number, questionIndex: number) => {
   const question = evaluationFormData.evaluation_topics[topicIndex].evaluation_questions[questionIndex];
-  const normalizedOptions = normalizeOptions(question.options);
-  normalizedOptions.push({ uuid: undefined, text: '', order: normalizedOptions.length + 1 });
-  question.options = normalizedOptions;
+  question.options?.push({ uuid: undefined, text: '', order: question.options.length + 1 });
 };
 
 const removeQuestionOption = (topicIndex: number, questionIndex: number, optionIndex: number) => {
   const question = evaluationFormData.evaluation_topics[topicIndex].evaluation_questions[questionIndex];
-  const normalizedOptions = normalizeOptions(question.options);
-  if (normalizedOptions.length > 1) {
-    normalizedOptions.splice(optionIndex, 1);
-    normalizedOptions.forEach((opt, idx) => opt.order = idx + 1);
-    question.options = normalizedOptions;
+  if (question.options && question.options.length > 1) {
+    question.options.splice(optionIndex, 1);
+    question.options.forEach((opt, idx) => opt.order = idx + 1);
   } else {
     snackbarStore.show('Não é possível remover todas as opções da pergunta. Adicione uma nova para poder remover esta.', 'warning');
   }
@@ -265,21 +285,12 @@ async function onSubmit(formValues: Record<string, any>) {
       description: topic.description,
       evaluation_questions: topic.evaluation_questions.map((question: any) => {
         const isSelection = [QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type);
-        
-        // Normalizar opções e converter para string[]
-        const normalizedOpts = normalizeOptions(question.options);
-        const optionsAsStrings = isSelection && normalizedOpts.length > 0
-          ? normalizedOpts
-              .sort((a, b) => a.order - b.order)
-              .map((opt) => opt.text)
-              .filter((text: string) => text.trim() !== '')
-          : [];
-        
+        const options = isSelection && question.options.length > 0 ? question.options : [];
         return {
           title: question.title,
           description: question.description,
           type: question.type,
-          options: optionsAsStrings, 
+          options, 
         };
       })
     })),
@@ -376,7 +387,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
               <v-divider  />
 
               <v-col cols="12" sm="12">
-                <v-radio-group v-model="radio" hide-details>
+                <v-radio-group v-model="evaluationMode" hide-details>
                   <div class="d-flex gap-2">
                     <v-card
                       variant="tonal"
@@ -404,7 +415,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                             variant="solo-filled"
                             density="compact"
                             clearable
-                            :disabled="radio === 'fromZero'"
+                            :disabled="evaluationMode === 'fromZero'"
                             :error="!!errorMessage"
                             :error-messages="errorMessage"
                             :loading="drdStore.loading"
@@ -470,6 +481,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                       <div class="flex-grow-1">
                         <Field :name="`evaluation_topics[${topicIndex}].title`" :label="`Título do Tópico ${topicIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                           <v-text-field
+                            :id="`evaluation_topics_${topicIndex}_title`"
                             v-bind="field"
                             v-model="topic.title"
                             :label="`Título do Tópico ${topicIndex + 1}`"
@@ -484,6 +496,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                         </Field>
                         <Field :name="`evaluation_topics[${topicIndex}].description`" :label="`Descrição do Tópico ${topicIndex + 1}`" v-slot="{ field, errorMessage }">
                           <v-textarea
+                            :id="`evaluation_topics_${topicIndex}_description`"
                             v-bind="field"
                             v-model="topic.description"
                             :label="`Descrição do Tópico ${topicIndex + 1} (Opcional)`"
@@ -520,6 +533,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                             <div class="d-flex gap-2">
                               <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].title`" :label="`Título da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                                 <v-text-field
+                                  :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`"
                                   v-bind="field"
                                   v-model="question.title"
                                   :label="`Título da Questão ${questionIndex + 1}`"
@@ -535,6 +549,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
   
                               <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].type`" :label="`Tipo da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                                 <v-select
+                                  :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`"
                                   v-bind="field"
                                   v-model="question.type"
                                   :items="frontendQuestionTypes"
@@ -574,6 +589,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
 
                             <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].description`" :label="`Descrição da Questão ${questionIndex + 1}`" v-slot="{ field, errorMessage }">
                               <v-textarea
+                                :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`"
                                 v-bind="field"
                                 v-model="question.description"
                                 :label="`Descrição da Questão ${questionIndex + 1} (Opcional)`"
@@ -625,17 +641,12 @@ function onChangeQuestionType(question: EvaluationQuestion) {
 
                             <div v-if="[QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type!)">
                               <h5 class="text-subtitle-2 ml-4 mb-2">Opções de Resposta</h5>
-                              <div v-for="(option, optionIndex) in normalizeOptions(question.options)" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
+                              <div v-for="(option, optionIndex) in question.options" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
                                 <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                                   <v-text-field
                                     :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`"
                                     v-bind="field"
                                     :model-value="option.text"
-                                    @update:model-value="(val: string) => {
-                                      const normalized = normalizeOptions(question.options);
-                                      normalized[optionIndex].text = val;
-                                      question.options = normalized;
-                                    }"
                                     :label="`Opção ${optionIndex + 1}`"
                                     variant="underlined"
                                     density="compact"
@@ -647,7 +658,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                                   />
                                 </Field>
                                 <v-btn
-                                  v-if="normalizeOptions(question.options).length > 1 && !isDrdSelected"
+                                  v-if="question.options && question.options.length > 1 && !isDrdSelected"
                                   icon
                                   variant="text"
                                   color="error"
