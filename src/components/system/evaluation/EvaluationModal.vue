@@ -240,10 +240,37 @@ const addQuestion = (topicIndex: number) => {
 };
 
 const removeQuestion = (topicIndex: number, questionIndex: number) => {
-  if (
-    evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.length > 1
-  ) {
+  if (evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.length > 1) {
     evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.splice(questionIndex, 1);
+
+    evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.forEach((question, questionIndex) => {
+      question.order = questionIndex + 1;
+    });
+
+    evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.forEach((question, questionIndex) => {
+      const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
+      if(inputQuestionTitle) {
+        inputQuestionTitle.value = question.title;
+        inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
+      if(inputQuestionDescription) {
+        inputQuestionDescription.value = question.description;
+        inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
+      if(inputQuestionType) {
+        inputQuestionType.value = question.type;
+        inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      question.options?.forEach((option, optionIndex) => {
+        const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+        if(inputQuestionOption && option.text !== '') {
+          inputQuestionOption.value = option.text;
+          inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      })
+    })
   } else {
     snackbarStore.show('Não é possível remover todas as perguntas do tópico. Adicione uma nova para poder remover esta.', 'warning');
   }
@@ -258,7 +285,18 @@ const removeQuestionOption = (topicIndex: number, questionIndex: number, optionI
   const question = evaluationFormData.evaluation_topics[topicIndex].evaluation_questions[questionIndex];
   if (question.options && question.options.length > 1) {
     question.options.splice(optionIndex, 1);
-    question.options.forEach((opt, idx) => opt.order = idx + 1);
+
+    question.options.forEach((option, idx) => {
+      option.order = idx + 1;
+    });
+
+    question.options?.forEach((option, optionIndex) => {
+      const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+      if(inputQuestionOption && option.text !== '') {
+        inputQuestionOption.value = option.text;
+        inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })
   } else {
     snackbarStore.show('Não é possível remover todas as opções da pergunta. Adicione uma nova para poder remover esta.', 'warning');
   }
