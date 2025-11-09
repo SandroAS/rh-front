@@ -92,12 +92,12 @@ watch(() => props.selectedEvaluation, (val) => {
   evaluationFormData.created_by_user_uuid = val?.created_by_user_uuid || userStore.user?.uuid || '';
   evaluationFormData.rate = typeof val?.rate === 'number' ? val.rate : 5;
   evaluationFormData.drd_uuid = val?.drd_uuid ?? undefined;
-  evaluationFormData.evaluation_topics = val?.evaluation_topics.map((topic, topicIndex) => ({
+  evaluationFormData.evaluation_topics = val?.evaluation_topics?.map((topic, topicIndex) => ({
     uuid: topic?.uuid ?? undefined,
     title: topic?.title ?? '',
     description: topic?.description ?? '',
     order: typeof topicIndex === 'number' ? topicIndex + 1 : 1,
-    evaluation_questions: topic.evaluation_questions.map((question) => ({
+    evaluation_questions: topic.evaluation_questions?.map((question) => ({
       uuid: question.uuid,
       title: question.title,
       description: question.description,
@@ -129,12 +129,12 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
 
       if (fullDrd) {
         evaluationFormData.rate = fullDrd.rate;
-        evaluationFormData.evaluation_topics = fullDrd.drdTopics.map((drdTopic, drdTopicIndex) => ({
+        evaluationFormData.evaluation_topics = fullDrd.drdTopics?.map((drdTopic, drdTopicIndex) => ({
           uuid: undefined,
           title: drdTopic.name,
           description: '',
           order: drdTopicIndex + 1,
-          evaluation_questions: drdTopic.drdTopicItems.map((drdItem, drdItemIndex) => ({
+          evaluation_questions: drdTopic.drdTopicItems?.map((drdItem, drdItemIndex) => ({
             uuid: undefined,
             title: drdItem.name,
             description: '',
@@ -510,7 +510,6 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                     <div class="d-flex align-start mb-2">
                       <div class="flex-grow-1">
                         <Field :name="`evaluation_topics[${topicIndex}].title`" :label="`Título do Tópico ${topicIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
-                          {{ topic.title }}uai {{ field.value }}
                           <v-text-field
                             :id="`evaluation_topics_${topicIndex}_title`"
                             v-bind="field"
