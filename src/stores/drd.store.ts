@@ -1,9 +1,8 @@
-import { getDRD, getDRDs, saveDRD } from '@/services/drd.service';
+import { getAllDRDs, getDRD, getDRDs, saveDRD } from '@/services/drd.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type DRDPayload from '@/types/drd/drd-payload.type';
 import type DRDResponsePagination from '@/types/drd/drd-response-pagination.type';
 import type DRDSimple from '@/types/drd/drd-simple.type';
-import type DRD from '@/types/drd/drd.type';
 import { defineStore } from 'pinia';
 
 
@@ -34,7 +33,19 @@ export const useDRDStore = defineStore('drd', {
     search_term: undefined
   }),
 
-  getters: {},
+  getters: {
+    drdOptions(): { value: string, title: string }[] | [] {
+      if(!this.drds) return [];
+      const drdsMapped = this.drds.map(drd => {
+        return {
+          value: drd.uuid,
+          title: drd.jobPosition.title,
+          // disabled: !!drd.evaluation_uuid - CRIAR DP O RELACIONAMENTO COM evaluation para deixar ter um só modelo por DRD.q
+        }
+      });
+      return drdsMapped;
+    }
+  },
 
   actions: {
     async saveDRD(drd: DRDPayload, uuid?: string) {
@@ -98,6 +109,20 @@ export const useDRDStore = defineStore('drd', {
         return await getDRD(uuid);
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar DRD.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getAllDRDs() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        this.drds = await getAllDRDs();
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
         throw err;
       } finally {
         this.loading = false;

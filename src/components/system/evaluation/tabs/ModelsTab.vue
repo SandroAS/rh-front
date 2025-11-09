@@ -5,9 +5,11 @@ import loadItems from '@/utils/loadItems.util';
 import type Evaluation from '@/types/evaluation/evaluation.type';
 import EvaluationModal from '@/components/system/evaluation/EvaluationModal.vue';
 import { useAccountUserStore } from '@/stores/account-user.store';
+import { useDRDStore } from '@/stores/drd.store';
 
 const evaluationStore = useEvaluationStore();
 const accountUserStore = useAccountUserStore();
+const drdStore = useDRDStore();
 
 const dialog = ref(false);
 const selectedEvaluation = ref<Evaluation | null>(null);
@@ -30,8 +32,13 @@ async function getAccountUsers() {
   await accountUserStore.getAccountUsers({page: 1, limit: 10000 });
 }
 
+async function getAllDRDs() {
+  await drdStore.getAllDRDs();
+}
+
 getEvaluations();
 getAccountUsers();
+getAllDRDs();
 
 const loadEvaluations = async () => {
   await loadItems(

@@ -85,42 +85,32 @@ const evaluationMode = ref('fromDRD');
 const isEditing = computed(() => !!props.selectedEvaluation);
 const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
 
-const drdOptions = computed(() => {
-  if (!drdStore.drds) return [];
-  return drdStore.drds.map(drd => ({
-    title: `${drd.jobPosition?.title || 'DRD sem cargo'} - ${drd.rate} estrelas`,
-    value: drd.uuid,
-    rate: drd.rate,
-  }));
-});
-
 watch(() => props.selectedEvaluation, (val) => {
   evaluationFormData.uuid = val?.uuid || undefined;
   evaluationFormData.title = val?.title || '';
   evaluationFormData.description = val?.description || '';
   evaluationFormData.created_by_user_uuid = val?.created_by_user_uuid || userStore.user?.uuid || '';
-  evaluationFormData.rate = val?.rate || 5;
-  evaluationFormData.drd_uuid = val?.drd_uuid || undefined;
-  evaluationFormData.evaluation_topics = val?.evaluation_topics?.map(topic => ({
-    uuid: topic.uuid,
-    title: topic.title,
-    description: topic.description,
-    evaluation_questions: topic.evaluation_questions.map(question => ({
+  evaluationFormData.rate = typeof val?.rate === 'number' ? val.rate : 5;
+  evaluationFormData.drd_uuid = val?.drd_uuid ?? undefined;
+  evaluationFormData.evaluation_topics = val?.evaluation_topics.map((topic, topicIndex) => ({
+    uuid: topic?.uuid ?? undefined,
+    title: topic?.title ?? '',
+    description: topic?.description ?? '',
+    order: typeof topicIndex === 'number' ? topicIndex + 1 : 1,
+    evaluation_questions: topic.evaluation_questions.map((question) => ({
       uuid: question.uuid,
       title: question.title,
       description: question.description,
       type: question.type,
-      options: question.options?.map((opt, index) => 
-        typeof opt === 'string' 
-          ? { uuid: undefined, text: opt, order: index + 1 }
-          : opt
-      ) || []
+      order: question.order,
+      options: question.options || []
     }))
   })) || [{
     uuid: undefined,
     title: '',
     description: '',
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, options: [] }]
+    order: 1,
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
   }];
 }, { immediate: true });
 
@@ -129,25 +119,27 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
     uuid: undefined,
     title: '',
     description: '',
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, options: [] }]
+    order: 1,
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
   }];
 
   if (newDrdUuid) {
     try {
-      // Buscar o DRD completo para ter acesso aos drdTopics
       const fullDrd = await drdStore.getDRD(newDrdUuid);
+
       if (fullDrd) {
         evaluationFormData.rate = fullDrd.rate;
-        
-        evaluationFormData.evaluation_topics = fullDrd.drdTopics.map((drdTopic) => ({
+        evaluationFormData.evaluation_topics = fullDrd.drdTopics.map((drdTopic, drdTopicIndex) => ({
           uuid: undefined,
           title: drdTopic.name,
           description: '',
-          evaluation_questions: drdTopic.drdTopicItems.map((drdItem) => ({
+          order: drdTopicIndex + 1,
+          evaluation_questions: drdTopic.drdTopicItems.map((drdItem, drdItemIndex) => ({
             uuid: undefined,
             title: drdItem.name,
             description: '',
             type: QuestionType.RATE,
+            order: drdItemIndex + 1,
             options: []
           }))
         }));
@@ -176,7 +168,8 @@ const addEvaluationTopic = () => {
     uuid: undefined,
     title: '',
     description: '',
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, options: [] }]
+    order: evaluationFormData.evaluation_topics.length + 1,
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
   });
 };
 
@@ -235,6 +228,7 @@ const addQuestion = (topicIndex: number) => {
     title: '',
     description: '',
     type: QuestionType.RATE,
+    order: 1,
     options: []
   });
 };
@@ -444,7 +438,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                           <v-select
                             v-bind="field"
                             v-model="evaluationFormData.drd_uuid"
-                            :items="drdOptions"
+                            :items="drdStore.drdOptions"
                             item-title="title"
                             item-value="value"
                             label="Escolha um DRD"

@@ -29,6 +29,11 @@ export const getDRD = async (uuid: string): Promise<DRD> => {
   return response.data;
 };
 
+export const getAllDRDs = async (): Promise<DRDSimple[]> => {
+  const response: AxiosResponse<DRDSimple[]> = await api.get('/drds');
+  return response.data;
+};
+
 export const saveDRD = async (drd: DRDPayload, uuid?: string) => {
   const response: AxiosResponse<DRDSimple> = uuid 
     ? await api.put(`/drds/${uuid}`, drd)
