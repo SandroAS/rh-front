@@ -101,16 +101,17 @@ onMounted(async () => {
     >
       <template #item.createdByUser="{ item }">
         <div class="d-flex align-center gap-3 flex-row-reverse flex-md-row">
-          <v-avatar color="primary" size="36" class="mr-2 ml-sm-2 mr-sm-0"> <template v-if="item.createdByUser.profile_img_url">
+          <v-avatar color="primary" size="36" class="mr-2 ml-sm-2 mr-sm-0">
+            <template v-if="item.createdByUser?.profile_img_url">
               <v-img :src="item.createdByUser.profile_img_url"></v-img>
             </template>
             <template v-else>
-              {{ getInitials(item.createdByUser.name) }}
+              {{ getInitials(item.createdByUser?.name) }}
             </template>
           </v-avatar>
           <div class="text-md-left text-right text-left">
-            <div class="font-weight-medium">{{ item.createdByUser.name }}</div>
-            <div class="text-caption text-medium-emphasis">{{ item.createdByUser.email }}</div>
+            <div class="font-weight-medium">{{ item.createdByUser?.name }}</div>
+            <div class="text-caption text-medium-emphasis">{{ item.createdByUser?.email }}</div>
           </div>
         </div>
       </template>

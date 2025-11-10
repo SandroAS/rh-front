@@ -32,6 +32,7 @@ const evaluationFormData = reactive<EvaluationPayload>({
   drd_uuid: props.selectedEvaluation?.drd_uuid || undefined,
   evaluation_topics: props.selectedEvaluation?.evaluation_topics?.map(topic => ({
     uuid: topic.uuid,
+    drd_topic_uuid: topic.drd_topic_uuid,
     title: topic.title,
     description: topic.description,
     order: topic.order,
@@ -131,11 +132,13 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
         evaluationFormData.rate = fullDrd.rate;
         evaluationFormData.evaluation_topics = fullDrd.drdTopics?.map((drdTopic, drdTopicIndex) => ({
           uuid: undefined,
+          drd_topic_uuid: drdTopic.uuid,
           title: drdTopic.name,
           description: '',
           order: drdTopicIndex + 1,
           evaluation_questions: drdTopic.drdTopicItems?.map((drdItem, drdItemIndex) => ({
             uuid: undefined,
+            drd_item_uuid: drdItem.uuid,
             title: drdItem.name,
             description: '',
             type: QuestionType.RATE,
@@ -143,6 +146,44 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
             options: []
           }))
         }));
+        setTimeout(() => {
+          evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+            const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
+            if(inputTopicTitle) {
+              inputTopicTitle.value = topic.title;
+              inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
+            if(inputTopicDescription) {
+              inputTopicDescription.value = topic.description;
+              inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            topic.evaluation_questions.forEach((question, questionIndex) => {
+              const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
+              if(inputQuestionTitle) {
+                inputQuestionTitle.value = question.title;
+                inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+              const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
+              if(inputQuestionDescription) {
+                inputQuestionDescription.value = question.description;
+                inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+              const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
+              if(inputQuestionType) {
+                inputQuestionType.value = question.type;
+                inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+              question.options?.forEach((option, optionIndex) => {
+                const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+                if(inputQuestionOption && option.text !== '') {
+                  inputQuestionOption.value = option.text;
+                  inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+              })
+            })
+          })
+        }, 50)
       }
     } catch (error) {
       console.error('Erro ao buscar DRD:', error);
@@ -154,8 +195,101 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
   } else if (!isEditing.value) {
     evaluationFormData.evaluation_topics = defaultTopics;
     evaluationFormData.rate = 5;
+
+    setTimeout(() => {
+      evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+        const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
+        if(inputTopicTitle) {
+          inputTopicTitle.value = topic.title;
+          inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
+        if(inputTopicDescription) {
+          inputTopicDescription.value = topic.description;
+          inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        topic.evaluation_questions.forEach((question, questionIndex) => {
+          const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
+          if(inputQuestionTitle) {
+            inputQuestionTitle.value = question.title;
+            inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
+          if(inputQuestionDescription) {
+            inputQuestionDescription.value = question.description;
+            inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
+          if(inputQuestionType) {
+            inputQuestionType.value = question.type;
+            inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          question.options?.forEach((option, optionIndex) => {
+            const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+            if(inputQuestionOption && option.text !== '') {
+              inputQuestionOption.value = option.text;
+              inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          })
+        })
+      })
+    }, 50)
   }
 });
+
+watch(() => evaluationMode.value, (newVal) => {
+  const defaultTopics = [{
+    uuid: undefined,
+    title: '',
+    description: '',
+    order: 1,
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
+  }];
+
+  if(newVal === 'fromZero') {
+    evaluationFormData.evaluation_topics = defaultTopics;
+    evaluationFormData.rate = 5;
+
+    setTimeout(() => {
+      evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+        const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
+        if(inputTopicTitle) {
+          inputTopicTitle.value = topic.title;
+          inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
+        if(inputTopicDescription) {
+          inputTopicDescription.value = topic.description;
+          inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        topic.evaluation_questions.forEach((question, questionIndex) => {
+          const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
+          if(inputQuestionTitle) {
+            inputQuestionTitle.value = question.title;
+            inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
+          if(inputQuestionDescription) {
+            inputQuestionDescription.value = question.description;
+            inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
+          if(inputQuestionType) {
+            inputQuestionType.value = question.type;
+            inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          question.options?.forEach((option, optionIndex) => {
+            const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+            if(inputQuestionOption && option.text !== '') {
+              inputQuestionOption.value = option.text;
+              inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          })
+        })
+      })
+    }, 50)
+  }
+})
 
 watch(() => props.modelValue, async (newVal) => {
   if (newVal && drdStore.drds?.length === 0) {
@@ -495,15 +629,6 @@ function onChangeQuestionType(question: EvaluationQuestion) {
               <v-divider class="my-4" />
 
               <h3 class="text-subtitle-1 mb-3">Estrutura do Formulário (Tópicos e Questões)</h3>
-              
-              <v-alert
-                v-if="isDrdSelected"
-                type="info"
-                variant="tonal"
-                class="mb-4"
-                icon="mdi-lock"
-                text="Os tópicos e questões foram preenchidos com base no DRD selecionado. Desvincule o DRD para editar ou criar tópicos e questões manualmente."
-              ></v-alert>
 
               <div v-if="evaluationFormData.evaluation_topics" class="w-100">
                   <div v-for="(topic, topicIndex) in evaluationFormData.evaluation_topics" :key="topicIndex" class="mb-4 pa-3 border rounded w-100">
@@ -521,7 +646,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                             :error="!!errorMessage"
                             :error-messages="errorMessage"
                             class="mb-1 w-100"
-                            :disabled="isDrdSelected"
+                            :disabled="!!topic?.drd_topic_uuid"
                           />
                         </Field>
                         <Field :name="`evaluation_topics[${topicIndex}].description`" :label="`Descrição do Tópico ${topicIndex + 1}`" v-slot="{ field, errorMessage }">
@@ -537,19 +662,18 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                             :error="!!errorMessage"
                             :error-messages="errorMessage"
                             class="mb-1 w-100"
-                            :disabled="isDrdSelected"
                           />
                         </Field>
                       </div>
                       <v-btn
-                        v-if="evaluationFormData.evaluation_topics.length > 1 && !isDrdSelected"
+                        v-if="evaluationFormData.evaluation_topics.length > 1"
                         icon
                         variant="text"
                         color="error"
                         @click="removeEvaluationTopic(topicIndex)"
                         size="small"
                         class="mt-2 ml-2"
-                        :disabled="isDrdSelected"
+                        :disabled="!!topic?.drd_topic_uuid"
                       >
                         <v-icon>mdi-delete</v-icon>
                       </v-btn>
@@ -562,7 +686,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                           <div class="flex-grow-1">
                             <div class="d-flex gap-2">
                               <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].title`" :label="`Título da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
-                                <v-text-field
+                                <v-textarea
                                   :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`"
                                   v-bind="field"
                                   v-model="question.title"
@@ -571,8 +695,10 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                                   density="compact"
                                   :error="!!errorMessage"
                                   :error-messages="errorMessage"
+                                  auto-grow
+                                  rows="1"
                                   class="mb-1 w-100"
-                                  :disabled="isDrdSelected"
+                                  :disabled="!!question?.drd_item_uuid"
                                   persistent-placeholder
                                 />
                               </Field>
@@ -591,12 +717,12 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                                   :error="!!errorMessage"
                                   :error-messages="errorMessage"
                                   class="mb-1 question-type-select"
-                                  :disabled="isDrdSelected"
-                                  style="min-width: 226px;"
+                                  :disabled="!!question?.drd_item_uuid"
+                                  style="min-width: 226px; height: fit-content;"
                                   @update:model-value="onChangeQuestionType(question)"
                                 >
                                   <template v-slot:append-inner>
-                                    <v-tooltip text="Recomendamos o tipo 'Classificação (Rate)' para métricas objetivas de DRD.">
+                                    <v-tooltip text="Recomendamos o tipo 'Classificação' para métricas objetivas de DRD.">
                                       <v-icon icon="mdi-information-outline"></v-icon>
                                     </v-tooltip>
                                   </template>
@@ -626,11 +752,11 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                                 variant="underlined"
                                 density="compact"
                                 persistent-placeholder
+                                auto-grow
                                 rows="2"
                                 :error="!!errorMessage"
                                 :error-messages="errorMessage"
                                 class="mb-1 w-100"
-                                :disabled="isDrdSelected"
                               />
                             </Field>
 
@@ -687,18 +813,16 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                                     :error="!!errorMessage"
                                     :error-messages="errorMessage"
                                     class="mb-1 w-100"
-                                    :disabled="isDrdSelected"
                                   />
                                 </Field>
                                 <v-btn
-                                  v-if="question.options && question.options.length > 1 && !isDrdSelected"
+                                  v-if="question.options && question.options.length > 1"
                                   icon
                                   variant="text"
                                   color="error"
                                   @click="removeQuestionOption(topicIndex, questionIndex, optionIndex)"
                                   size="small"
                                   class="ml-2"
-                                  :disabled="isDrdSelected"
                                 >
                                   <v-icon>mdi-delete</v-icon>
                                 </v-btn>
@@ -709,7 +833,6 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                                 @click="addQuestionOption(topicIndex, questionIndex)"
                                 class="mt-2 ml-4"
                                 size="small"
-                                :disabled="isDrdSelected"
                               >
                                 <v-icon left>mdi-plus</v-icon> Adicionar Opção
                               </v-btn>
@@ -717,14 +840,14 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                           </div>
                           
                           <v-btn
-                            v-if="topic.evaluation_questions.length > 1 && !isDrdSelected"
+                            v-if="topic.evaluation_questions.length > 1"
                             icon
                             variant="text"
                             color="error"
                             @click="removeQuestion(topicIndex, questionIndex)"
                             size="small"
                             class="ml-2 mt-2"
-                            :disabled="isDrdSelected"
+                            :disabled="!!question?.drd_item_uuid"
                           >
                             <v-icon>mdi-delete</v-icon>
                           </v-btn>
@@ -738,7 +861,6 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                       @click="addQuestion(topicIndex)"
                       class="mt-2 ml-4"
                       size="small"
-                      :disabled="isDrdSelected"
                     >
                       <v-icon left>mdi-plus</v-icon> Adicionar Questão
                     </v-btn>
