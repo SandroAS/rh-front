@@ -15,6 +15,7 @@ export interface EvaluationQuestion {
   title: string;
   description: string;
   type: QuestionType;
+  is_required: boolean;
   order: number;
   options?: EvaluationQuestionOption[];
 }

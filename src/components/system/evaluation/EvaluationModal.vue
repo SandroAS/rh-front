@@ -41,6 +41,7 @@ const evaluationFormData = reactive<EvaluationPayload>({
       title: question.title,
       description: question.description,
       type: question.type,
+      is_required: question.is_required,
       order: question.order,
       options: question.options?.map(option => ({
         uuid: option.uuid,
@@ -62,6 +63,7 @@ const evaluationFormData = reactive<EvaluationPayload>({
       title: '',
       description: '',
       type: QuestionType.RATE,
+      is_required: true,
       order: 1,
       options: [{
         uuid: undefined,
@@ -142,6 +144,7 @@ watch(() => props.selectedEvaluation, (val) => {
       title: question.title,
       description: question.description,
       type: question.type,
+      is_required: question.is_required,
       order: question.order,
       options: question.options || []
     }))
@@ -150,7 +153,7 @@ watch(() => props.selectedEvaluation, (val) => {
     title: '',
     description: '',
     order: 1,
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   }];
 }, { immediate: true });
 
@@ -160,7 +163,7 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
     title: '',
     description: '',
     order: 1,
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   }];
 
   if (newDrdUuid) {
@@ -181,6 +184,7 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
             title: drdItem.name,
             description: '',
             type: QuestionType.RATE,
+            is_required: true,
             order: drdItemIndex + 1,
             options: []
           }))
@@ -212,7 +216,7 @@ watch(() => evaluationMode.value, (newVal) => {
     title: '',
     description: '',
     order: 1,
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   }];
 
   if(newVal === 'fromZero') {
@@ -237,7 +241,7 @@ const addEvaluationTopic = () => {
     title: '',
     description: '',
     order: evaluationFormData.evaluation_topics.length + 1,
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
+    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   });
 };
 
@@ -261,6 +265,7 @@ const addQuestion = (topicIndex: number) => {
     title: '',
     description: '',
     type: QuestionType.RATE,
+    is_required: true,
     order: 1,
     options: []
   });
@@ -415,7 +420,7 @@ function handleDrdChange(newValue: any) {
       title: '',
       description: '',
       order: 1,
-      evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
+      evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
     }];
 
     evaluationFormData.evaluation_topics = defaultTopics;
@@ -760,7 +765,7 @@ function handleDrdChange(newValue: any) {
                                 </v-btn>
                               </div>
 
-                              <v-switch label="Obrigatório" hide-details style="min-width: 131px;"></v-switch>
+                              <v-switch v-model="question.is_required" label="Obrigatório" hide-details style="min-width: 131px;"></v-switch>
                             </div>
                           </div>
                           
