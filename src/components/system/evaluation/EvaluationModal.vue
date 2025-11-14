@@ -86,6 +86,45 @@ const evaluationMode = ref('fromDRD');
 const isEditing = computed(() => !!props.selectedEvaluation);
 const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
 
+function forceUpdateVeeValidate() {
+  evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+    const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
+    if(inputTopicTitle) {
+      inputTopicTitle.value = topic.title;
+      inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
+    if(inputTopicDescription) {
+      inputTopicDescription.value = topic.description;
+      inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    topic.evaluation_questions.forEach((question, questionIndex) => {
+      const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
+      if(inputQuestionTitle) {
+        inputQuestionTitle.value = question.title;
+        inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
+      if(inputQuestionDescription) {
+        inputQuestionDescription.value = question.description;
+        inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
+      if(inputQuestionType) {
+        inputQuestionType.value = question.type;
+        inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      question.options?.forEach((option, optionIndex) => {
+        const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+        if(inputQuestionOption && option.text !== '') {
+          inputQuestionOption.value = option.text;
+          inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      })
+    })
+  })
+}
+
 watch(() => props.selectedEvaluation, (val) => {
   evaluationFormData.uuid = val?.uuid || undefined;
   evaluationFormData.title = val?.title || '';
@@ -147,42 +186,7 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
           }))
         }));
         setTimeout(() => {
-          evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
-            const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
-            if(inputTopicTitle) {
-              inputTopicTitle.value = topic.title;
-              inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
-            if(inputTopicDescription) {
-              inputTopicDescription.value = topic.description;
-              inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            topic.evaluation_questions.forEach((question, questionIndex) => {
-              const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
-              if(inputQuestionTitle) {
-                inputQuestionTitle.value = question.title;
-                inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
-              }
-              const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
-              if(inputQuestionDescription) {
-                inputQuestionDescription.value = question.description;
-                inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
-              }
-              const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
-              if(inputQuestionType) {
-                inputQuestionType.value = question.type;
-                inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
-              }
-              question.options?.forEach((option, optionIndex) => {
-                const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
-                if(inputQuestionOption && option.text !== '') {
-                  inputQuestionOption.value = option.text;
-                  inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-              })
-            })
-          })
+          forceUpdateVeeValidate()
         }, 50)
       }
     } catch (error) {
@@ -197,42 +201,7 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
     evaluationFormData.rate = 5;
 
     setTimeout(() => {
-      evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
-        const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
-        if(inputTopicTitle) {
-          inputTopicTitle.value = topic.title;
-          inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
-        if(inputTopicDescription) {
-          inputTopicDescription.value = topic.description;
-          inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        topic.evaluation_questions.forEach((question, questionIndex) => {
-          const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
-          if(inputQuestionTitle) {
-            inputQuestionTitle.value = question.title;
-            inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
-          if(inputQuestionDescription) {
-            inputQuestionDescription.value = question.description;
-            inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
-          if(inputQuestionType) {
-            inputQuestionType.value = question.type;
-            inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          question.options?.forEach((option, optionIndex) => {
-            const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
-            if(inputQuestionOption && option.text !== '') {
-              inputQuestionOption.value = option.text;
-              inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-          })
-        })
-      })
+      forceUpdateVeeValidate()
     }, 50)
   }
 });
@@ -251,42 +220,7 @@ watch(() => evaluationMode.value, (newVal) => {
     evaluationFormData.rate = 5;
 
     setTimeout(() => {
-      evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
-        const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
-        if(inputTopicTitle) {
-          inputTopicTitle.value = topic.title;
-          inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
-        if(inputTopicDescription) {
-          inputTopicDescription.value = topic.description;
-          inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        topic.evaluation_questions.forEach((question, questionIndex) => {
-          const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
-          if(inputQuestionTitle) {
-            inputQuestionTitle.value = question.title;
-            inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
-          if(inputQuestionDescription) {
-            inputQuestionDescription.value = question.description;
-            inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
-          if(inputQuestionType) {
-            inputQuestionType.value = question.type;
-            inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          question.options?.forEach((option, optionIndex) => {
-            const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
-            if(inputQuestionOption && option.text !== '') {
-              inputQuestionOption.value = option.text;
-              inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-          })
-        })
-      })
+      forceUpdateVeeValidate()
     }, 50)
   }
 })
@@ -315,42 +249,7 @@ const removeEvaluationTopic = (index: number) => {
       topic.order = topicIndex + 1;
     })
 
-    evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
-      const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
-      if(inputTopicTitle) {
-        inputTopicTitle.value = topic.title;
-        inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
-      if(inputTopicDescription) {
-        inputTopicDescription.value = topic.description;
-        inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      topic.evaluation_questions.forEach((question, questionIndex) => {
-        const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
-        if(inputQuestionTitle) {
-          inputQuestionTitle.value = question.title;
-          inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
-        if(inputQuestionDescription) {
-          inputQuestionDescription.value = question.description;
-          inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
-        if(inputQuestionType) {
-          inputQuestionType.value = question.type;
-          inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        question.options?.forEach((option, optionIndex) => {
-          const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
-          if(inputQuestionOption && option.text !== '') {
-            inputQuestionOption.value = option.text;
-            inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        })
-      })
-    })
+    forceUpdateVeeValidate()
   } else {
     snackbarStore.show('Não é possível remover todos os tópicos. Adicione um novo para poder remover este.', 'warning');
   }
@@ -508,6 +407,25 @@ function onChangeQuestionType(question: EvaluationQuestion) {
     })
   }, 50)
 }
+
+function handleDrdChange(newValue: any) {
+  if (!newValue) {
+    const defaultTopics = [{
+      uuid: undefined,
+      title: '',
+      description: '',
+      order: 1,
+      evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, order: 1, options: [] }]
+    }];
+
+    evaluationFormData.evaluation_topics = defaultTopics;
+    evaluationFormData.rate = 5;
+
+    setTimeout(() => {
+      forceUpdateVeeValidate()
+    }, 50)
+  }
+};
 </script>
 
 <template>
@@ -583,7 +501,8 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                             :error="!!errorMessage"
                             :error-messages="errorMessage"
                             :loading="drdStore.loading"
-                          ></v-select>
+                            @update:modelValue="handleDrdChange"
+                          />
                         </Field>
                       </v-card-text>
                     </v-card>
@@ -760,82 +679,88 @@ function onChangeQuestionType(question: EvaluationQuestion) {
                               />
                             </Field>
 
-                            <div v-if="question.type === QuestionType.RATE">
-                              <div class="d-flex align-center">
-                                <v-rating
-                                  color="primary"
-                                  density="compact"
-                                  half-increments
-                                  hover
-                                  :length="evaluationFormData.rate"
-                                  size="x-large"
-                                  readonly
-                                ></v-rating>
-                                <span class="ml-2 text-h6">0</span>
-                              </div>
-                            </div>
-
-                            <div v-if="question.type === QuestionType.SHORT_TEXT">
-                              <v-text-field
-                                variant="underlined"
-                                density="compact"
-                                persistent-placeholder
-                                class="mb-1 w-100"
-                                readonly
-                              />
-                            </div>
-
-                            <div v-if="question.type === QuestionType.LONG_TEXT">
-                              <v-textarea
-                                variant="underlined"
-                                density="compact"
-                                persistent-placeholder
-                                rows="2"
-                                readonly
-                              />
-                            </div>
-
-                            <div v-if="[QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type!)">
-                              <h5 class="text-subtitle-2 ml-4 mb-2">Opções de Resposta</h5>
-                              <div v-for="(option, optionIndex) in question.options" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
-                                <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
-                                  <v-text-field
-                                    :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`"
-                                    v-bind="field"
-                                    :model-value="option.text"
-                                    @update:model-value="(val: string) => {
-                                      option.text = val
-                                    }"
-                                    :label="`Opção ${optionIndex + 1}`"
-                                    variant="underlined"
+                            <div class="d-flex gap-4">
+                              <div v-if="question.type === QuestionType.RATE" class="w-100">
+                                <div class="d-flex align-center">
+                                  <v-rating
+                                    color="primary"
                                     density="compact"
-                                    :prepend-icon="getIconQuestionType(question.type)"
-                                    :error="!!errorMessage"
-                                    :error-messages="errorMessage"
-                                    class="mb-1 w-100"
-                                  />
-                                </Field>
+                                    half-increments
+                                    hover
+                                    :length="evaluationFormData.rate"
+                                    size="x-large"
+                                    readonly
+                                  ></v-rating>
+                                  <span class="ml-2 text-h6">0</span>
+                                </div>
+                              </div>
+  
+                              <div v-if="question.type === QuestionType.SHORT_TEXT" class="w-100">
+                                <v-text-field
+                                  variant="underlined"
+                                  density="compact"
+                                  persistent-placeholder
+                                  hide-details
+                                  class="mb-1 w-100"
+                                  readonly
+                                />
+                              </div>
+  
+                              <div v-if="question.type === QuestionType.LONG_TEXT" class="w-100">
+                                <v-textarea
+                                  variant="underlined"
+                                  density="compact"
+                                  persistent-placeholder
+                                  hide-details
+                                  rows="2"
+                                  readonly
+                                />
+                              </div>
+  
+                              <div v-if="[QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type!)" class="w-100">
+                                <h5 class="text-subtitle-2 ml-4 mb-2">Opções de Resposta</h5>
+                                <div v-for="(option, optionIndex) in question.options" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
+                                  <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                                    <v-text-field
+                                      :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`"
+                                      v-bind="field"
+                                      :model-value="option.text"
+                                      @update:model-value="(val: string) => {
+                                        option.text = val
+                                      }"
+                                      :label="`Opção ${optionIndex + 1}`"
+                                      variant="underlined"
+                                      density="compact"
+                                      :prepend-icon="getIconQuestionType(question.type)"
+                                      :error="!!errorMessage"
+                                      :error-messages="errorMessage"
+                                      class="mb-1 w-100"
+                                    />
+                                  </Field>
+                                  <v-btn
+                                    v-if="question.options && question.options.length > 1"
+                                    icon
+                                    variant="text"
+                                    color="error"
+                                    @click="removeQuestionOption(topicIndex, questionIndex, optionIndex)"
+                                    size="small"
+                                    class="ml-2"
+                                  >
+                                    <v-icon>mdi-delete</v-icon>
+                                  </v-btn>
+                                </div>
                                 <v-btn
-                                  v-if="question.options && question.options.length > 1"
-                                  icon
-                                  variant="text"
-                                  color="error"
-                                  @click="removeQuestionOption(topicIndex, questionIndex, optionIndex)"
+                                  color="blue-grey-lighten-2"
+                                  variant="outlined"
+                                  @click="addQuestionOption(topicIndex, questionIndex)"
+                                  class="mt-2 ml-4"
                                   size="small"
-                                  class="ml-2"
                                 >
-                                  <v-icon>mdi-delete</v-icon>
+                                  <v-icon left>mdi-plus</v-icon> Adicionar Opção
                                 </v-btn>
                               </div>
-                              <v-btn
-                                color="blue-grey-lighten-2"
-                                variant="outlined"
-                                @click="addQuestionOption(topicIndex, questionIndex)"
-                                class="mt-2 ml-4"
-                                size="small"
-                              >
-                                <v-icon left>mdi-plus</v-icon> Adicionar Opção
-                              </v-btn>
+
+                              <v-switch label="Obrigatório" hide-details style="min-width: 131px;"></v-switch>
                             </div>
                           </div>
                           
