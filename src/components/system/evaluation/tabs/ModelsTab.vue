@@ -24,20 +24,10 @@ const openDialog = (item?: Evaluation) => {
   dialog.value = true;
 }
 
-async function getEvaluations() {
-  await evaluationStore.getEvaluations({ page: currentPage.value, limit: itemsPerPage.value });
-}
-
-async function getAccountUsers() {
-  await accountUserStore.getAccountUsers({page: 1, limit: 10000 });
-}
-
 async function getAllDRDs() {
   await drdStore.getAllDRDs();
 }
 
-getEvaluations();
-getAccountUsers();
 getAllDRDs();
 
 const loadEvaluations = async () => {

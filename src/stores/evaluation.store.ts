@@ -45,7 +45,7 @@ export const useEvaluationStore = defineStore('evaluation', {
         if(!this.evaluations) this.evaluations = [];
         const evaluationSaved = {
           uuid: res.uuid,
-          title: evaluation.title,
+          title: evaluation.name,
           description: evaluation.description,
           rate: evaluation.rate,
           drd_uuid: evaluation.drd_uuid,

@@ -6,5 +6,5 @@ export default interface EvaluationTopic {
   title: string;
   description: string;
   order: number;
-  evaluation_questions: EvaluationQuestion[];
+  questions: EvaluationQuestion[];
 }

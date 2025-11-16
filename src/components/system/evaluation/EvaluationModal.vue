@@ -25,53 +25,34 @@ const close = () => emit('update:modelValue', false);
 
 const evaluationFormData = reactive<EvaluationPayload>({
   uuid: props.selectedEvaluation?.uuid || undefined,
-  title: props.selectedEvaluation?.title || '',
+  name: props.selectedEvaluation?.name || '',
   description: props.selectedEvaluation?.description || '',
   created_by_user_uuid: props.selectedEvaluation?.created_by_user_uuid || userStore.user?.uuid || '',
   rate: props.selectedEvaluation?.rate || 5,
   drd_uuid: props.selectedEvaluation?.drd_uuid || undefined,
-  evaluation_topics: props.selectedEvaluation?.evaluation_topics?.map(topic => ({
-    uuid: topic.uuid,
-    drd_topic_uuid: topic.drd_topic_uuid,
-    title: topic.title,
-    description: topic.description,
-    order: topic.order,
-    evaluation_questions: topic.evaluation_questions.map(question => ({
-      uuid: question.uuid,
-      title: question.title,
-      description: question.description,
-      type: question.type,
-      is_required: question.is_required,
-      order: question.order,
-      options: question.options?.map(option => ({
-        uuid: option.uuid,
-        text: option.text,
-        order: option.order,
-      })) || [{
-        uuid: undefined,
-        text: '',
-        order: 1,
-      }]
-    }))
-  })) || [{
+  form: props.selectedEvaluation?.form || {
     uuid: undefined,
-    title: '',
-    description: '',
-    order: 1,
-    evaluation_questions: [{
+    name: '',
+    topics: [{
       uuid: undefined,
       title: '',
       description: '',
-      type: QuestionType.RATE,
-      is_required: true,
       order: 1,
-      options: [{
+      questions: [{
         uuid: undefined,
-        text: '',
+        title: '',
+        description: '',
+        type: QuestionType.RATE,
+        is_required: true,
         order: 1,
-      }]
-    }] 
-  }],
+        options: [{
+          uuid: undefined,
+          text: '',
+          order: 1,
+        }]
+      }] 
+    }]
+  }
 });
 
 const frontendQuestionTypes = [
@@ -89,7 +70,7 @@ const isEditing = computed(() => !!props.selectedEvaluation);
 const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
 
 function forceUpdateVeeValidate() {
-  evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+  evaluationFormData.form?.topics.forEach((topic, topicIndex) => {
     const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
     if(inputTopicTitle) {
       inputTopicTitle.value = topic.title;
@@ -100,7 +81,7 @@ function forceUpdateVeeValidate() {
       inputTopicDescription.value = topic.description;
       inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
     }
-    topic.evaluation_questions.forEach((question, questionIndex) => {
+    topic.questions.forEach((question, questionIndex) => {
       const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
       if(inputQuestionTitle) {
         inputQuestionTitle.value = question.title;
@@ -129,17 +110,17 @@ function forceUpdateVeeValidate() {
 
 watch(() => props.selectedEvaluation, (val) => {
   evaluationFormData.uuid = val?.uuid || undefined;
-  evaluationFormData.title = val?.title || '';
+  evaluationFormData.name = val?.name || '';
   evaluationFormData.description = val?.description || '';
   evaluationFormData.created_by_user_uuid = val?.created_by_user_uuid || userStore.user?.uuid || '';
   evaluationFormData.rate = typeof val?.rate === 'number' ? val.rate : 5;
   evaluationFormData.drd_uuid = val?.drd_uuid ?? undefined;
-  evaluationFormData.evaluation_topics = val?.evaluation_topics?.map((topic, topicIndex) => ({
+  evaluationFormData.form.topics = val?.form?.topics?.map((topic, topicIndex) => ({
     uuid: topic?.uuid ?? undefined,
     title: topic?.title ?? '',
     description: topic?.description ?? '',
     order: typeof topicIndex === 'number' ? topicIndex + 1 : 1,
-    evaluation_questions: topic.evaluation_questions?.map((question) => ({
+    questions: topic.questions?.map((question) => ({
       uuid: question.uuid,
       title: question.title,
       description: question.description,
@@ -153,7 +134,7 @@ watch(() => props.selectedEvaluation, (val) => {
     title: '',
     description: '',
     order: 1,
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
+    questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   }];
 }, { immediate: true });
 
@@ -163,7 +144,7 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
     title: '',
     description: '',
     order: 1,
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
+    questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   }];
 
   if (newDrdUuid) {
@@ -172,13 +153,13 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
 
       if (fullDrd) {
         evaluationFormData.rate = fullDrd.rate;
-        evaluationFormData.evaluation_topics = fullDrd.drdTopics?.map((drdTopic, drdTopicIndex) => ({
+        evaluationFormData.form.topics = fullDrd.drdTopics?.map((drdTopic, drdTopicIndex) => ({
           uuid: undefined,
           drd_topic_uuid: drdTopic.uuid,
           title: drdTopic.name,
           description: '',
           order: drdTopicIndex + 1,
-          evaluation_questions: drdTopic.drdTopicItems?.map((drdItem, drdItemIndex) => ({
+          questions: drdTopic.drdTopicItems?.map((drdItem, drdItemIndex) => ({
             uuid: undefined,
             drd_item_uuid: drdItem.uuid,
             title: drdItem.name,
@@ -196,12 +177,12 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
     } catch (error) {
       console.error('Erro ao buscar DRD:', error);
       if (!isEditing.value) {
-        evaluationFormData.evaluation_topics = defaultTopics;
+        evaluationFormData.form.topics = defaultTopics;
         evaluationFormData.rate = 5;
       }
     }
   } else if (!isEditing.value) {
-    evaluationFormData.evaluation_topics = defaultTopics;
+    evaluationFormData.form.topics = defaultTopics;
     evaluationFormData.rate = 5;
 
     setTimeout(() => {
@@ -216,11 +197,11 @@ watch(() => evaluationMode.value, (newVal) => {
     title: '',
     description: '',
     order: 1,
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
+    questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   }];
 
   if(newVal === 'fromZero') {
-    evaluationFormData.evaluation_topics = defaultTopics;
+    evaluationFormData.form.topics = defaultTopics;
     evaluationFormData.rate = 5;
 
     setTimeout(() => {
@@ -236,20 +217,20 @@ watch(() => props.modelValue, async (newVal) => {
 }, { immediate: true });
 
 const addEvaluationTopic = () => {
-  evaluationFormData.evaluation_topics.push({
+  evaluationFormData.form.topics.push({
     uuid: undefined,
     title: '',
     description: '',
-    order: evaluationFormData.evaluation_topics.length + 1,
-    evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
+    order: evaluationFormData.form.topics.length + 1,
+    questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   });
 };
 
 const removeEvaluationTopic = (index: number) => {
-  if (evaluationFormData.evaluation_topics.length > 1) {
-    evaluationFormData.evaluation_topics.splice(index, 1);
+  if (evaluationFormData.form.topics.length > 1) {
+    evaluationFormData.form.topics.splice(index, 1);
 
-    evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
+    evaluationFormData.form.topics.forEach((topic, topicIndex) => {
       topic.order = topicIndex + 1;
     })
 
@@ -260,7 +241,7 @@ const removeEvaluationTopic = (index: number) => {
 };
 
 const addQuestion = (topicIndex: number) => {
-  evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.push({
+  evaluationFormData.form.topics[topicIndex].questions.push({
     uuid: undefined,
     title: '',
     description: '',
@@ -272,14 +253,14 @@ const addQuestion = (topicIndex: number) => {
 };
 
 const removeQuestion = (topicIndex: number, questionIndex: number) => {
-  if (evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.length > 1) {
-    evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.splice(questionIndex, 1);
+  if (evaluationFormData.form.topics[topicIndex].questions.length > 1) {
+    evaluationFormData.form.topics[topicIndex].questions.splice(questionIndex, 1);
 
-    evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.forEach((question, questionIndex) => {
+    evaluationFormData.form.topics[topicIndex].questions.forEach((question, questionIndex) => {
       question.order = questionIndex + 1;
     });
 
-    evaluationFormData.evaluation_topics[topicIndex].evaluation_questions.forEach((question, questionIndex) => {
+    evaluationFormData.form.topics[topicIndex].questions.forEach((question, questionIndex) => {
       const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
       if(inputQuestionTitle) {
         inputQuestionTitle.value = question.title;
@@ -309,12 +290,12 @@ const removeQuestion = (topicIndex: number, questionIndex: number) => {
 };
 
 const addQuestionOption = (topicIndex: number, questionIndex: number) => {
-  const question = evaluationFormData.evaluation_topics[topicIndex].evaluation_questions[questionIndex];
+  const question = evaluationFormData.form.topics[topicIndex].questions[questionIndex];
   question.options?.push({ uuid: undefined, text: '', order: question.options.length + 1 });
 };
 
 const removeQuestionOption = (topicIndex: number, questionIndex: number, optionIndex: number) => {
-  const question = evaluationFormData.evaluation_topics[topicIndex].evaluation_questions[questionIndex];
+  const question = evaluationFormData.form.topics[topicIndex].questions[questionIndex];
   if (question.options && question.options.length > 1) {
     question.options.splice(optionIndex, 1);
 
@@ -343,25 +324,28 @@ const rules = {
 async function onSubmit(formValues: Record<string, any>) {
   const payload: EvaluationPayload = {
     ...formValues,
-    title: formValues.title || '',
+    name: formValues.name || '',
     description: formValues.description || '',
     rate: formValues.rate || 5,
     created_by_user_uuid: userStore.user?.uuid || evaluationFormData.created_by_user_uuid,
-    
-    evaluation_topics: formValues.evaluation_topics.map((topic: any) => ({
-      title: topic.title,
-      description: topic.description,
-      evaluation_questions: topic.evaluation_questions.map((question: any) => {
-        const isSelection = [QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type);
-        const options = isSelection && question.options.length > 0 ? question.options : [];
-        return {
-          title: question.title,
-          description: question.description,
-          type: question.type,
-          options, 
-        };
-      })
-    })),
+    form: {
+      name: formValues.name + ' - Formulário',
+      topics: formValues.evaluation_topics.map((topic: any) => ({
+        title: topic.title,
+        description: topic.description,
+        evaluation_questions: topic.evaluation_questions.map((question: any) => {
+          const isSelection = [QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type);
+          const options = isSelection && question.options.length > 0 ? question.options : [];
+          return {
+            title: question.title,
+            description: question.description,
+            type: question.type,
+            is_required: question.is_required,
+            options, 
+          };
+        })
+      }))
+    }
   };
 
   try {
@@ -399,8 +383,8 @@ function onChangeQuestionType(question: EvaluationQuestion) {
   };
 
   setTimeout(() => {
-    evaluationFormData.evaluation_topics.forEach((topic, topicIndex) => {
-      topic.evaluation_questions.forEach((item, questionIndex) => {
+    evaluationFormData.form.topics.forEach((topic, topicIndex) => {
+      topic.questions.forEach((item, questionIndex) => {
         item.options?.forEach((option, optionIndex) => {
           const input = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
           if(input && option.text !== '') {
@@ -420,10 +404,10 @@ function handleDrdChange(newValue: any) {
       title: '',
       description: '',
       order: 1,
-      evaluation_questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
+      questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
     }];
 
-    evaluationFormData.evaluation_topics = defaultTopics;
+    evaluationFormData.form.topics = defaultTopics;
     evaluationFormData.rate = 5;
 
     setTimeout(() => {
@@ -444,11 +428,11 @@ function handleDrdChange(newValue: any) {
           <v-container class="pt-0">
             <v-row>
               <v-col cols="12" class="pb-0">
-                <Field name="title" label="Título do Modelo de Avaliação" rules="required|min:3" v-slot="{ field, errorMessage }">
+                <Field name="name" label="Nome do Modelo de Avaliação" rules="required|min:3" v-slot="{ field, errorMessage }">
                   <v-text-field
                     v-bind="field"
-                    v-model="evaluationFormData.title"
-                    label="Título do Modelo de Avaliação"
+                    v-model="evaluationFormData.name"
+                    label="Nome do Modelo de Avaliação"
                     variant="solo-filled"
                     density="compact"
                     :error="!!errorMessage"
@@ -554,8 +538,8 @@ function handleDrdChange(newValue: any) {
 
               <h3 class="text-subtitle-1 mb-3">Estrutura do Formulário (Tópicos e Questões)</h3>
 
-              <div v-if="evaluationFormData.evaluation_topics" class="w-100">
-                  <div v-for="(topic, topicIndex) in evaluationFormData.evaluation_topics" :key="topicIndex" class="mb-4 pa-3 border rounded w-100">
+              <div v-if="evaluationFormData.form?.topics" class="w-100">
+                  <div v-for="(topic, topicIndex) in evaluationFormData.form.topics" :key="topicIndex" class="mb-4 pa-3 border rounded w-100">
                     <div class="d-flex align-start mb-2">
                       <div class="flex-grow-1">
                         <Field :name="`evaluation_topics[${topicIndex}].title`" :label="`Título do Tópico ${topicIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
@@ -590,7 +574,7 @@ function handleDrdChange(newValue: any) {
                         </Field>
                       </div>
                       <v-btn
-                        v-if="evaluationFormData.evaluation_topics.length > 1"
+                        v-if="evaluationFormData?.form?.topics.length > 1"
                         icon
                         variant="text"
                         color="error"
@@ -604,8 +588,8 @@ function handleDrdChange(newValue: any) {
                     </div>
 
                     <h4 class="text-subtitle-2 ml-4 mb-2">Questões do Tópico</h4>
-                    <div v-if="topic.evaluation_questions">
-                      <div v-for="(question, questionIndex) in topic.evaluation_questions" :key="questionIndex" class="pa-3 border rounded ml-4 mb-3">
+                    <div v-if="topic?.questions">
+                      <div v-for="(question, questionIndex) in topic.questions" :key="questionIndex" class="pa-3 border rounded ml-4 mb-3">
                         <div class="d-flex align-start">
                           <div class="flex-grow-1">
                             <div class="d-flex gap-2">
@@ -770,7 +754,7 @@ function handleDrdChange(newValue: any) {
                           </div>
                           
                           <v-btn
-                            v-if="topic.evaluation_questions.length > 1"
+                            v-if="topic?.questions?.length > 1"
                             icon
                             variant="text"
                             color="error"

@@ -10,7 +10,7 @@ export const getEvaluations = async (page: number = 1, limit: number = 10, sortC
   if (sortOrder) params.sort_order = sortOrder;
   if (searchTerm) params.search_term = searchTerm;
 
-  const response: AxiosResponse<EvaluationResponsePagination> = await api.get('/evaluations', { params });
+  const response: AxiosResponse<EvaluationResponsePagination> = await api.get('/evaluations/pagination', { params });
 
   return response.data;
 };

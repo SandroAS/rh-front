@@ -1,11 +1,11 @@
-import type EvaluationTopic from './evaluation-topic.type';
+import type FormPayload from '../form/form-payload.type';
 
 export default interface EvaluationPayload {
   uuid?: string;
-  title: string;
+  name: string;
   description?: string;
   created_by_user_uuid: string;
   rate: number;
   drd_uuid?: string;
-  evaluation_topics: EvaluationTopic[];
+  form: FormPayload;
 }
