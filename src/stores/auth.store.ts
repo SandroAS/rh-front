@@ -19,9 +19,19 @@ interface UserStoreState {
   error: string | null;
 }
 
+let user: AuthUser | null = null;
+const storageUser = localStorage.getItem('user');
+try {
+  if (storageUser) {
+    user = JSON.parse(storageUser) as AuthUser;
+  }
+} catch (e) {
+  user = null;
+}
+
 export const useUserStore = defineStore('user', {
   state: (): UserStoreState => ({
-    user: null,
+    user,
     loading: false,
     error: null,
   }),
@@ -33,7 +43,7 @@ export const useUserStore = defineStore('user', {
     userProfileImageUrl: (state): string | null | undefined => state.user?.profile_img_url,
     userPermissions: (state): string[] => state.user?.role?.permissions || [],
     currentUser: (state): AuthUser | null => state.user,
-    userAvatar: (state): UserAvatar | null => state.user ? { uuid: state.user.uuid, name: state.user.name, profile_img_url: state.user.profile_img_url } : null,
+    userAvatar: (state): UserAvatar | null => state.user ? { uuid: state.user.uuid, name: state.user.name, email: state.user.email, profile_img_url: state.user.profile_img_url } : null,
     currentUserSample: (state): User => ({
       name: state.user?.name || '',
       email: state.user!.email || '',

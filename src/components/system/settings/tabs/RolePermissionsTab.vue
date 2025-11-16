@@ -19,12 +19,11 @@ const openDialog = (item?: Role) => {
   dialog.value = true;
 }
 
-async function getRolePermissions() {
+async function getPermissions() {
   await roleStore.getPermissions();
-  await roleStore.getRolesPermissions();
 }
 
-getRolePermissions();
+getPermissions();
 
 async function loadItems({ page, itemsPerPage, sortBy }: { page: number, itemsPerPage: number, sortBy: any[] }) {
   const sortColumn = sortBy.length > 0 ? sortBy[0].key : undefined;

@@ -32,12 +32,6 @@ async function updateIsActive(accountUser: AccountUser) {
   }
 }
 
-async function getUsers() {
-  await accountUserStore.getAccountUsers({ page: currentPage.value, limit: itemsPerPage.value });
-}
-
-getUsers();
-
 async function loadItems({ page, itemsPerPage, sortBy }: { page: number, itemsPerPage: number, sortBy: any[] }) {
   const sortColumn = sortBy.length > 0 ? sortBy[0].key : undefined;
   const sortOrder = sortBy.length > 0 ? sortBy[0].order : undefined;

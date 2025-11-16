@@ -91,14 +91,14 @@ watch(searchTerm, (newVal) => {
             size="small"
             class="mt-1"
           >
-            <v-avatar v-if="item.createdBy.profile_img_url" start>
+            <v-avatar v-if="item?.createdBy?.profile_img_url" start>
               <v-img :src="item.createdBy.profile_img_url"></v-img>
             </v-avatar>
             <v-avatar v-else size="28" class="mr-2" color="primary">
-              <span class="text-caption font-weight-bold">{{ getInitials(item.createdBy.name) }}</span>
+              <span class="text-caption font-weight-bold">{{ getInitials(item?.createdBy?.name) }}</span>
             </v-avatar>
 
-            {{ item.createdBy.name }}
+            {{ item?.createdBy?.name }}
           </v-chip>
         </div>
       </template>
