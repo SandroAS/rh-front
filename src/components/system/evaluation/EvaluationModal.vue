@@ -71,34 +71,34 @@ const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
 
 function forceUpdateVeeValidate() {
   evaluationFormData.form?.topics.forEach((topic, topicIndex) => {
-    const inputTopicTitle = document.querySelector(`#evaluation_topics_${topicIndex}_title`) as HTMLInputElement;
+    const inputTopicTitle = document.querySelector(`#topics_${topicIndex}_title`) as HTMLInputElement;
     if(inputTopicTitle) {
       inputTopicTitle.value = topic.title;
       inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
     }
-    const inputTopicDescription = document.querySelector(`#evaluation_topics_${topicIndex}_description`) as HTMLInputElement;
+    const inputTopicDescription = document.querySelector(`#topics_${topicIndex}_description`) as HTMLInputElement;
     if(inputTopicDescription) {
       inputTopicDescription.value = topic.description;
       inputTopicDescription.dispatchEvent(new Event('change', { bubbles: true }));
     }
     topic.questions.forEach((question, questionIndex) => {
-      const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
+      const inputQuestionTitle = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_title`) as HTMLInputElement;
       if(inputQuestionTitle) {
         inputQuestionTitle.value = question.title;
         inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
+      const inputQuestionDescription = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_description`) as HTMLInputElement;
       if(inputQuestionDescription) {
         inputQuestionDescription.value = question.description;
         inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
+      const inputQuestionType = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_type`) as HTMLInputElement;
       if(inputQuestionType) {
         inputQuestionType.value = question.type;
         inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
       }
       question.options?.forEach((option, optionIndex) => {
-        const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+        const inputQuestionOption = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
         if(inputQuestionOption && option.text !== '') {
           inputQuestionOption.value = option.text;
           inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
@@ -261,23 +261,23 @@ const removeQuestion = (topicIndex: number, questionIndex: number) => {
     });
 
     evaluationFormData.form.topics[topicIndex].questions.forEach((question, questionIndex) => {
-      const inputQuestionTitle = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`) as HTMLInputElement;
+      const inputQuestionTitle = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_title`) as HTMLInputElement;
       if(inputQuestionTitle) {
         inputQuestionTitle.value = question.title;
         inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      const inputQuestionDescription = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`) as HTMLInputElement;
+      const inputQuestionDescription = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_description`) as HTMLInputElement;
       if(inputQuestionDescription) {
         inputQuestionDescription.value = question.description;
         inputQuestionDescription.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      const inputQuestionType = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`) as HTMLInputElement;
+      const inputQuestionType = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_type`) as HTMLInputElement;
       if(inputQuestionType) {
         inputQuestionType.value = question.type;
         inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
       }
       question.options?.forEach((option, optionIndex) => {
-        const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+        const inputQuestionOption = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
         if(inputQuestionOption && option.text !== '') {
           inputQuestionOption.value = option.text;
           inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
@@ -304,7 +304,7 @@ const removeQuestionOption = (topicIndex: number, questionIndex: number, optionI
     });
 
     question.options?.forEach((option, optionIndex) => {
-      const inputQuestionOption = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+      const inputQuestionOption = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
       if(inputQuestionOption && option.text !== '') {
         inputQuestionOption.value = option.text;
         inputQuestionOption.dispatchEvent(new Event('change', { bubbles: true }));
@@ -330,10 +330,10 @@ async function onSubmit(formValues: Record<string, any>) {
     created_by_user_uuid: userStore.user?.uuid || evaluationFormData.created_by_user_uuid,
     form: {
       name: formValues.name + ' - Formulário',
-      topics: formValues.evaluation_topics.map((topic: any) => ({
+      topics: formValues?.form?.topics?.map((topic: any) => ({
         title: topic.title,
         description: topic.description,
-        evaluation_questions: topic.evaluation_questions.map((question: any) => {
+        questions: topic?.questions?.map((question: any) => {
           const isSelection = [QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type);
           const options = isSelection && question.options.length > 0 ? question.options : [];
           return {
@@ -386,7 +386,7 @@ function onChangeQuestionType(question: EvaluationQuestion) {
     evaluationFormData.form.topics.forEach((topic, topicIndex) => {
       topic.questions.forEach((item, questionIndex) => {
         item.options?.forEach((option, optionIndex) => {
-          const input = document.querySelector(`#evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
+          const input = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_options_${optionIndex}_text`) as HTMLInputElement;
           if(input && option.text !== '') {
             input.value = option.text;
             input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -542,9 +542,9 @@ function handleDrdChange(newValue: any) {
                   <div v-for="(topic, topicIndex) in evaluationFormData.form.topics" :key="topicIndex" class="mb-4 pa-3 border rounded w-100">
                     <div class="d-flex align-start mb-2">
                       <div class="flex-grow-1">
-                        <Field :name="`evaluation_topics[${topicIndex}].title`" :label="`Título do Tópico ${topicIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                        <Field :name="`form.topics[${topicIndex}].title`" :label="`Título do Tópico ${topicIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                           <v-text-field
-                            :id="`evaluation_topics_${topicIndex}_title`"
+                            :id="`topics_${topicIndex}_title`"
                             v-bind="field"
                             v-model="topic.title"
                             :label="`Título do Tópico ${topicIndex + 1}`"
@@ -557,9 +557,9 @@ function handleDrdChange(newValue: any) {
                             :disabled="!!topic?.drd_topic_uuid"
                           />
                         </Field>
-                        <Field :name="`evaluation_topics[${topicIndex}].description`" :label="`Descrição do Tópico ${topicIndex + 1}`" v-slot="{ field, errorMessage }">
+                        <Field :name="`form.topics[${topicIndex}].description`" :label="`Descrição do Tópico ${topicIndex + 1}`" v-slot="{ field, errorMessage }">
                           <v-textarea
-                            :id="`evaluation_topics_${topicIndex}_description`"
+                            :id="`topics_${topicIndex}_description`"
                             v-bind="field"
                             v-model="topic.description"
                             :label="`Descrição do Tópico ${topicIndex + 1} (Opcional)`"
@@ -593,9 +593,9 @@ function handleDrdChange(newValue: any) {
                         <div class="d-flex align-start">
                           <div class="flex-grow-1">
                             <div class="d-flex gap-2">
-                              <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].title`" :label="`Título da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                              <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].title`" :label="`Título da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                                 <v-textarea
-                                  :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_title`"
+                                  :id="`topics_${topicIndex}_questions_${questionIndex}_title`"
                                   v-bind="field"
                                   v-model="question.title"
                                   :label="`Título da Questão ${questionIndex + 1}`"
@@ -611,9 +611,9 @@ function handleDrdChange(newValue: any) {
                                 />
                               </Field>
   
-                              <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].type`" :label="`Tipo da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                              <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].type`" :label="`Tipo da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                                 <v-select
-                                  :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_type`"
+                                  :id="`topics_${topicIndex}_questions_${questionIndex}_type`"
                                   v-bind="field"
                                   v-model="question.type"
                                   :items="frontendQuestionTypes"
@@ -651,9 +651,9 @@ function handleDrdChange(newValue: any) {
                               </Field>
                             </div>
 
-                            <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].description`" :label="`Descrição da Questão ${questionIndex + 1}`" v-slot="{ field, errorMessage }">
+                            <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].description`" :label="`Descrição da Questão ${questionIndex + 1}`" v-slot="{ field, errorMessage }">
                               <v-textarea
-                                :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_description`"
+                                :id="`topics_${topicIndex}_questions_${questionIndex}_description`"
                                 v-bind="field"
                                 v-model="question.description"
                                 :label="`Descrição da Questão ${questionIndex + 1} (Opcional)`"
@@ -709,9 +709,9 @@ function handleDrdChange(newValue: any) {
                               <div v-if="[QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type!)" class="w-100">
                                 <h5 class="text-subtitle-2 ml-4 mb-2">Opções de Resposta</h5>
                                 <div v-for="(option, optionIndex) in question.options" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
-                                  <Field :name="`evaluation_topics[${topicIndex}].evaluation_questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                                  <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
                                     <v-text-field
-                                      :id="`evaluation_topics_${topicIndex}_evaluation_questions_${questionIndex}_options_${optionIndex}_text`"
+                                      :id="`topics_${topicIndex}_questions_${questionIndex}_options_${optionIndex}_text`"
                                       v-bind="field"
                                       :model-value="option.text"
                                       @update:model-value="(val: string) => {
