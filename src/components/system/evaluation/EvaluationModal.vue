@@ -8,6 +8,7 @@ import { useUserStore } from '@/stores/auth.store';
 import type Evaluation from '@/types/evaluation/evaluation.type';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
 import { QuestionType, type EvaluationQuestion } from '@/types/evaluation/evaluation-question.type';
+import type EvaluationTopic from '@/types/evaluation/evaluation-topic.type';
 
 const evaluationStore = useEvaluationStore();
 const snackbarStore = useSnackbarStore();
@@ -330,18 +331,24 @@ async function onSubmit(formValues: Record<string, any>) {
     created_by_user_uuid: userStore.user?.uuid || evaluationFormData.created_by_user_uuid,
     form: {
       name: formValues.name + ' - Formulário',
-      topics: formValues?.form?.topics?.map((topic: any) => ({
+      topics: evaluationFormData?.form?.topics?.map((topic: EvaluationTopic) => ({
+        uuid: topic.uuid,
+        drd_topic_uuid: topic.drd_topic_uuid,
         title: topic.title,
         description: topic.description,
-        questions: topic?.questions?.map((question: any) => {
+        order: topic.order,
+        questions: topic?.questions?.map((question: EvaluationQuestion) => {
           const isSelection = [QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type);
-          const options = isSelection && question.options.length > 0 ? question.options : [];
+          const options = isSelection && question?.options && question.options?.length > 0 ? question.options : [];
           return {
+            uuid: question.uuid,
+            drd_item_uuid: question.drd_item_uuid,
             title: question.title,
             description: question.description,
             type: question.type,
             is_required: question.is_required,
-            options, 
+            order: question.order,
+            options
           };
         })
       }))
