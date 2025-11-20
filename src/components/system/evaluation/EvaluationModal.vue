@@ -291,7 +291,6 @@ const addQuestion = (topicIndex: number) => {
   setTimeout(() => {
     evaluationFormData.form.topics[topicIndex].questions.forEach((question, questionIndex) => {
       const inputQuestionType = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_type`) as HTMLInputElement;
-      console.log(inputQuestionType)
       if(inputQuestionType) {
         inputQuestionType.value = question.type;
         inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
