@@ -3,6 +3,7 @@ import api from './api.service';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
 import type EvaluationResponsePagination from '@/types/evaluation/evaluation-response-pagination.type';
 import type Evaluation from '@/types/evaluation/evaluation.type';
+import type EvaluationSimple from '@/types/evaluation/evaluation-simple.type';
 
 export const getEvaluations = async (page: number = 1, limit: number = 10, sortColumn?: string, sortOrder?: 'asc' | 'desc', searchTerm?: string): Promise<EvaluationResponsePagination> => {
   const params: any = { page, limit };
@@ -26,6 +27,11 @@ export const getEvaluation = async (uuid: string): Promise<Evaluation> => {
     }
   });
 
+  return response.data;
+};
+
+export const getAllEvaluations = async (): Promise<EvaluationSimple[]> => {
+  const response: AxiosResponse<EvaluationSimple[]> = await api.get('/evaluations');
   return response.data;
 };
 

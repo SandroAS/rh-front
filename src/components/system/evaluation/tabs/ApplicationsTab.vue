@@ -55,7 +55,7 @@ watch(searchTerm, (newVal) => {
 onMounted(async () => {
   // Carregar usuários e modelos para exibição na tabela
   await accountUserStore.getAccountUsers({ page: 1, limit: 10000 });
-  await evaluationStore.getEvaluations({ page: 1, limit: 10000 });
+  await evaluationStore.getAllEvaluations();
   loadEvaluationApplications();
 });
 

@@ -1,13 +1,15 @@
-import { getEvaluation, getEvaluations, saveEvaluation } from '@/services/evaluation.service';
+import { getAllEvaluations, getEvaluation, getEvaluations, saveEvaluation } from '@/services/evaluation.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type DRD from '@/types/drd/drd.type';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
 import type EvaluationResponsePagination from '@/types/evaluation/evaluation-response-pagination.type';
+import type EvaluationSimple from '@/types/evaluation/evaluation-simple.type';
 import type Evaluation from '@/types/evaluation/evaluation.type';
 import { defineStore } from 'pinia';
 
 interface EvaluationStoreState {
   evaluations: Evaluation[] | null;
+  evaluations_simple: EvaluationSimple[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -22,6 +24,7 @@ interface EvaluationStoreState {
 export const useEvaluationStore = defineStore('evaluation', {
   state: (): EvaluationStoreState => ({
     evaluations: null,
+    evaluations_simple: null,
     loading: false,
     error: null,
     total: 0,
@@ -102,6 +105,20 @@ export const useEvaluationStore = defineStore('evaluation', {
         return await getEvaluation(uuid);
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar DRD.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getAllEvaluations() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        this.evaluations_simple = await getAllEvaluations();
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
         throw err;
       } finally {
         this.loading = false;
