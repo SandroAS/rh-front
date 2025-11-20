@@ -25,7 +25,7 @@ export const getEvaluation = async (uuid: string): Promise<Evaluation> => {
       topic.questions.sort((a, b) => a.order - b.order);
     }
   });
-console.log(response.data)
+
   return response.data;
 };
 

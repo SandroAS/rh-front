@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch, computed, ref } from 'vue';
+import { reactive, watch, computed, ref, nextTick } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
@@ -79,7 +79,7 @@ const showForm = computed(() => {
 });
 
 function forceUpdateVeeValidate() {
-  evaluationFormData.form?.topics.forEach((topic, topicIndex) => {
+  evaluationFormData.form?.topics?.forEach((topic, topicIndex) => {
     const inputTopicTitle = document.querySelector(`#topics_${topicIndex}_title`) as HTMLInputElement;
     if(inputTopicTitle && topic.title) {
       inputTopicTitle.value = topic.title;
@@ -131,29 +131,17 @@ const getInitialEvaluationState = async (selectedEvaluation: EvaluationSimple | 
     evaluationFormData.created_by_user_uuid = fetchedEvaluation?.created_by_user_uuid || userStore.user?.uuid || '';
     evaluationFormData.rate = typeof fetchedEvaluation?.rate === 'number' ? fetchedEvaluation.rate : 5;
     evaluationFormData.drd_uuid = fetchedEvaluation?.drd?.uuid || undefined;
-    evaluationFormData.form.uuid = fetchedEvaluation?.form.uuid;
-    evaluationFormData.form.name = fetchedEvaluation?.form.name || '';
-    evaluationFormData.form.topics = fetchedEvaluation?.form?.topics?.map((topic, topicIndex) => ({
-      uuid: topic?.uuid ?? undefined,
-      title: topic?.title ?? '',
-      description: topic?.description ?? '',
-      order: typeof topicIndex === 'number' ? topicIndex + 1 : 1,
-      questions: topic.questions?.map((question) => ({
-        uuid: question.uuid,
-        title: question.title,
-        description: question.description,
-        type: question.type,
-        is_required: question.is_required,
-        order: question.order,
-        options: question.options || []
-      }))
-    })) || [{
+    evaluationFormData.form = fetchedEvaluation?.form || {
       uuid: undefined,
-      title: '',
-      description: '',
-      order: 1,
-      questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
-    }];
+      name: '',
+      topics: [{
+        uuid: undefined,
+        title: '',
+        description: '',
+        order: 1,
+        questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
+      }]
+    };
 
     if(evaluationFormData) {
       setTimeout(() => {
@@ -196,7 +184,7 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
     questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
   }];
 
-  if (newDrdUuid) {
+  if (newDrdUuid && !props.selectedEvaluation?.drd?.uuid) {
     try {
       const fullDrd = await drdStore.getDRD(newDrdUuid);
 
@@ -299,6 +287,17 @@ const addQuestion = (topicIndex: number) => {
     order: 1,
     options: []
   });
+
+  setTimeout(() => {
+    evaluationFormData.form.topics[topicIndex].questions.forEach((question, questionIndex) => {
+      const inputQuestionType = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_type`) as HTMLInputElement;
+      console.log(inputQuestionType)
+      if(inputQuestionType) {
+        inputQuestionType.value = question.type;
+        inputQuestionType.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })
+  }, 50);
 };
 
 const removeQuestion = (topicIndex: number, questionIndex: number) => {
@@ -380,13 +379,13 @@ async function onSubmit(formValues: Record<string, any>) {
     form: {
       uuid: evaluationFormData?.form?.uuid,
       name: formValues.name + ' - Formulário',
-      topics: evaluationFormData?.form?.topics?.map((topic: EvaluationTopic) => ({
+      topics: evaluationFormData?.form?.topics?.map((topic: EvaluationTopic, indexTopic) => ({
         uuid: topic.uuid,
         drd_topic_uuid: topic.drd_topic_uuid,
         title: topic.title,
         description: topic.description,
-        order: topic.order,
-        questions: topic?.questions?.map((question: EvaluationQuestion) => {
+        order: indexTopic + 1,
+        questions: topic?.questions?.map((question: EvaluationQuestion, indexQuestion) => {
           const isSelection = [QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type);
           const options = isSelection && question?.options && question.options?.length > 0 ? question.options : [];
           return {
@@ -396,7 +395,7 @@ async function onSubmit(formValues: Record<string, any>) {
             description: question.description,
             type: question.type,
             is_required: question.is_required,
-            order: question.order,
+            order: indexQuestion + 1,
             options
           };
         })
@@ -513,7 +512,7 @@ function handleDrdChange(newValue: any) {
                 </Field>
               </v-col>
 
-              <v-divider  />
+              <v-divider />
 
               <v-col cols="12" sm="12">
                 <v-radio-group v-model="evaluationMode" hide-details>
