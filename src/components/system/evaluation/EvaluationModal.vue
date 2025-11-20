@@ -70,6 +70,13 @@ const evaluationMode = ref('fromDRD');
 
 const isEditing = computed(() => !!props.selectedEvaluation?.uuid);
 const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
+const showForm = computed(() => {
+  const isDrdSelectedAndFormDRDOption = evaluationMode.value === 'fromDRD' && isDrdSelected.value
+  if(evaluationFormData.form?.topics && (evaluationMode.value === 'fromZero' || isDrdSelectedAndFormDRDOption)) {
+    return true;
+  }
+  return false;
+});
 
 function forceUpdateVeeValidate() {
   evaluationFormData.form?.topics.forEach((topic, topicIndex) => {
@@ -123,7 +130,7 @@ const getInitialEvaluationState = async (selectedEvaluation: EvaluationSimple | 
     evaluationFormData.description = fetchedEvaluation?.description || '';
     evaluationFormData.created_by_user_uuid = fetchedEvaluation?.created_by_user_uuid || userStore.user?.uuid || '';
     evaluationFormData.rate = typeof fetchedEvaluation?.rate === 'number' ? fetchedEvaluation.rate : 5;
-    evaluationFormData.drd_uuid = fetchedEvaluation?.drd_uuid ?? undefined;
+    evaluationFormData.drd_uuid = fetchedEvaluation?.drd?.uuid || undefined;
     evaluationFormData.form.uuid = fetchedEvaluation?.form.uuid;
     evaluationFormData.form.name = fetchedEvaluation?.form.name || '';
     evaluationFormData.form.topics = fetchedEvaluation?.form?.topics?.map((topic, topicIndex) => ({
@@ -161,6 +168,13 @@ const getInitialEvaluationState = async (selectedEvaluation: EvaluationSimple | 
           inputDescription.value = evaluationFormData.description;
           inputDescription.dispatchEvent(new Event('change', { bubbles: true }));
         }
+
+        const inputDrdUuid = document.querySelector(`#evaluation_drd_uuid`) as HTMLInputElement;
+        if(inputDrdUuid && evaluationFormData?.drd_uuid) {
+          inputDrdUuid.value = evaluationFormData.drd_uuid;
+          inputDrdUuid.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
         forceUpdateVeeValidate()
       }, 50)
     }
@@ -196,7 +210,7 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
           order: drdTopicIndex + 1,
           questions: drdTopic.drdTopicItems?.map((drdItem, drdItemIndex) => ({
             uuid: undefined,
-            drd_item_uuid: drdItem.uuid,
+            drd_topic_item_uuid: drdItem.uuid,
             title: drdItem.name,
             description: '',
             type: QuestionType.RATE,
@@ -361,7 +375,7 @@ async function onSubmit(formValues: Record<string, any>) {
     ...formValues,
     name: formValues.name || '',
     description: formValues.description || '',
-    rate: formValues.rate || 5,
+    rate: evaluationFormData?.rate || 5,
     created_by_user_uuid: userStore.user?.uuid || evaluationFormData.created_by_user_uuid,
     form: {
       uuid: evaluationFormData?.form?.uuid,
@@ -377,7 +391,7 @@ async function onSubmit(formValues: Record<string, any>) {
           const options = isSelection && question?.options && question.options?.length > 0 ? question.options : [];
           return {
             uuid: question.uuid,
-            drd_item_uuid: question.drd_item_uuid,
+            drd_topic_item_uuid: question.drd_topic_item_uuid,
             title: question.title,
             description: question.description,
             type: question.type,
@@ -521,6 +535,7 @@ function handleDrdChange(newValue: any) {
   
                         <Field name="drd_uuid" label="DRD Base (Opcional)" v-slot="{ field, errorMessage }">
                           <v-select
+                            id="evaluation_drd_uuid"
                             v-bind="field"
                             v-model="evaluationFormData.drd_uuid"
                             :items="drdStore.drdOptions"
@@ -580,9 +595,9 @@ function handleDrdChange(newValue: any) {
 
               <v-divider class="my-4" />
 
-              <h3 class="text-subtitle-1 mb-3">Estrutura do Formulário (Tópicos e Questões)</h3>
+              <h3 v-if="showForm" class="text-subtitle-1 mb-3">Estrutura do Formulário</h3>
 
-              <div v-if="evaluationFormData.form?.topics" class="w-100">
+              <div v-if="showForm" class="w-100">
                   <div v-for="(topic, topicIndex) in evaluationFormData.form.topics" :key="topicIndex" class="mb-4 pa-3 border rounded w-100">
                     <div class="d-flex align-start mb-2">
                       <div class="flex-grow-1">
@@ -650,7 +665,7 @@ function handleDrdChange(newValue: any) {
                                   auto-grow
                                   rows="1"
                                   class="mb-1 w-100"
-                                  :disabled="!!question?.drd_item_uuid"
+                                  :disabled="!!question?.drd_topic_item_uuid"
                                   persistent-placeholder
                                 />
                               </Field>
@@ -669,7 +684,7 @@ function handleDrdChange(newValue: any) {
                                   :error="!!errorMessage"
                                   :error-messages="errorMessage"
                                   class="mb-1 question-type-select"
-                                  :disabled="!!question?.drd_item_uuid"
+                                  :disabled="!!question?.drd_topic_item_uuid"
                                   style="min-width: 226px; height: fit-content;"
                                   @update:model-value="onChangeQuestionType(question)"
                                 >
@@ -799,6 +814,7 @@ function handleDrdChange(newValue: any) {
                                 hide-details
                                 style="min-width: 131px; align-items: self-end;"
                                 color="primary"
+                                :disabled="!!question?.drd_topic_item_uuid"
                               />
                             </div>
                           </div>
@@ -811,7 +827,7 @@ function handleDrdChange(newValue: any) {
                             @click="removeQuestion(topicIndex, questionIndex)"
                             size="small"
                             class="ml-2 mt-2"
-                            :disabled="!!question?.drd_item_uuid"
+                            :disabled="!!question?.drd_topic_item_uuid"
                           >
                             <v-icon>mdi-delete</v-icon>
                           </v-btn>
@@ -832,6 +848,7 @@ function handleDrdChange(newValue: any) {
               </div>
 
               <v-btn
+                v-if="showForm"
                 color="primary"
                 variant="outlined"
                 @click="addEvaluationTopic"

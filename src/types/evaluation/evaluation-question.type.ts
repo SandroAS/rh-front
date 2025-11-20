@@ -11,7 +11,7 @@ export enum QuestionType {
 
 export interface EvaluationQuestion {
   uuid?: string;
-  drd_item_uuid?: string;
+  drd_topic_item_uuid?: string;
   title: string;
   description: string;
   type: QuestionType;

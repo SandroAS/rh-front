@@ -40,16 +40,17 @@ export const useEvaluationStore = defineStore('evaluation', {
       this.error = null;
 
       try {
-        const res: { uuid: string } = await saveEvaluation(evaluation, uuid);
+        const res: Evaluation = await saveEvaluation(evaluation, uuid);
         if(!this.evaluations) this.evaluations = [];
         const evaluationSaved = {
           uuid: res.uuid,
-          title: evaluation.name,
-          description: evaluation.description,
-          rate: evaluation.rate,
+          name: res.name,
+          description: res.description,
+          rate: res.rate,
           drd_uuid: evaluation.drd_uuid,
-          form: evaluation.form,
-          created_by_user_uuid: evaluation.created_by_user_uuid
+          form: res.form,
+          created_by_user_uuid: evaluation.created_by_user_uuid,
+          createdBy: res.createdBy
         }
         if(uuid) {
           const index = this.evaluations.findIndex(x => x.uuid === uuid);

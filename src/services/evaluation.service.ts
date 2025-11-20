@@ -30,7 +30,7 @@ console.log(response.data)
 };
 
 export const saveEvaluation = async (evaluation: EvaluationPayload, uuid?: string) => {
-  const response: AxiosResponse<{ uuid: string }> = uuid 
+  const response: AxiosResponse<Evaluation> = uuid 
     ? await api.put(`/evaluations/${uuid}`, evaluation)
     : await api.post('/evaluations', evaluation);
   return response.data;
