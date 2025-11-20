@@ -9,6 +9,7 @@ import type Evaluation from '@/types/evaluation/evaluation.type';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
 import { QuestionType, type EvaluationQuestion } from '@/types/evaluation/evaluation-question.type';
 import type EvaluationTopic from '@/types/evaluation/evaluation-topic.type';
+import type EvaluationSimple from '@/types/evaluation/evaluation-simple.type';
 
 const evaluationStore = useEvaluationStore();
 const snackbarStore = useSnackbarStore();
@@ -67,7 +68,7 @@ const frontendQuestionTypes = [
 
 const evaluationMode = ref('fromDRD');
 
-const isEditing = computed(() => !!props.selectedEvaluation);
+const isEditing = computed(() => !!props.selectedEvaluation?.uuid);
 const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
 
 function forceUpdateVeeValidate() {
@@ -109,34 +110,65 @@ function forceUpdateVeeValidate() {
   })
 }
 
-watch(() => props.selectedEvaluation, (val) => {
-  evaluationFormData.uuid = val?.uuid || undefined;
-  evaluationFormData.name = val?.name || '';
-  evaluationFormData.description = val?.description || '';
-  evaluationFormData.created_by_user_uuid = val?.created_by_user_uuid || userStore.user?.uuid || '';
-  evaluationFormData.rate = typeof val?.rate === 'number' ? val.rate : 5;
-  evaluationFormData.drd_uuid = val?.drd_uuid ?? undefined;
-  evaluationFormData.form.topics = val?.form?.topics?.map((topic, topicIndex) => ({
-    uuid: topic?.uuid ?? undefined,
-    title: topic?.title ?? '',
-    description: topic?.description ?? '',
-    order: typeof topicIndex === 'number' ? topicIndex + 1 : 1,
-    questions: topic.questions?.map((question) => ({
-      uuid: question.uuid,
-      title: question.title,
-      description: question.description,
-      type: question.type,
-      is_required: question.is_required,
-      order: question.order,
-      options: question.options || []
-    }))
-  })) || [{
-    uuid: undefined,
-    title: '',
-    description: '',
-    order: 1,
-    questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
-  }];
+const getInitialEvaluationState = async (selectedEvaluation: EvaluationSimple | null): Promise<void> => {  
+  try {
+    let fetchedEvaluation: Evaluation | undefined;
+
+    if (isEditing.value) {
+      fetchedEvaluation = await evaluationStore.getEvaluation(selectedEvaluation!.uuid);
+    }
+
+    evaluationFormData.uuid = fetchedEvaluation?.uuid || undefined;
+    evaluationFormData.name = fetchedEvaluation?.name || '';
+    evaluationFormData.description = fetchedEvaluation?.description || '';
+    evaluationFormData.created_by_user_uuid = fetchedEvaluation?.created_by_user_uuid || userStore.user?.uuid || '';
+    evaluationFormData.rate = typeof fetchedEvaluation?.rate === 'number' ? fetchedEvaluation.rate : 5;
+    evaluationFormData.drd_uuid = fetchedEvaluation?.drd_uuid ?? undefined;
+    evaluationFormData.form.topics = fetchedEvaluation?.form?.topics?.map((topic, topicIndex) => ({
+      uuid: topic?.uuid ?? undefined,
+      title: topic?.title ?? '',
+      description: topic?.description ?? '',
+      order: typeof topicIndex === 'number' ? topicIndex + 1 : 1,
+      questions: topic.questions?.map((question) => ({
+        uuid: question.uuid,
+        title: question.title,
+        description: question.description,
+        type: question.type,
+        is_required: question.is_required,
+        order: question.order,
+        options: question.options || []
+      }))
+    })) || [{
+      uuid: undefined,
+      title: '',
+      description: '',
+      order: 1,
+      questions: [{ uuid: undefined, title: '', description: '', type: QuestionType.RATE, is_required: true, order: 1, options: [] }]
+    }];
+
+    if(evaluationFormData) {
+      setTimeout(() => {
+        const inputName = document.querySelector(`#evaluation_name`) as HTMLInputElement;
+        if(inputName && evaluationFormData?.name) {
+          inputName.value = evaluationFormData.name;
+          inputName.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+  
+        const inputDescription = document.querySelector(`#evaluation_description`) as HTMLInputElement;
+        if(inputDescription && evaluationFormData?.description) {
+          inputDescription.value = evaluationFormData.description;
+          inputDescription.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        forceUpdateVeeValidate()
+      }, 50)
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+watch(() => props.selectedEvaluation, async (val) => {
+  getInitialEvaluationState(val ?? null)
 }, { immediate: true });
 
 watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
@@ -437,6 +469,7 @@ function handleDrdChange(newValue: any) {
               <v-col cols="12" class="pb-0">
                 <Field name="name" label="Nome do Modelo de Avaliação" rules="required|min:3" v-slot="{ field, errorMessage }">
                   <v-text-field
+                    id="evaluation_name"
                     v-bind="field"
                     v-model="evaluationFormData.name"
                     label="Nome do Modelo de Avaliação"
@@ -450,6 +483,7 @@ function handleDrdChange(newValue: any) {
               <v-col cols="12" class="pb-0">
                 <Field name="description" label="Descrição" rules="required" v-slot="{ field, errorMessage }">
                   <v-textarea
+                    id="evaluation_description"
                     v-bind="field"
                     v-model="evaluationFormData.description"
                     label="Descrição"

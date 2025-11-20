@@ -3,9 +3,7 @@ import { getEvaluationApplications, saveEvaluationApplication, deleteEvaluationA
 import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
-import { mockEvaluationApplications } from '@/mocks/evaluation.mocks';
-// Payload para salvar uma nova aplicação. Note que topics/questions não são passados aqui,
-// pois o backend deve copiá-los do modelo.
+
 export interface EvaluationApplicationSavePayload {
   evaluation_model_uuid: string;
   type: 'peer' | 'self' | 'leader';
@@ -121,8 +119,8 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
       try {
         if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
           // Lógica para dados mockados
-          this.evaluation_applications = mockEvaluationApplications;
-          this.total = mockEvaluationApplications.length;
+          this.evaluation_applications = [];
+          this.total = 1;
           this.page = params.page;
           this.limit = params.limit;
           this.last_page = 1;

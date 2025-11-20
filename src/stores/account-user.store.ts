@@ -4,7 +4,6 @@ import type AccountUser from '@/types/account/account-user.type';
 import type AccountUsersResponsePaginationDto from '@/types/account/account-users-response-pagination-dto';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import { defineStore } from 'pinia';
-import { mockUsers } from '@/mocks/evaluation.mocks';
 import { getAllAccountUsers } from '@/services/user.service';
 import type { UserAvatar } from '@/types/user/user-avatar.type';
 
