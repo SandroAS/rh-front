@@ -404,10 +404,10 @@ async function onSubmit(formValues: Record<string, any>) {
 
   try {
     if (isEditing.value && props.selectedEvaluation) {
-      await evaluationStore.saveEvaluation(payload, props.selectedEvaluation.uuid);
+      await evaluationStore.saveEvaluation(payload, props.selectedEvaluation.uuid, props.selectedEvaluation.drd);
       snackbarStore.show('Modelo de Avaliação atualizado com sucesso!', 'success');
     } else {
-      await evaluationStore.saveEvaluation(payload);
+      await evaluationStore.saveEvaluation(payload, undefined, props.selectedEvaluation?.drd);
       snackbarStore.show('Modelo de Avaliação adicionado com sucesso!', 'success');
     }
     close();

@@ -1,5 +1,6 @@
 import { getEvaluation, getEvaluations, saveEvaluation } from '@/services/evaluation.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
+import type DRD from '@/types/drd/drd.type';
 import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
 import type EvaluationResponsePagination from '@/types/evaluation/evaluation-response-pagination.type';
 import type Evaluation from '@/types/evaluation/evaluation.type';
@@ -35,7 +36,7 @@ export const useEvaluationStore = defineStore('evaluation', {
   getters: {},
 
   actions: {
-    async saveEvaluation(evaluation: EvaluationPayload, uuid?: string) {
+    async saveEvaluation(evaluation: EvaluationPayload, uuid?: string, drd?: DRD) {
       this.loading = true;
       this.error = null;
 
@@ -49,6 +50,7 @@ export const useEvaluationStore = defineStore('evaluation', {
           rate: res.rate,
           drd_uuid: evaluation.drd_uuid,
           form: res.form,
+          drd,
           created_by_user_uuid: evaluation.created_by_user_uuid,
           createdBy: res.createdBy
         }
