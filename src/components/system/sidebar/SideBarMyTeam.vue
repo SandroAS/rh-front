@@ -30,7 +30,7 @@ const goToCollaboratorPanel = (uuid: string) => {
 
 <template>
   <div class="border-t">
-    <div v-if="!rail" class="pa-2" style="overflow-y: auto; height: 365px;">
+    <div v-if="!rail" class="pa-2" style="overflow-y: auto; height: 364px;">
       <div class="d-flex align-center mb-2 team-header-container">
         <div class="text-subtitle-2 font-weight-medium mr-1 nowrap-text">Meu Time:</div>
 

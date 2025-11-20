@@ -74,7 +74,7 @@ const isDrdSelected = computed(() => !!evaluationFormData.drd_uuid);
 function forceUpdateVeeValidate() {
   evaluationFormData.form?.topics.forEach((topic, topicIndex) => {
     const inputTopicTitle = document.querySelector(`#topics_${topicIndex}_title`) as HTMLInputElement;
-    if(inputTopicTitle) {
+    if(inputTopicTitle && topic.title) {
       inputTopicTitle.value = topic.title;
       inputTopicTitle.dispatchEvent(new Event('change', { bubbles: true }));
     }
@@ -85,7 +85,7 @@ function forceUpdateVeeValidate() {
     }
     topic.questions.forEach((question, questionIndex) => {
       const inputQuestionTitle = document.querySelector(`#topics_${topicIndex}_questions_${questionIndex}_title`) as HTMLInputElement;
-      if(inputQuestionTitle) {
+      if(inputQuestionTitle && question.title) {
         inputQuestionTitle.value = question.title;
         inputQuestionTitle.dispatchEvent(new Event('change', { bubbles: true }));
       }
@@ -124,6 +124,8 @@ const getInitialEvaluationState = async (selectedEvaluation: EvaluationSimple | 
     evaluationFormData.created_by_user_uuid = fetchedEvaluation?.created_by_user_uuid || userStore.user?.uuid || '';
     evaluationFormData.rate = typeof fetchedEvaluation?.rate === 'number' ? fetchedEvaluation.rate : 5;
     evaluationFormData.drd_uuid = fetchedEvaluation?.drd_uuid ?? undefined;
+    evaluationFormData.form.uuid = fetchedEvaluation?.form.uuid;
+    evaluationFormData.form.name = fetchedEvaluation?.form.name || '';
     evaluationFormData.form.topics = fetchedEvaluation?.form?.topics?.map((topic, topicIndex) => ({
       uuid: topic?.uuid ?? undefined,
       title: topic?.title ?? '',
@@ -362,6 +364,7 @@ async function onSubmit(formValues: Record<string, any>) {
     rate: formValues.rate || 5,
     created_by_user_uuid: userStore.user?.uuid || evaluationFormData.created_by_user_uuid,
     form: {
+      uuid: evaluationFormData?.form?.uuid,
       name: formValues.name + ' - Formulário',
       topics: evaluationFormData?.form?.topics?.map((topic: EvaluationTopic) => ({
         uuid: topic.uuid,
@@ -790,7 +793,13 @@ function handleDrdChange(newValue: any) {
                                 </v-btn>
                               </div>
 
-                              <v-switch v-model="question.is_required" label="Obrigatório" hide-details style="min-width: 131px;"></v-switch>
+                              <v-switch
+                                v-model="question.is_required"
+                                label="Obrigatório"
+                                hide-details
+                                style="min-width: 131px; align-items: self-end;"
+                                color="primary"
+                              />
                             </div>
                           </div>
                           
