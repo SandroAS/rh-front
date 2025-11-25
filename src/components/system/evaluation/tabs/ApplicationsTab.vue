@@ -1,22 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useAccountUserStore } from '@/stores/account-user.store';
-import { useEvaluationStore } from '@/stores/evaluation.store'; // Para buscar o nome do modelo
+import { useEvaluationStore } from '@/stores/evaluation.store';
 import loadItems from '@/utils/loadItems.util';
 import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
 import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
 import ApplicationModal from '../ApplicationModal.vue';
 
-// Importar um modal para criar/editar aplicações, similar ao EvaluationModal
-// Você precisará criar este modal separadamente, pois a lógica de "aplicação" é diferente do "modelo".
-// Por enquanto, usaremos um placeholder.
-// import EvaluationApplicationModal from '@/components/system/evaluation/EvaluationApplicationModal.vue';
-
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const accountUserStore = useAccountUserStore();
-const evaluationStore = useEvaluationStore(); // Para buscar os modelos de avaliação
+const evaluationStore = useEvaluationStore();
 
-const dialog = ref(false); // Para o modal de aplicação
+const dialog = ref(false);
 const selectedApplication = ref<EvaluationApplication | null>(null);
 
 const currentPage = ref(evaluationApplicationStore.page);
@@ -53,10 +48,8 @@ watch(searchTerm, (newVal) => {
 });
 
 onMounted(async () => {
-  // Carregar usuários e modelos para exibição na tabela
-  await accountUserStore.getAccountUsers({ page: 1, limit: 10000 });
+  await accountUserStore.getAllAccountUsers();
   await evaluationStore.getAllEvaluations();
-  loadEvaluationApplications();
 });
 
 const getUserName = (uuid: string | undefined) => {
@@ -68,7 +61,7 @@ const getUserName = (uuid: string | undefined) => {
 const getEvaluationModelTitle = (uuid: string | undefined) => {
   if (!uuid) return 'N/A';
   const model = evaluationStore.evaluations!.find(e => e.uuid === uuid);
-  return model ? model.title : 'Modelo Desconhecido';
+  return model ? model.name : 'Modelo Desconhecido';
 };
 
 const getApplicationTypeDisplayName = (type: 'peer' | 'self' | 'leader') => {

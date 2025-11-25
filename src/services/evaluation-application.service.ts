@@ -16,7 +16,7 @@ export async function getEvaluationApplications(
   if (sortOrder) params.sort_order = sortOrder;
   if (searchTerm) params.search_term = searchTerm;
 
-  const response: AxiosResponse<EvaluationApplicationResponsePagination> = await api.get('/evaluation-applications', { params });
+  const response: AxiosResponse<EvaluationApplicationResponsePagination> = await api.get('/evaluation-applications/pagination', { params });
   return response.data;
 }
 
