@@ -362,12 +362,6 @@ const removeQuestionOption = (topicIndex: number, questionIndex: number, optionI
   }
 };
 
-const rules = {
-  required: (value: any) => !!value || 'Campo obrigatório.',
-  rateRange: (v: number) => (v >= 3 && v <= 10) || 'O rate deve ser entre 3 e 10.',
-  minTitle: (v: string) => v.length >= 3 || 'Mínimo 3 caracteres.',
-};
-
 async function onSubmit(formValues: Record<string, any>) {
   const payload: EvaluationPayload = {
     ...formValues,
@@ -599,7 +593,7 @@ function handleDrdChange(newValue: any) {
                   <div v-for="(topic, topicIndex) in evaluationFormData.form.topics" :key="topicIndex" class="mb-4 pa-3 border rounded w-100">
                     <div class="d-flex align-start mb-2">
                       <div class="flex-grow-1">
-                        <Field :name="`form.topics[${topicIndex}].title`" :label="`Título do Tópico ${topicIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                        <Field :name="`form.topics[${topicIndex}].title`" :label="`Título do Tópico ${topicIndex + 1}`" rules="required" v-slot="{ field, errorMessage }">
                           <v-text-field
                             :id="`topics_${topicIndex}_title`"
                             v-bind="field"
@@ -650,7 +644,7 @@ function handleDrdChange(newValue: any) {
                         <div class="d-flex align-start">
                           <div class="flex-grow-1">
                             <div class="d-flex gap-2">
-                              <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].title`" :label="`Título da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                              <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].title`" :label="`Título da Questão ${questionIndex + 1}`" rules="required" v-slot="{ field, errorMessage }">
                                 <v-textarea
                                   :id="`topics_${topicIndex}_questions_${questionIndex}_title`"
                                   v-bind="field"
@@ -668,7 +662,7 @@ function handleDrdChange(newValue: any) {
                                 />
                               </Field>
   
-                              <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].type`" :label="`Tipo da Questão ${questionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                              <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].type`" :label="`Tipo da Questão ${questionIndex + 1}`" rules="required" v-slot="{ field, errorMessage }">
                                 <v-select
                                   :id="`topics_${topicIndex}_questions_${questionIndex}_type`"
                                   v-bind="field"
@@ -766,7 +760,7 @@ function handleDrdChange(newValue: any) {
                               <div v-if="[QuestionType.MULTI_CHOICE, QuestionType.SINGLE_CHOICE, QuestionType.DROPDOWN].includes(question.type!)" class="w-100">
                                 <h5 class="text-subtitle-2 ml-4 mb-2">Opções de Resposta</h5>
                                 <div v-for="(option, optionIndex) in question.options" :key="optionIndex" class="d-flex align-center ml-8 mb-2">
-                                  <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" :rules="rules.required" v-slot="{ field, errorMessage }">
+                                  <Field :name="`form.topics[${topicIndex}].questions[${questionIndex}].options[${optionIndex}].text`" :label="`Opção ${optionIndex + 1}`" rules="required" v-slot="{ field, errorMessage }">
                                     <v-text-field
                                       :id="`topics_${topicIndex}_questions_${questionIndex}_options_${optionIndex}_text`"
                                       v-bind="field"

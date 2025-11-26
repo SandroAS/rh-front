@@ -36,7 +36,19 @@ export const useEvaluationStore = defineStore('evaluation', {
     search_term: undefined
   }),
 
-  getters: {},
+  getters: {
+    evaluationOptions(): { value: string, title: string, subtitle: string }[] | [] {
+      if(!this.evaluations_simple) return [];
+      const evaluationsMapped = this.evaluations_simple.map(evaluation => {
+        return {
+          value: evaluation.uuid,
+          title: evaluation.name || '',
+          subtitle: 'DRD: '+evaluation?.drd?.jobPosition.title || '',
+        }
+      });
+      return evaluationsMapped;
+    }
+  },
 
   actions: {
     async saveEvaluation(evaluation: EvaluationPayload, uuid?: string, drd?: DRD) {

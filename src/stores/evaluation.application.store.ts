@@ -1,19 +1,9 @@
 import { defineStore } from 'pinia';
 import { getEvaluationApplications, saveEvaluationApplication, deleteEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
-import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
+import { type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
-
-export interface EvaluationApplicationSavePayload {
-  evaluation_model_uuid: string;
-  type: 'peer' | 'self' | 'leader';
-  requested_by_user_uuid: string;
-  evaluated_collaborator_uuid: string;
-  evaluator_collaborator_uuid: string;
-  application_date: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'canceled';
-  score?: number; // Opcional ao salvar
-}
+import type EvaluationApplicationPayload from '@/types/evaluationApplication/evaluation-application-payload.type';
 
 interface EvaluationApplicationStoreState {
   evaluation_applications: EvaluationApplication[] | null;
@@ -43,14 +33,13 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
   }),
 
   getters: {
-    // Exemplo de getter, se precisar buscar uma aplicação por UUID
     getApplicationByUuid: (state) => (uuid: string) => {
       return state.evaluation_applications?.find(app => app.uuid === uuid);
     }
   },
 
   actions: {
-    async saveEvaluationApplication(application: EvaluationApplicationSavePayload, uuid?: string) {
+    async saveEvaluationApplication(application: EvaluationApplicationPayload, uuid?: string) {
       this.loading = true;
       this.error = null;
 

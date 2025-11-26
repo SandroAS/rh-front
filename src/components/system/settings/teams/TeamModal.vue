@@ -64,7 +64,7 @@ async function onSubmit(formValues: Record<string, any>) {
   const payload: TeamPayload = { ...formValues as TeamPayload, createdBy: userStore.userAvatar! };
 
   const leader = accountUserStore.accountUsersOptions.find(x => x.value === payload.leader);
-  const leaderUserAvatar = { uuid: leader!.value, name: leader!.title, profile_img_url: leader?.avatar };
+  const leaderUserAvatar = { uuid: leader!.value, name: leader!.title, email: '', profile_img_url: leader?.avatar };
 
   let sector = undefined;
   if(payload.sector_uuid) {

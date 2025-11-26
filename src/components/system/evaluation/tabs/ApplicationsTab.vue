@@ -4,7 +4,7 @@ import { useAccountUserStore } from '@/stores/account-user.store';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import loadItems from '@/utils/loadItems.util';
 import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
-import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
+import { type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import ApplicationModal from '../ApplicationModal.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();

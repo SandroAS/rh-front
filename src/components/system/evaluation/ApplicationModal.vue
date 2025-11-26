@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { reactive, watch, computed } from 'vue';
+import { reactive, watch, computed, ref } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useEvaluationStore } from '@/stores/evaluation.store';
-import { useUserStore } from '@/stores/auth.store';
-import { useEvaluationApplicationStore, type EvaluationApplicationSavePayload } from '@/stores/evaluation.application.store';
-import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
+import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
+import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import { useAccountUserStore } from '@/stores/account-user.store';
+import type EvaluationApplicationPayload from '@/types/evaluationApplication/evaluation-application-payload.type';
+import { useSnackbarStore } from '@/stores/snackbar.store';
+import { getInitials } from '@/utils/getInitialsFromName.util';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const evaluationStore = useEvaluationStore();
-const userStore = useUserStore();
 const accountUserStore = useAccountUserStore();
+const snackbarStore = useSnackbarStore();
 
 const props = defineProps<{
   modelValue: boolean;
@@ -21,80 +23,48 @@ const emit = defineEmits(['update:modelValue']);
 
 const close = () => {
   emit('update:modelValue', false);
-  resetForm();
 };
 
-const evaluationApplicationFormData = reactive<EvaluationApplicationSavePayload>({
+const evaluationApplicationFormData = reactive<EvaluationApplicationPayload>({
   evaluation_model_uuid: props.selectedApplication?.evaluation_model_uuid || '',
-  type: props.selectedApplication?.type || 'self',
-  requested_by_user_uuid: props.selectedApplication?.requested_by_user_uuid || userStore.user?.uuid || '',
-  evaluated_collaborator_uuid: props.selectedApplication?.evaluated_collaborator_uuid || '',
-  evaluator_collaborator_uuid: props.selectedApplication?.evaluator_collaborator_uuid || '',
-  application_date: props.selectedApplication?.application_date || '',
-  status: props.selectedApplication?.status || 'pending',
+  type: props.selectedApplication?.type || EvaluationType.SELF,
+  evaluated_user_uuid: props.selectedApplication?.evaluated_user_uuid || '',
+  submitting_user_uuid: props.selectedApplication?.submitting_user_uuid || '',
+  started_date: props.selectedApplication?.started_date || undefined,
+  expiration_date: props.selectedApplication?.expiration_date || undefined,
+  status: props.selectedApplication?.status || EvaluationApplicationStatus.CREATED
 });
 
 const isEditing = computed(() => !!props.selectedApplication);
 
-const resetForm = () => {
-  evaluationApplicationFormData.evaluation_model_uuid = props.selectedApplication?.evaluation_model_uuid || '';
-  evaluationApplicationFormData.type = props.selectedApplication?.type || 'self';
-  evaluationApplicationFormData.requested_by_user_uuid = props.selectedApplication?.requested_by_user_uuid || userStore.user?.uuid || '';
-  evaluationApplicationFormData.evaluated_collaborator_uuid = props.selectedApplication?.evaluated_collaborator_uuid || '';
-  evaluationApplicationFormData.evaluator_collaborator_uuid = props.selectedApplication?.evaluator_collaborator_uuid || '';
-  evaluationApplicationFormData.application_date = props.selectedApplication?.application_date || '';
-  evaluationApplicationFormData.status = props.selectedApplication?.status || 'pending';
-};
-
-watch(() => props.modelValue, (newVal) => {
-  if (newVal) {
-    resetForm();
-  }
-});
-
 watch(() => evaluationApplicationFormData.type, (newType) => {
-  if (newType === 'self' && evaluationApplicationFormData.evaluated_collaborator_uuid) {
-    evaluationApplicationFormData.evaluator_collaborator_uuid = evaluationApplicationFormData.evaluated_collaborator_uuid;
+  if (newType === EvaluationType.SELF && evaluationApplicationFormData.evaluated_user_uuid) {
+    evaluationApplicationFormData.submitting_user_uuid = evaluationApplicationFormData.evaluated_user_uuid;
   }
 });
 
-watch(() => evaluationApplicationFormData.evaluated_collaborator_uuid, (newVal) => {
-  if (evaluationApplicationFormData.type === 'self' && newVal) {
-    evaluationApplicationFormData.evaluator_collaborator_uuid = newVal;
+watch(() => evaluationApplicationFormData.evaluated_user_uuid, (newVal) => {
+  if (evaluationApplicationFormData.type === EvaluationType.SELF && newVal) {
+    evaluationApplicationFormData.submitting_user_uuid = newVal;
   }
-});
-
-const evaluationModelsOptions = computed(() => {
-  return evaluationStore.evaluations?.map(model => ({
-    title: `${model.title} (${model.rate} estrelas)`,
-    value: model.uuid,
-  })) || [];
-});
-
-const collaboratorsOptions = computed(() => {
-  return accountUserStore.account_users?.map(user => ({
-    title: user.name,
-    value: user.uuid,
-  })) || [];
 });
 
 const applicationTypeOptions = [
-  { title: 'Autoavaliação', value: 'self' },
-  { title: 'Avaliação por Pares', value: 'peer' },
-  { title: 'Avaliação por Líder', value: 'leader' },
+  { title: 'Autoavaliação', value: EvaluationType.SELF },
+  { title: 'Avaliação por Pares', value: EvaluationType.PEER },
+  { title: 'Avaliação por Líder', value: EvaluationType.LEADER },
+  { title: 'Avaliação por Liderado', value: EvaluationType.SUBORDINATE },
 ];
 
-const rules = {
-  required: (value: any) => !!value || 'Campo obrigatório.',
-  isUuid: (value: any) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) || 'Selecione um item válido.',
-};
-
-async function onSubmit(formValues: EvaluationApplicationSavePayload) {
+async function onSubmit(formValues: Record<string, any>) {
+  const payload = formValues as EvaluationApplicationPayload;
   try {
     if (isEditing.value && props.selectedApplication) {
-      await evaluationApplicationStore.saveEvaluationApplication(formValues, props.selectedApplication.uuid);
+      await evaluationApplicationStore.saveEvaluationApplication(payload, props.selectedApplication.uuid);
+      snackbarStore.show('Modelo de Avaliação atualizado com sucesso!', 'success');
     } else {
-      await evaluationApplicationStore.saveEvaluationApplication(formValues);
+      await evaluationApplicationStore.saveEvaluationApplication(payload);
+      snackbarStore.show('Modelo de Avaliação adicionado com sucesso!', 'success');
     }
     close();
   } catch (err) {
@@ -108,17 +78,18 @@ async function onSubmit(formValues: EvaluationApplicationSavePayload) {
     <Form @submit="onSubmit" :initial-values="evaluationApplicationFormData">
       <v-card>
         <v-card-title class="text-h6">
-          {{ isEditing ? 'Editar Aplicação de Avaliação' : 'Criar Nova Aplicação de Avaliação' }}
+          {{ !!evaluationApplicationFormData?.uuid ? 'Editar Aplicação de Avaliação' : 'Criar Nova Aplicação de Avaliação' }}
         </v-card-title>
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12">
-                <Field name="evaluation_model_uuid" label="Modelo de Avaliação" :rules="[rules.required, rules.isUuid]" v-slot="{ field, errorMessage }">
+                <Field name="evaluation_model_uuid" label="Modelo de Avaliação" rules="required" v-slot="{ field, errorMessage }">
                   <v-select
                     v-bind="field"
                     v-model="evaluationApplicationFormData.evaluation_model_uuid"
-                    :items="evaluationModelsOptions"
+                    :items="evaluationStore.evaluationOptions"
+                    :item-props="true"
                     label="Selecione o Modelo de Avaliação"
                     variant="outlined"
                     density="compact"
@@ -132,8 +103,8 @@ async function onSubmit(formValues: EvaluationApplicationSavePayload) {
             <v-divider class="my-4" />
 
             <v-row>
-              <v-col cols="12" sm="6">
-                <Field name="type" label="Tipo de Avaliação" :rules="[rules.required]" v-slot="{ field, errorMessage }">
+              <v-col cols="12" sm="12">
+                <Field name="type" label="Tipo de Avaliação" rules="required" v-slot="{ field, errorMessage }">
                   <v-select
                     v-bind="field"
                     v-model="evaluationApplicationFormData.type"
@@ -147,11 +118,25 @@ async function onSubmit(formValues: EvaluationApplicationSavePayload) {
                 </Field>
               </v-col>
               <v-col cols="12" sm="6">
-                <Field name="application_date" label="Data de Aplicação" :rules="[rules.required]" v-slot="{ field, errorMessage }">
+                <Field name="started_date" label="Data de Aplicação" rules="required" v-slot="{ field, errorMessage }">
                   <v-text-field
                     v-bind="field"
-                    v-model="evaluationApplicationFormData.application_date"
+                    v-model="evaluationApplicationFormData.started_date"
                     label="Data de Aplicação"
+                    type="date"
+                    variant="outlined"
+                    density="compact"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  ></v-text-field>
+                </Field>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <Field name="expiration_date" label="Disponível até" rules="required" v-slot="{ field, errorMessage }">
+                  <v-text-field
+                    v-bind="field"
+                    v-model="evaluationApplicationFormData.expiration_date"
+                    label="Disponível até"
                     type="date"
                     variant="outlined"
                     density="compact"
@@ -164,32 +149,128 @@ async function onSubmit(formValues: EvaluationApplicationSavePayload) {
 
             <v-row>
               <v-col cols="12" sm="6">
-                <Field name="evaluated_collaborator_uuid" label="Usuário Avaliado" :rules="[rules.required, rules.isUuid]" v-slot="{ field, errorMessage }">
-                  <v-select
-                    v-bind="field"
-                    v-model="evaluationApplicationFormData.evaluated_collaborator_uuid"
-                    :items="collaboratorsOptions"
+                <Field name="evaluated_user_uuid" label="Usuário Avaliado" rules="required" v-slot="{ field, errorMessage }">
+                  <v-autocomplete
+                    v-model="evaluationApplicationFormData.evaluated_user_uuid"
+                    @update:model-value="(uuidValue: any) => {
+                      const finalValue = uuidValue?.value || uuidValue; 
+                      evaluationApplicationFormData.evaluated_user_uuid = finalValue;
+                      field.onChange(finalValue);
+                    }"
                     label="Selecione o Avaliado"
-                    variant="outlined"
-                    density="compact"
+                    :items="accountUserStore.accountUsersOptions"
+                    color="blue-grey-lighten-2"
+                    item-title="title"
+                    item-value="value"
+                    variant="solo-filled"
                     :error="!!errorMessage"
                     :error-messages="errorMessage"
-                  ></v-select>
+                  >
+                    <template v-slot:selection="{ item }">
+                      <div v-if="item.value" class="d-flex align-center w-full">
+                        <v-avatar 
+                          v-if="item.raw.avatar" 
+                          :image="item.raw.avatar" 
+                          size="24" 
+                          class="mr-2"
+                        />
+                        <v-avatar 
+                          v-else 
+                          color="primary" 
+                          size="24" 
+                          class="mr-2"
+                        >
+                          <span class="text-white text-caption">{{ getInitials(item.raw.title) }}</span>
+                        </v-avatar>
+                        <span class="text-body-2 font-weight-medium text-truncate">{{ item.raw.title }}</span>
+                      </div>
+                    </template>
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item v-if="item.raw.avatar"
+                        v-bind="props"
+                        :prepend-avatar="item.raw.avatar"
+                        :title="item.raw.title"
+                        density="compact"
+                        max-height="10"
+                      ></v-list-item>
+                      <v-list-item v-else
+                        v-bind="props"
+                        :title="item.raw.title"
+                        density="compact"
+                        max-height="70"
+                        class="py-0"
+                      >
+                        <template v-slot:prepend>
+                          <v-avatar color="primary" size="35">
+                            <span class="text-white">{{ getInitials(item.raw.title) }}</span>
+                          </v-avatar>
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-autocomplete>
                 </Field>
               </v-col>
               <v-col cols="12" sm="6">
-                <Field name="evaluator_collaborator_uuid" label="Usuário Avaliador" :rules="[rules.required, rules.isUuid]" v-slot="{ field, errorMessage }">
-                  <v-select
-                    v-bind="field"
-                    v-model="evaluationApplicationFormData.evaluator_collaborator_uuid"
-                    :items="collaboratorsOptions"
+                <Field name="submitting_user_uuid" label="Usuário Avaliador" rules="required" v-slot="{ field, errorMessage }">
+                  <v-autocomplete
+                    v-model="evaluationApplicationFormData.submitting_user_uuid"
+                    @update:model-value="(uuidValue: any) => {
+                      const finalValue = uuidValue?.value || uuidValue; 
+                      evaluationApplicationFormData.submitting_user_uuid = finalValue;
+                      field.onChange(finalValue);
+                    }"
                     label="Selecione o Avaliador"
-                    variant="outlined"
-                    density="compact"
+                    :items="accountUserStore.accountUsersOptions"
+                    color="blue-grey-lighten-2"
+                    item-title="title"
+                    item-value="value"
+                    :disabled="evaluationApplicationFormData.type === EvaluationType.SELF"
+                    variant="solo-filled"
                     :error="!!errorMessage"
                     :error-messages="errorMessage"
-                    :disabled="evaluationApplicationFormData.type === 'self'"
-                  ></v-select>
+                  >
+                    <template v-slot:selection="{ item }">
+                      <div v-if="item.value" class="d-flex align-center w-full">
+                        <v-avatar 
+                          v-if="item.raw.avatar" 
+                          :image="item.raw.avatar" 
+                          size="24" 
+                          class="mr-2"
+                        />
+                        <v-avatar 
+                          v-else 
+                          color="primary" 
+                          size="24" 
+                          class="mr-2"
+                        >
+                          <span class="text-white text-caption">{{ getInitials(item.raw.title) }}</span>
+                        </v-avatar>
+                        <span class="text-body-2 font-weight-medium text-truncate">{{ item.raw.title }}</span>
+                      </div>
+                    </template>
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item v-if="item.raw.avatar"
+                        v-bind="props"
+                        :prepend-avatar="item.raw.avatar"
+                        :title="item.raw.title"
+                        density="compact"
+                        max-height="10"
+                      ></v-list-item>
+                      <v-list-item v-else
+                        v-bind="props"
+                        :title="item.raw.title"
+                        density="compact"
+                        max-height="70"
+                        class="py-0"
+                      >
+                        <template v-slot:prepend>
+                          <v-avatar color="primary" size="35">
+                            <span class="text-white">{{ getInitials(item.raw.title) }}</span>
+                          </v-avatar>
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-autocomplete>
                 </Field>
               </v-col>
             </v-row>
