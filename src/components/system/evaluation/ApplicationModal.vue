@@ -45,7 +45,7 @@ const evaluationApplicationFormData = reactive<EvaluationApplicationPayload>({
   submitting_user: props.selectedApplication?.submitting_user || undefined,
 });
 
-const creationMode = ref<'MANUAL' | '360'>('MANUAL');
+const creationMode = ref<'MANUAL' | '360'>('360');
 const evaluated360UserUuid = ref<string | null>(null);
 
 const applicationTypeOptions = [
@@ -124,11 +124,11 @@ const generate360Applications = (evaluatedUuid: string) => {
   // AJUSTAR LOGICA DO 360...
   const relations = null;
 
-  if (!relations) {
-    snackbarStore.show('Nenhuma relação encontrada para o usuário selecionado, vincule ele a um time antes.', 'warning');
-    evaluationApplicationFormData.applications = [];
-    return;
-  }
+  // if (!relations) {
+  //   snackbarStore.show('Nenhuma relação encontrada para o usuário selecionado, vincule ele a um time antes.', 'warning');
+  //   evaluationApplicationFormData.applications = [];
+  //   return;
+  // }
 
   // 1. Autoavaliação (Self)
   evaluationApplicationFormData.applications.push({
@@ -190,6 +190,10 @@ watch(creationMode, (newMode) => {
   evaluated360UserUuid.value = null;
 });
 
+watch(evaluated360UserUuid, (val) => {
+  if(val) generate360Applications(val);
+});
+
 async function onSubmit(formValues: Record<string, any>) {
   const payload = evaluationApplicationFormData?.applications?.length
     ? evaluationApplicationFormData?.applications?.map(app => ({
@@ -245,29 +249,22 @@ async function onSubmit(formValues: Record<string, any>) {
         <v-card-text>
           <v-container>
             <v-row>
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="evaluationApplicationFormData.evaluation_uuid"
-                  :items="evaluationStore.evaluationOptions"
-                  :item-props="true"
-                  label="Modelo de Avaliação"
-                  variant="solo-filled"
-                  density="compact"
-                  required
-                ></v-select>
+              <v-col cols="12" class="pb-0">
+                <Field name="evaluation_uuid" label="Modelo de Avaliação" rules="required" v-slot="{ field, errorMessage }">
+                  <v-select
+                    v-bind="field"
+                    v-model="evaluationApplicationFormData.evaluation_uuid"
+                    :items="evaluationStore.evaluationOptions"
+                    :item-props="true"
+                    label="Modelo de Avaliação"
+                    variant="solo-filled"
+                    density="compact"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  ></v-select>
+                </Field>
               </v-col>
 
-              <v-col cols="12" md="6" class="pt-0">
-                <v-radio-group v-model="creationMode" label="Método de Criação" inline density="compact">
-                  <v-radio label="Manual (Múltiplas Entradas)" value="MANUAL" color="primary"></v-radio>
-                  <v-radio label="360° (Relações)" value="BULK_360" color="primary"></v-radio>
-                </v-radio-group>
-              </v-col>
-            </v-row>
-            
-            <v-divider class="my-4" />
-
-            <v-row>
               <v-col cols="12" sm="6">
                 <Field name="started_date" label="Data de Aplicação" rules="required" v-slot="{ field, errorMessage }">
                   <v-text-field
@@ -296,77 +293,112 @@ async function onSubmit(formValues: Record<string, any>) {
                   ></v-text-field>
                 </Field>
               </v-col>
+
+
+              <v-divider />
+
+              <v-col cols="12" sm="12">
+                <v-radio-group v-model="creationMode" hide-details>
+                  <div class="d-flex gap-2">
+                    <v-card
+                      variant="tonal"
+                      color="primary"
+                      class="pa-4 w-100 border-blue-custom"
+                    >
+                      <v-card-title class="pa-0 mb-2 text-subtitle-1 d-flex justify-space-between">
+                        <div>Criar aplicações 360 automaticamente</div>
+                        <div>
+                          <v-radio value="360"></v-radio>
+                        </div>
+                      </v-card-title>
+                      <v-card-text class="pa-0">
+                        <p class="mb-3 text-caption">Selecione o usuário que será avaliado. O sistema buscará automaticamente o Líder, Pares e Liderados deste usuário para gerar as aplicações necessárias.</p>
+
+                        <Field name="bulk_evaluated_user_uuid" label="Usuário Avaliado (360)" rules="required" v-slot="{ field, errorMessage }">
+                          <v-autocomplete
+                            v-model="evaluated360UserUuid"
+                            @update:model-value="(uuidValue: any) => {
+                              evaluated360UserUuid = uuidValue?.value || uuidValue;
+                              field.onChange(evaluated360UserUuid);
+                            }"
+                            @blur="field.onBlur"
+                            label="Selecione o Avaliado"
+                            :items="accountUserStore.accountUsersOptions"
+                            color="blue-grey-lighten-2"
+                            item-title="title"
+                            item-value="value"
+                            variant="solo-filled"
+                            :error="!!errorMessage"
+                            :error-messages="errorMessage"
+                          >
+                            <template v-slot:selection="{ item }">
+                              <div v-if="item.value" class="d-flex align-center w-full">
+                                <v-avatar 
+                                  v-if="item?.raw?.avatar" 
+                                  :image="item.raw.avatar" 
+                                  size="24" 
+                                  class="mr-2"
+                                />
+                                <v-avatar 
+                                  v-else 
+                                  color="primary" 
+                                  size="24" 
+                                  class="mr-2"
+                                >
+                                  <span class="text-white text-caption">{{ getInitials(item.raw.title) }}</span>
+                                </v-avatar>
+                                <span class="text-body-2 font-weight-medium text-truncate">{{ item.raw.title }}</span>
+                              </div>
+                            </template>
+                            <template v-slot:item="{ props, item }">
+                              <v-list-item v-if="item.raw.avatar"
+                                v-bind="props"
+                                :prepend-avatar="item.raw.avatar"
+                                :title="item.raw.title"
+                                density="compact"
+                              ></v-list-item>
+                              <v-list-item v-else
+                                v-bind="props"
+                                :title="item.raw.title"
+                                density="compact"
+                                class="py-0"
+                              >
+                                <template v-slot:prepend>
+                                  <v-avatar color="primary" size="35">
+                                    <span class="text-white">{{ getInitials(item.raw.title) }}</span>
+                                  </v-avatar>
+                                </template>
+                              </v-list-item>
+                            </template>
+                          </v-autocomplete>
+                        </Field>
+                      </v-card-text>
+                    </v-card>
+                    <v-card
+                      variant="outlined"
+                      class="pa-4 w-100"
+                      :border="evaluated360UserUuid ? 'primary md' : 'gray sm'"
+                    >
+                      <v-card-title class="pa-0 mb-2 text-subtitle-1 d-flex justify-space-between">
+                        <div>Criar aplicações manualmente</div>
+                        <div>
+                          <v-radio value="MANUAL"></v-radio>
+                        </div>
+                      </v-card-title>
+                      <v-card-text class="pa-0">
+                        <p class="mb-3 text-caption">Criar manualmente ainda será possível fazer uma avaliação 360, mas terá que conhecer previamente a relação entre avaliando e avaliado para escolher o tipo certo de aplicação.</p>
+                      </v-card-text>
+                    </v-card>
+                  </div>
+                </v-radio-group>
+              </v-col>
             </v-row>
 
             <v-divider class="my-4" />
 
             <v-row v-if="creationMode === '360'">
-              <v-col cols="12">
-                <h4 class="mb-2 text-primary">Usuário Avaliado (Geração 360)</h4>
-                <small>Selecione o usuário que será avaliado. O sistema buscará automaticamente o Líder, Pares e Liderados deste usuário para gerar as aplicações necessárias.</small>
-              </v-col>
-              <v-col cols="12">
-                <Field name="bulk_evaluated_user_uuid" label="Usuário Avaliado (360)" rules="required" v-slot="{ field, errorMessage }">
-                  <v-autocomplete
-                    v-model="evaluated360UserUuid"
-                    @update:model-value="(uuidValue: any) => {
-                      evaluated360UserUuid = uuidValue?.value || uuidValue;
-                      field.onChange(evaluated360UserUuid);
-                    }"
-                    @blur="field.onBlur"
-                    label="Selecione o Avaliado"
-                    :items="accountUserStore.accountUsersOptions"
-                    color="blue-grey-lighten-2"
-                    item-title="title"
-                    item-value="value"
-                    variant="solo-filled"
-                    :error="!!errorMessage"
-                    :error-messages="errorMessage"
-                  >
-                    <template v-slot:selection="{ item }">
-                      <div v-if="item.value" class="d-flex align-center w-full">
-                        <v-avatar 
-                          v-if="item?.raw?.avatar" 
-                          :image="item.raw.avatar" 
-                          size="24" 
-                          class="mr-2"
-                        />
-                        <v-avatar 
-                          v-else 
-                          color="primary" 
-                          size="24" 
-                          class="mr-2"
-                        >
-                          <span class="text-white text-caption">{{ getInitials(item.raw.title) }}</span>
-                        </v-avatar>
-                        <span class="text-body-2 font-weight-medium text-truncate">{{ item.raw.title }}</span>
-                      </div>
-                    </template>
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item v-if="item.raw.avatar"
-                        v-bind="props"
-                        :prepend-avatar="item.raw.avatar"
-                        :title="item.raw.title"
-                        density="compact"
-                      ></v-list-item>
-                      <v-list-item v-else
-                        v-bind="props"
-                        :title="item.raw.title"
-                        density="compact"
-                        class="py-0"
-                      >
-                        <template v-slot:prepend>
-                          <v-avatar color="primary" size="35">
-                            <span class="text-white">{{ getInitials(item.raw.title) }}</span>
-                          </v-avatar>
-                        </template>
-                      </v-list-item>
-                    </template>
-                  </v-autocomplete>
-                </Field>
-              </v-col>
               <v-col cols="12" v-if="evaluationApplicationFormData?.applications?.length && evaluated360UserUuid">
-                <v-card variant="tonal" class="pa-4">
+                <v-card variant="outlined" class="pa-4 border">
                   <p class="font-weight-medium mb-2">Aplicações Geradas ({{ evaluationApplicationFormData.applications.length }}):</p>
                   <v-list density="compact" class="bg-transparent">
                     <v-list-item v-for="(app, index) in evaluationApplicationFormData.applications" :key="index" class="py-1">

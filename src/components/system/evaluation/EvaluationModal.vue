@@ -514,7 +514,6 @@ function handleDrdChange(newValue: any) {
                       variant="tonal"
                       color="primary"
                       class="pa-4 w-100 border-blue-custom"
-                      :border="isDrdSelected ? 'success md' : 'primary sm'"
                     >
                       <v-card-title class="pa-0 mb-2 text-subtitle-1 d-flex justify-space-between">
                         <div>Criar avaliação a partir de um DRD</div>
