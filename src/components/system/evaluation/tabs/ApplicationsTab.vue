@@ -4,7 +4,7 @@ import { useAccountUserStore } from '@/stores/account-user.store';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import loadItems from '@/utils/loadItems.util';
 import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
-import { type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
+import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import ApplicationModal from '../ApplicationModal.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
@@ -52,34 +52,31 @@ onMounted(async () => {
   await evaluationStore.getAllEvaluations();
 });
 
-const getUserName = (uuid: string | undefined) => {
-  if (!uuid) return 'N/A';
-  const user = accountUserStore.account_users!.find(u => u.uuid === uuid);
-  return user ? user.name : 'Usuário Desconhecido';
-};
-
 const getEvaluationModelTitle = (uuid: string | undefined) => {
   if (!uuid) return 'N/A';
   const model = evaluationStore.evaluations!.find(e => e.uuid === uuid);
   return model ? model.name : 'Modelo Desconhecido';
 };
 
-const getApplicationTypeDisplayName = (type: 'peer' | 'self' | 'leader') => {
+const getApplicationTypeDisplayName = (type: EvaluationType) => {
   switch (type) {
-    case 'peer': return 'Por Pares';
-    case 'self': return 'Autoavaliação';
-    case 'leader': return 'Por Líder';
+    case EvaluationType.PEER: return 'Por Pares';
+    case EvaluationType.SELF: return 'Autoavaliação';
+    case EvaluationType.LEADER: return 'Por Líder';
     default: return type;
   }
 };
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: EvaluationApplicationStatus) => {
   switch (status) {
-    case 'completed': return 'success';
-    case 'in_progress': return 'info';
-    case 'pending': return 'warning';
-    case 'canceled': return 'error';
-    default: return 'info';
+    case EvaluationApplicationStatus.CREATED:
+    case EvaluationApplicationStatus.SENDED: return 'info';
+    case EvaluationApplicationStatus.IN_PROGRESS: 
+    case EvaluationApplicationStatus.ACCESSED: return 'warning';
+    case EvaluationApplicationStatus.FINISHED: return 'success';
+    case EvaluationApplicationStatus.EXPIRED: return 'error';
+    case EvaluationApplicationStatus.CANCELED: return 'gray';
+    default: return 'gray';
   }
 };
 </script>
@@ -107,12 +104,11 @@ const getStatusColor = (status: string) => {
 
     <v-data-table
       :headers="[
-        { title: 'Modelo', value: 'evaluation_model_uuid', sortable: true },
+        { title: 'Modelo', value: 'evaluation_uuid', sortable: true },
         { title: 'Tipo', value: 'type', sortable: true },
-        { title: 'Solicitado por', value: 'requested_by_user_uuid', sortable: true },
-        { title: 'Avaliado', value: 'evaluated_collaborator_uuid', sortable: true },
-        { title: 'Avaliador', value: 'evaluator_collaborator_uuid', sortable: true },
-        { title: 'Data de Solicitação', value: 'application_date', sortable: true },
+        { title: 'Avaliado', value: 'evaluated_user', sortable: true },
+        { title: 'Avaliador', value: 'submitting_user', sortable: true },
+        { title: 'Data de Início', value: 'started_date', sortable: true },
         { title: 'Status', value: 'status', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
@@ -126,30 +122,26 @@ const getStatusColor = (status: string) => {
       mobile-breakpoint="md"
       @update:options="loadEvaluationApplications"
     >
-      <template v-slot:[`item.evaluation_model_uuid`]="{ item }">
-        {{ getEvaluationModelTitle(item.evaluation_model_uuid) }}
+      <template v-slot:[`item.evaluation_uuid`]="{ item }">
+        {{ getEvaluationModelTitle(item.evaluation_uuid) }}
       </template>
 
       <template v-slot:[`item.type`]="{ item }">
-        <v-chip size="small" :color="item.type === 'self' ? 'blue-grey' : 'orange'">
+        <v-chip size="small" :color="item.type === EvaluationType.SELF ? 'blue-grey' : 'orange'">
           {{ getApplicationTypeDisplayName(item.type) }}
         </v-chip>
       </template>
 
-      <template v-slot:[`item.requested_by_user_uuid`]="{ item }">
-        {{ getUserName(item.requested_by_user_uuid) }}
-      </template>
-
       <template v-slot:[`item.evaluated_collaborator_uuid`]="{ item }">
-        {{ getUserName(item.evaluated_collaborator_uuid) }}
+        {{ item.evaluated_user.name }}
       </template>
 
       <template v-slot:[`item.evaluator_collaborator_uuid`]="{ item }">
-        {{ getUserName(item.evaluator_collaborator_uuid) }}
+        {{ item.submitting_user.name }}
       </template>
 
-      <template v-slot:[`item.application_date`]="{ item }">
-        {{ new Date(item.application_date).toLocaleDateString() }}
+      <template v-slot:[`item.started_date`]="{ item }">
+        {{ new Date(item.started_date).toLocaleDateString() }}
       </template>
 
       <template v-slot:[`item.status`]="{ item }">
@@ -163,9 +155,9 @@ const getStatusColor = (status: string) => {
           <v-btn icon @click="openDialog(item)" size="small">
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
-          <v-btn icon color="red" @click="evaluationApplicationStore.deleteEvaluationApplication(item.uuid)" size="small">
+          <!-- <v-btn icon color="red" @click="evaluationApplicationStore.deleteEvaluationApplication(item.uuid)" size="small">
             <v-icon>mdi-delete</v-icon>
-          </v-btn>
+          </v-btn> -->
         </div>
       </template>
     </v-data-table>

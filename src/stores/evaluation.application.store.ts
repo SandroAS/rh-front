@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import { getEvaluationApplications, saveEvaluationApplication, deleteEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
+import { getEvaluationApplications, saveEvaluationApplication, deleteEvaluationApplication, getEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
 import { type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
-import type EvaluationApplicationPayload from '@/types/evaluationApplication/evaluation-application-payload.type';
+import { type CreateEvaluationApplication, type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
 
 interface EvaluationApplicationStoreState {
   evaluation_applications: EvaluationApplication[] | null;
@@ -39,29 +39,49 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
   },
 
   actions: {
-    async saveEvaluationApplication(application: EvaluationApplicationPayload, uuid?: string) {
+    async saveEvaluationApplication(application: EvaluationApplicationPayload[], uuid?: string) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res: { uuid: string } = await saveEvaluationApplication(application, uuid);
-
-        if (uuid) {
-          // Se for uma atualização, atualiza a aplicação no array local
-          const index = this.evaluation_applications?.findIndex(x => x.uuid === uuid);
-          if (this.evaluation_applications && index !== -1 && index !== undefined) {
-            // Se a API retornar a aplicação completa, use-a. Caso contrário, crie um objeto parcial.
-            // Para manter o padrão, vamos recarregar a lista após salvar para garantir consistência.
-            // Ou você pode fazer uma requisição GET para a aplicação recém-salva/atualizada
-            // para ter os dados mais frescos e completos.
-            // Por simplicidade aqui, vamos apenas recarregar a lista, como na sua `getEvaluations`.
-            await this.getEvaluationApplications({ page: this.page, limit: this.limit, sort_column: this.sort_column, sort_order: this.sort_order, search_term: this.search_term });
+        const res: { applications: CreateEvaluationApplication[] } = await saveEvaluationApplication(application[0], uuid);
+        if(!this.evaluation_applications) this.evaluation_applications = [];
+        if(uuid) {
+          const evaluationSaved = {
+            uuid: application[0].uuid!,
+            evaluation_uuid: application[0].evaluation_uuid,
+            evaluation: application[0].evaluation!,
+            started_date: application[0].started_date!,
+            expiration_date: application[0].expiration_date!,
+            status: application[0].status,
+            type: application[0].type!,
+            evaluated_user_uuid: application[0].evaluated_user_uuid!,
+            evaluated_user: application[0].evaluated_user!,
+            submitting_user_uuid: application[0].submitting_user_uuid!,
+            submitting_user: application[0].submitting_user!,
+          }
+          const index = this.evaluation_applications.findIndex(x => x.uuid === uuid);
+          if (index !== -1) {
+            this.evaluation_applications.splice(index, 1, evaluationSaved);
           } else {
-            console.error('UUID: ' + uuid + ' não encontrado para atualizar localmente ou array de aplicações vazio.');
+            console.error('UUID: '+uuid+' não encontrado para atualizar localmente.')
           }
         } else {
-          // Se for uma nova criação, recarrega a lista para que a nova aplicação apareça
-          await this.getEvaluationApplications({ page: 1, limit: this.limit, sort_column: this.sort_column, sort_order: this.sort_order, search_term: this.search_term });
+          res.applications.forEach(createApplication => {
+            this.evaluation_applications?.unshift({
+              uuid: createApplication.uuid!,
+              evaluation_uuid: application[0].evaluation_uuid,
+              evaluation: application[0].evaluation!,
+              started_date: application[0].started_date!,
+              expiration_date: application[0].expiration_date!,
+              status: application[0].status,
+              type: createApplication.type!,
+              evaluated_user_uuid: createApplication.evaluated_user_uuid!,
+              evaluated_user: createApplication.evaluated_user!,
+              submitting_user_uuid: createApplication.submitting_user_uuid!,
+              submitting_user: createApplication.submitting_user!,
+            });
+          })
         }
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar salvar aplicação de avaliação.';
@@ -135,29 +155,43 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
       }
     },
 
-    async deleteEvaluationApplication(uuid: string) {
+    async getEvaluationApplication(uuid: string) {
       this.loading = true;
       this.error = null;
 
       try {
-        await deleteEvaluationApplication(uuid);
-        if (this.evaluation_applications) {
-          this.evaluation_applications = this.evaluation_applications.filter(app => app.uuid !== uuid);
-          this.total--;
-          // Se a página atual não tiver mais itens e não for a primeira, volta para a página anterior
-          if (this.evaluation_applications.length === 0 && this.page > 1) {
-            this.page--;
-            await this.getEvaluationApplications({ page: this.page, limit: this.limit, sort_column: this.sort_column, sort_order: this.sort_order, search_term: this.search_term });
-          }
-        }
+        return await getEvaluationApplication(uuid);
       } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar excluir aplicação de avaliação.';
-        console.error('Erro ao excluir aplicação de avaliação:', err);
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar Aplicação de Avaliação.';
         throw err;
       } finally {
         this.loading = false;
       }
     },
+
+    // async deleteEvaluationApplication(uuid: string) {
+    //   this.loading = true;
+    //   this.error = null;
+
+    //   try {
+    //     await deleteEvaluationApplication(uuid);
+    //     if (this.evaluation_applications) {
+    //       this.evaluation_applications = this.evaluation_applications.filter(app => app.uuid !== uuid);
+    //       this.total--;
+    //       // Se a página atual não tiver mais itens e não for a primeira, volta para a página anterior
+    //       if (this.evaluation_applications.length === 0 && this.page > 1) {
+    //         this.page--;
+    //         await this.getEvaluationApplications({ page: this.page, limit: this.limit, sort_column: this.sort_column, sort_order: this.sort_order, search_term: this.search_term });
+    //       }
+    //     }
+    //   } catch (err: any) {
+    //     this.error = err.response?.data?.message || 'Erro ao tentar excluir aplicação de avaliação.';
+    //     console.error('Erro ao excluir aplicação de avaliação:', err);
+    //     throw err;
+    //   } finally {
+    //     this.loading = false;
+    //   }
+    // },
 
     async setPage(page: number) {
       this.page = page;

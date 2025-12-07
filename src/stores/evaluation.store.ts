@@ -116,7 +116,7 @@ export const useEvaluationStore = defineStore('evaluation', {
       try {
         return await getEvaluation(uuid);
       } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar buscar DRD.';
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar Avaliação.';
         throw err;
       } finally {
         this.loading = false;
@@ -130,7 +130,7 @@ export const useEvaluationStore = defineStore('evaluation', {
       try {
         this.evaluations_simple = await getAllEvaluations();
       } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar Avaliações.';
         throw err;
       } finally {
         this.loading = false;

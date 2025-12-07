@@ -67,7 +67,7 @@ const loadMetricsData = async () => {
     const filteredApplications = allApplications?.filter(app => {
       // Lógica de filtro (idêntica à anterior)
       let isMatch = true;
-      if (filters.value.evaluationName && app.evaluation_model_uuid !== filters.value.evaluationName) isMatch = false;
+      if (filters.value.evaluationName && app.evaluation_uuid !== filters.value.evaluationName) isMatch = false;
       if (filters.value.evaluationType && app.type !== filters.value.evaluationType) isMatch = false;
       if (filters.value.evaluated && app.evaluated_collaborator_uuid !== filters.value.evaluated) isMatch = false;
       if (filters.value.evaluator && app.evaluator_collaborator_uuid !== filters.value.evaluator) isMatch = false;
@@ -182,7 +182,7 @@ const applyFilters = async () => {
     filteredApplications.value = allApplications?.filter(app => {
       // ... (lógica de filtro permanece a mesma)
       let isMatch = true;
-      if (filters.value.evaluationName && app.evaluation_model_uuid !== filters.value.evaluationName) isMatch = false;
+      if (filters.value.evaluationName && app.evaluation_uuid !== filters.value.evaluationName) isMatch = false;
       if (filters.value.evaluationType && app.type !== filters.value.evaluationType) isMatch = false;
       if (filters.value.evaluated && app.evaluated_collaborator_uuid !== filters.value.evaluated) isMatch = false;
       if (filters.value.evaluator && app.evaluator_collaborator_uuid !== filters.value.evaluator) isMatch = false;

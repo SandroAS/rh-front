@@ -1,5 +1,5 @@
 import type Evaluation from '../evaluation/evaluation.type';
-import type User from '../user/user.type';
+import type { UserAvatar } from '../user/user-avatar.type';
 import type { EvaluationApplicationTopic } from './evaluation-application-topic.type';
 
 export enum EvaluationType {
@@ -23,13 +23,13 @@ export enum EvaluationApplicationStatus {
 
 export interface EvaluationApplication {
   uuid: string;
-  evaluation_model_uuid: string;
-  evaluation_model?: Evaluation;
+  evaluation_uuid: string;
+  evaluation?: Evaluation;
   type: EvaluationType;
   evaluated_user_uuid: string;
-  evaluated_user: User;
+  evaluated_user: UserAvatar;
   submitting_user_uuid: string;
-  submitting_user: User;
+  submitting_user: UserAvatar;
   started_date: Date;
   expiration_date: Date;
   status: EvaluationApplicationStatus;

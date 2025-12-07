@@ -8,7 +8,7 @@ const snackbarStore = useSnackbarStore();
 // Simulação de dados da aplicação de avaliação
 const application = ref<EvaluationApplication>({
   uuid: 'app-mock-001',
-  evaluation_model_uuid: 'model-mock-001',
+  evaluation_uuid: 'model-mock-001',
   type: 'peer',
   requested_by_user_uuid: 'user-001',
   evaluated_collaborator_uuid: 'user-002',
@@ -16,7 +16,7 @@ const application = ref<EvaluationApplication>({
   application_date: '2025-08-05',
   status: 'pending',
   // Dados do modelo de avaliação aninhado para o formulário
-  evaluation_model: {
+  evaluation: {
     uuid: 'model-mock-001',
     title: 'Avaliação de Desempenho - Analista de DP',
     rate: 5,
@@ -112,9 +112,9 @@ function submitEvaluation() {
 </script>
 
 <template>
-  <v-container v-if="application && application.evaluation_model">
+  <v-container v-if="application && application.evaluation">
     <v-card class="pa-8">
-      <div class="text-h4 font-weight-bold mb-2">{{ application.evaluation_model.title }}</div>
+      <div class="text-h4 font-weight-bold mb-2">{{ application.evaluation.title }}</div>
       <div class="text-subtitle-1 text-medium-emphasis">
         Preencha o formulário de avaliação para o colaborador
         <strong>{{ application.evaluated_collaborator?.name }}</strong>.
@@ -122,7 +122,7 @@ function submitEvaluation() {
 
       <v-divider class="my-6"></v-divider>
 
-      <div v-for="topic in application.evaluation_model.evaluation_topics" :key="topic.uuid" class="mb-8">
+      <div v-for="topic in application.evaluation.evaluation_topics" :key="topic.uuid" class="mb-8">
         <div class="text-h5 font-weight-bold">{{ topic.title }}</div>
         <div class="text-subtitle-2 text-medium-emphasis mb-4">{{ topic.description }}</div>
 
