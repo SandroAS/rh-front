@@ -48,7 +48,7 @@ watch(searchTerm, (newVal) => {
 });
 
 onMounted(async () => {
-  await accountUserStore.getAllAccountUsers();
+  await accountUserStore.getAllAccountUsersWithTeams();
   await evaluationStore.getAllEvaluations();
 });
 

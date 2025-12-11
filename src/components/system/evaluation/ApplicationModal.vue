@@ -171,8 +171,6 @@ const generate360Applications = (evaluatedUuid: string) => {
       submitting_user: null
     });
   // });
-
-  snackbarStore.show(`${evaluationApplicationFormData.applications.length} aplicações 360 geradas com sucesso.`, 'info');
 };
 
 watch(() => props.selectedApplication, async (val) => {
@@ -314,7 +312,7 @@ async function onSubmit(formValues: Record<string, any>) {
                       <v-card-text class="pa-0">
                         <p class="mb-3 text-caption">Selecione o usuário que será avaliado. O sistema buscará automaticamente o Líder, Pares e Liderados deste usuário para gerar as aplicações necessárias.</p>
 
-                        <Field name="bulk_evaluated_user_uuid" label="Usuário Avaliado (360)" rules="required" v-slot="{ field, errorMessage }">
+                        <Field name="bulk_evaluated_user_uuid" label="Usuário Avaliado (360)" rules="required" v-slot="{ field, errorMessage }">                          
                           <v-autocomplete
                             v-model="evaluated360UserUuid"
                             @update:model-value="(uuidValue: any) => {
@@ -323,15 +321,37 @@ async function onSubmit(formValues: Record<string, any>) {
                             }"
                             @blur="field.onBlur"
                             label="Selecione o Avaliado"
-                            :items="accountUserStore.accountUsersOptions"
+                            :items="accountUserStore.accountUsersOptionsTeams"
                             color="blue-grey-lighten-2"
                             item-title="title"
                             item-value="value"
                             variant="solo-filled"
+                            chips
+                            closable-chips
+                            multiple
                             :error="!!errorMessage"
                             :error-messages="errorMessage"
+                            :disabled="creationMode === 'MANUAL'"
                           >
-                            <template v-slot:selection="{ item }">
+                            <template v-slot:chip="{ props, item }">
+                              <v-chip
+                                v-bind="props"
+                                pill
+                                size="small"
+                                class="mt-1 pl-0"
+                              >
+                                <v-avatar v-if="item.raw.avatar" start class="ml-0">
+                                  <v-img :src="item.raw.avatar"></v-img>
+                                </v-avatar>
+
+                                <v-avatar v-else color="primary" class="mr-1">
+                                  <span class="text-white">{{ getInitials(item.raw.title) }}</span>
+                                </v-avatar>
+
+                                {{ item.raw.title }}
+                              </v-chip>
+                            </template>
+                            <!-- <template v-slot:selection="{ item }">
                               <div v-if="item.value" class="d-flex align-center w-full">
                                 <v-avatar 
                                   v-if="item?.raw?.avatar" 
@@ -349,17 +369,20 @@ async function onSubmit(formValues: Record<string, any>) {
                                 </v-avatar>
                                 <span class="text-body-2 font-weight-medium text-truncate">{{ item.raw.title }}</span>
                               </div>
-                            </template>
+                            </template> -->
                             <template v-slot:item="{ props, item }">
+
                               <v-list-item v-if="item.raw.avatar"
                                 v-bind="props"
                                 :prepend-avatar="item.raw.avatar"
                                 :title="item.raw.title"
+                                :subtitle="item?.raw?.teams?.length ? item?.raw?.teams[0].name : ''"
                                 density="compact"
                               ></v-list-item>
                               <v-list-item v-else
                                 v-bind="props"
                                 :title="item.raw.title"
+                                :subtitle="item?.raw?.teams?.length ? item?.raw?.teams[0].name : ''"
                                 density="compact"
                                 class="py-0"
                               >

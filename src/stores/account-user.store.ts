@@ -4,12 +4,15 @@ import type AccountUser from '@/types/account/account-user.type';
 import type AccountUsersResponsePaginationDto from '@/types/account/account-users-response-pagination-dto';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import { defineStore } from 'pinia';
-import { getAllAccountUsers } from '@/services/user.service';
+import { getAllAccountUsers, getAllAccountUsersWithTeams } from '@/services/user.service';
 import type { UserAvatar } from '@/types/user/user-avatar.type';
+import type { UserTeam } from '@/types/user/user-team.type';
+import type TeamResponse from '@/types/team/team-response.type';
 
 interface AccountUserStoreState {
   account_users: AccountUser[] | null;
   all_account_users: UserAvatar[] | null;
+  all_account_users_teams: UserTeam[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -25,6 +28,7 @@ export const useAccountUserStore = defineStore('accountUser', {
   state: (): AccountUserStoreState => ({
     account_users: null,
     all_account_users: null,
+    all_account_users_teams: null,
     loading: false,
     error: null,
     total: 0,
@@ -49,7 +53,22 @@ export const useAccountUserStore = defineStore('accountUser', {
       });
 
       return levelsGroupsMapped;
-    }
+    },
+    accountUsersOptionsTeams(): { value: string, title: string, avatar?: UserAvatar['profile_img_url'], teams: TeamResponse[], disabled?: boolean }[] | [] {
+      if(!this.all_account_users_teams) return [];
+      const levelsGroupsMapped = this.all_account_users_teams.map(account_user_team => {
+        console.log('uaaai', account_user_team)
+        return {
+          value: account_user_team.uuid,
+          title: account_user_team.name,
+          avatar: account_user_team.profile_img_url,
+          teams: account_user_team.teams,
+          disabled: false
+        }
+      });
+
+      return levelsGroupsMapped;
+    },
   },
 
   actions: {
@@ -137,6 +156,21 @@ export const useAccountUserStore = defineStore('accountUser', {
       try {
         const res: UserAvatar[] = await getAllAccountUsers();
         this.all_account_users = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar todos os usuários.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getAllAccountUsersWithTeams() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: UserTeam[] = await getAllAccountUsersWithTeams();
+        this.all_account_users_teams = res;
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar todos os usuários.';
         throw err;
