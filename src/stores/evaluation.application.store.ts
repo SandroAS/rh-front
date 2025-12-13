@@ -39,26 +39,26 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
   },
 
   actions: {
-    async saveEvaluationApplication(application: EvaluationApplicationPayload[], uuid?: string) {
+    async saveEvaluationApplication(application: EvaluationApplicationPayload, uuid?: string) {
       this.loading = true;
       this.error = null;
 
       try {
-        const res: { applications: CreateEvaluationApplication[] } = await saveEvaluationApplication(application[0], uuid);
+        const res: { applications: CreateEvaluationApplication[] } = await saveEvaluationApplication(application, uuid);
         if(!this.evaluation_applications) this.evaluation_applications = [];
         if(uuid) {
           const evaluationSaved = {
-            uuid: application[0].uuid!,
-            evaluation_uuid: application[0].evaluation_uuid,
-            evaluation: application[0].evaluation!,
-            started_date: application[0].started_date!,
-            expiration_date: application[0].expiration_date!,
-            status: application[0].status,
-            type: application[0].type!,
-            evaluated_user_uuid: application[0].evaluated_user_uuid!,
-            evaluated_user: application[0].evaluated_user!,
-            submitting_user_uuid: application[0].submitting_user_uuid!,
-            submitting_user: application[0].submitting_user!,
+            uuid: application.uuid!,
+            evaluation_uuid: application.evaluation_uuid,
+            evaluation: application.evaluation!,
+            started_date: application.started_date!,
+            expiration_date: application.expiration_date!,
+            status: application.status,
+            type: application.type!,
+            evaluated_user_uuid: application.evaluated_user_uuid!,
+            evaluated_user: application.evaluated_user!,
+            submitting_user_uuid: application.submitting_user_uuid!,
+            submitting_user: application.submitting_user!,
           }
           const index = this.evaluation_applications.findIndex(x => x.uuid === uuid);
           if (index !== -1) {
@@ -70,11 +70,11 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
           res.applications.forEach(createApplication => {
             this.evaluation_applications?.unshift({
               uuid: createApplication.uuid!,
-              evaluation_uuid: application[0].evaluation_uuid,
-              evaluation: application[0].evaluation!,
-              started_date: application[0].started_date!,
-              expiration_date: application[0].expiration_date!,
-              status: application[0].status,
+              evaluation_uuid: application.evaluation_uuid,
+              evaluation: application.evaluation!,
+              started_date: application.started_date!,
+              expiration_date: application.expiration_date!,
+              status: application.status,
               type: createApplication.type!,
               evaluated_user_uuid: createApplication.evaluated_user_uuid!,
               evaluated_user: createApplication.evaluated_user!,

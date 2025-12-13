@@ -284,30 +284,40 @@ watch(evaluated360UserUuid, (val) => {
 
 async function onSubmit(formValues: Record<string, any>) {
   const applicationsToSave = evaluationApplicationFormData.applications || [];
-
-  const payload = applicationsToSave.map(app => ({
-    uuid: app.uuid,
+console.log(applicationsToSave)
+console.log(formValues)
+  const payload = {
+    uuid: evaluationApplicationFormData.uuid,
     evaluation_uuid: evaluationApplicationFormData.evaluation_uuid,
     started_date: evaluationApplicationFormData.started_date,
     expiration_date: evaluationApplicationFormData.expiration_date,
     status: evaluationApplicationFormData.status,
-    type: app.type,
-    evaluated_user_uuid: app.evaluated_user_uuid,
-    submitting_user_uuid: app.submitting_user_uuid
-  }));
+    type: evaluationApplicationFormData.type,
+    applications: applicationsToSave.map(app => ({
+      uuid: app.uuid,
+      evaluation_uuid: evaluationApplicationFormData.evaluation_uuid,
+      started_date: evaluationApplicationFormData.started_date,
+      expiration_date: evaluationApplicationFormData.expiration_date,
+      status: evaluationApplicationFormData.status,
+      type: app.type,
+      evaluated_user_uuid: app.evaluated_user_uuid,
+      evaluated_user: app.evaluated_user,
+      submitting_user_uuid: app.submitting_user_uuid,
+      submitting_user: app.submitting_user
+    })),
+    evaluated_user_uuid: evaluationApplicationFormData.evaluated_user_uuid,
+    submitting_user_uuid: evaluationApplicationFormData.submitting_user_uuid,
+  }
+
+  console.log(payload)
 
   try {
-    if (!!props.selectedApplication && creationMode.value === 'MANUAL' && payload.length === 1) {
-      // Se estiver editando uma aplicação única no modo manual
+    if (!!props.selectedApplication?.uuid) {
       await evaluationApplicationStore.saveEvaluationApplication(payload, props.selectedApplication.uuid);
-      snackbarStore.show('Aplicação atualizada com sucesso!', 'success');
-    } else if (payload.length > 0) {
-      // Criação 360 (múltipla) ou criação manual de múltiplas
-      await evaluationApplicationStore.saveEvaluationApplication(payload);
-      snackbarStore.show(`${payload.length} Aplicações de Avaliação criadas com sucesso!`, 'success');
+      snackbarStore.show(`Aplicação de Avaliação atualizada com sucesso!`, 'success');
     } else {
-      snackbarStore.show('Nenhuma aplicação para salvar.', 'warning');
-      return;
+      await evaluationApplicationStore.saveEvaluationApplication(payload);
+      snackbarStore.show(`Aplicação(ões) de Avaliação criada(s) com sucesso!`, 'success');
     }
     close();
   } catch (err) {
@@ -547,7 +557,7 @@ async function onSubmit(formValues: Record<string, any>) {
                             field.onChange(finalValue);
                           }"
                           label="Avaliado"
-                          :items="accountUserStore.accountUsersOptions"
+                          :items="accountUserStore.accountUsersOptionsTeams"
                           item-title="title"
                           item-value="value"
                           variant="solo-filled"
@@ -595,7 +605,7 @@ async function onSubmit(formValues: Record<string, any>) {
                             field.onChange(finalValue);
                           }"
                           label="Avaliador"
-                          :items="accountUserStore.accountUsersOptions"
+                          :items="accountUserStore.accountUsersOptionsTeams"
                           item-title="title"
                           item-value="value"
                           :disabled="app.type === EvaluationType.SELF"
