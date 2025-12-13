@@ -57,7 +57,6 @@ export const useAccountUserStore = defineStore('accountUser', {
     accountUsersOptionsTeams(): { value: string, title: string, avatar?: UserAvatar['profile_img_url'], teams: TeamResponse[], disabled?: boolean }[] | [] {
       if(!this.all_account_users_teams) return [];
       const levelsGroupsMapped = this.all_account_users_teams.map(account_user_team => {
-        console.log('uaaai', account_user_team)
         return {
           value: account_user_team.uuid,
           title: account_user_team.name,
