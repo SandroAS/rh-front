@@ -235,8 +235,8 @@ const generate360Applications = (evaluatedUuids: string[] | null) => {
       // C. Avaliação por Pares (Peer)
       // O usuário avaliado é avaliado por seus colegas de time (peers)
       teamMembersUuids.forEach(peerUuid => {
-        // Adiciona PEER se o Avaliador for diferente do Avaliado
-        if (peerUuid !== evaluatedUserUuid) {
+        // Adiciona PEER se o Avaliador for diferente do Avaliado e diferente de Líder
+        if (peerUuid !== evaluatedUserUuid && peerUuid !== leaderUuid) {
           addUniqueApplication(
             combinedApplications,
             uniqueRelations,
