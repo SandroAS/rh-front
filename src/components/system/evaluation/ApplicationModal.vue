@@ -284,8 +284,6 @@ watch(evaluated360UserUuid, (val) => {
 
 async function onSubmit(formValues: Record<string, any>) {
   const applicationsToSave = evaluationApplicationFormData.applications || [];
-console.log(applicationsToSave)
-console.log(formValues)
   const payload = {
     uuid: evaluationApplicationFormData.uuid,
     evaluation_uuid: evaluationApplicationFormData.evaluation_uuid,
@@ -308,8 +306,6 @@ console.log(formValues)
     evaluated_user_uuid: evaluationApplicationFormData.evaluated_user_uuid,
     submitting_user_uuid: evaluationApplicationFormData.submitting_user_uuid,
   }
-
-  console.log(payload)
 
   try {
     if (!!props.selectedApplication?.uuid) {
