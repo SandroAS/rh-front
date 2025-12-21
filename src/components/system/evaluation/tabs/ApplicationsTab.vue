@@ -52,18 +52,26 @@ onMounted(async () => {
   await evaluationStore.getAllEvaluations();
 });
 
-const getEvaluationModelTitle = (uuid: string | undefined) => {
-  if (!uuid) return 'N/A';
-  const model = evaluationStore.evaluations!.find(e => e.uuid === uuid);
-  return model ? model.name : 'Modelo Desconhecido';
-};
-
 const getApplicationTypeDisplayName = (type: EvaluationType) => {
   switch (type) {
     case EvaluationType.PEER: return 'Por Pares';
     case EvaluationType.SELF: return 'Autoavaliação';
     case EvaluationType.LEADER: return 'Por Líder';
+    case EvaluationType.SUBORDINATE: return 'Por Subordinado';
     default: return type;
+  }
+};
+
+const getApplicationStatusDisplayName = (status: EvaluationApplicationStatus) => {
+  switch (status) {
+    case EvaluationApplicationStatus.CREATED: return 'CRIADO';
+    case EvaluationApplicationStatus.SENDED: return 'ENVIADO';
+    case EvaluationApplicationStatus.IN_PROGRESS: return 'EM PROGRESSO';
+    case EvaluationApplicationStatus.ACCESSED: return 'ACESSADO';
+    case EvaluationApplicationStatus.FINISHED: return 'FINALIZADO';
+    case EvaluationApplicationStatus.EXPIRED: return 'EXPIRADO';
+    case EvaluationApplicationStatus.CANCELED: return 'CANCELADO';
+    default: return status;
   }
 };
 
@@ -123,7 +131,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
       @update:options="loadEvaluationApplications"
     >
       <template v-slot:[`item.evaluation_uuid`]="{ item }">
-        {{ getEvaluationModelTitle(item.evaluation_uuid) }}
+        {{ item?.evaluation?.name }}
       </template>
 
       <template v-slot:[`item.type`]="{ item }">
@@ -146,12 +154,15 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
 
       <template v-slot:[`item.status`]="{ item }">
         <v-chip :color="getStatusColor(item.status)" size="small">
-          {{ item.status }}
+          {{ getApplicationStatusDisplayName(item.status) }}
         </v-chip>
       </template>
 
       <template v-slot:[`item.actions`]="{ item }">
-        <div>
+        <div class="d-flex">
+          <v-btn icon @click="openDialog(item)" size="small" color="primary">
+            <v-icon>mdi-send</v-icon>
+          </v-btn>
           <v-btn icon @click="openDialog(item)" size="small">
             <v-icon>mdi-pencil</v-icon>
           </v-btn>

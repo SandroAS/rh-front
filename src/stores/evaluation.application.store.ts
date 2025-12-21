@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import { getEvaluationApplications, saveEvaluationApplication, deleteEvaluationApplication, getEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
+import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
 import { type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
-import { type CreateEvaluationApplication, type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
+import { type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
 
 interface EvaluationApplicationStoreState {
   evaluation_applications: EvaluationApplication[] | null;
@@ -43,45 +43,45 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
       this.loading = true;
       this.error = null;
 
-      try {
-        const res: { applications: CreateEvaluationApplication[] } = await saveEvaluationApplication(application, uuid);
-        if(!this.evaluation_applications) this.evaluation_applications = [];
-        if(uuid) {
-          const evaluationSaved = {
-            uuid: application.uuid!,
-            evaluation_uuid: application.evaluation_uuid,
-            evaluation: application.evaluation!,
-            started_date: application.started_date!,
-            expiration_date: application.expiration_date!,
-            status: application.status,
-            type: application.type!,
-            evaluated_user_uuid: application.evaluated_user_uuid!,
-            evaluated_user: application.evaluated_user!,
-            submitting_user_uuid: application.submitting_user_uuid!,
-            submitting_user: application.submitting_user!,
-          }
+      try {        
+        if (!this.evaluation_applications) this.evaluation_applications = [];
+
+        if (uuid) {
+          await updateEvaluationApplication(application, uuid);
+          const evaluationSaved: EvaluationApplication = {
+            ...application,
+            uuid: uuid,
+            evaluation: application.evaluation,
+            evaluated_user: application.evaluated_user,
+            submitting_user: application.submitting_user,
+          } as EvaluationApplication;
+
           const index = this.evaluation_applications.findIndex(x => x.uuid === uuid);
           if (index !== -1) {
             this.evaluation_applications.splice(index, 1, evaluationSaved);
-          } else {
-            console.error('UUID: '+uuid+' não encontrado para atualizar localmente.')
           }
         } else {
-          res.applications.forEach(createApplication => {
-            this.evaluation_applications?.unshift({
-              uuid: createApplication.uuid!,
-              evaluation_uuid: application.evaluation_uuid,
-              evaluation: application.evaluation!,
-              started_date: application.started_date!,
-              expiration_date: application.expiration_date!,
-              status: application.status,
-              type: createApplication.type!,
-              evaluated_user_uuid: createApplication.evaluated_user_uuid!,
-              evaluated_user: createApplication.evaluated_user!,
-              submitting_user_uuid: createApplication.submitting_user_uuid!,
-              submitting_user: createApplication.submitting_user!,
+          const res: EvaluationApplication[] = await createEvaluationApplication(application);
+          res.forEach(newAppFromServer => {
+
+            const originalAppData = application.applications?.find(a => {
+              return a.evaluated_user_uuid === newAppFromServer.evaluated_user_uuid && a.type === newAppFromServer.type
             });
-          })
+
+            const enrichedApplication: EvaluationApplication = {
+              ...newAppFromServer,
+              evaluation: application.evaluation, 
+              evaluated_user: originalAppData?.evaluated_user || application.evaluated_user,
+              submitting_user: originalAppData?.submitting_user || application.submitting_user,
+            } as EvaluationApplication;
+
+            this.evaluation_applications?.unshift(enrichedApplication);
+            this.total++;
+          });
+
+          if (this.evaluation_applications.length > this.limit) {
+            this.evaluation_applications = this.evaluation_applications.slice(0, this.limit);
+          }
         }
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar salvar aplicação de avaliação.';

@@ -26,13 +26,18 @@ export const getEvaluationApplication = async (uuid: string): Promise<Evaluation
   return response.data;
 };
 
-export async function saveEvaluationApplication(
+export async function createEvaluationApplication(
   payload: EvaluationApplicationPayload,
-  uuid?: string
-): Promise<{ applications: CreateEvaluationApplication[] }> {
-  const response: AxiosResponse<{ applications: CreateEvaluationApplication[] }> = uuid
-    ? await api.put(`/evaluation-applications/${uuid}`, payload)
-    : await api.post('/evaluation-applications', payload);
+): Promise<EvaluationApplication[]> {
+  const response: AxiosResponse<EvaluationApplication[]> = await api.post('/evaluation-applications', payload);
+  return response.data;
+}
+
+export async function updateEvaluationApplication(
+  payload: EvaluationApplicationPayload,
+  uuid: string
+): Promise<EvaluationApplication> {
+  const response: AxiosResponse<EvaluationApplication> = await api.put(`/evaluation-applications/${uuid}`, payload)
   return response.data;
 }
 
