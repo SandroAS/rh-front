@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, computed, ref, reactive } from 'vue';
+import { watch, ref, reactive } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
@@ -19,19 +19,6 @@ const props = defineProps<{
   selectedApplication?: EvaluationApplication | null;
 }>();
 const emit = defineEmits(['update:modelValue']);
-
-// Tipos assumidos com base no seu JSON de retorno
-interface TeamMemberUser { uuid: string; name: string; email: string; profile_img_url: string | null; }
-interface TeamMemberResponse { uuid: string; user: TeamMemberUser; }
-interface TeamResponse {
-  uuid: string;
-  name: string;
-  leader: TeamMemberUser;
-  teamMembers: TeamMemberResponse[];
-}
-interface UserDataFor360 extends TeamMemberUser {
-  teams: TeamResponse[];
-}
 
 const close = () => {
   emit('update:modelValue', false);
@@ -399,7 +386,7 @@ async function onSubmit(formValues: Record<string, any>) {
                       </v-card-title>
                       <v-card-text class="pa-0">
                         <p class="mb-3 text-caption">Selecione o(s) usuário(s) que será(ão) avaliado(s). O sistema buscará automaticamente o Líder, Pares e Liderados deste usuário para gerar as aplicações necessárias.</p>
-                        <Field name="bulk_evaluated_user_uuid" label="Usuário(s) Avaliado(s) (360)" rules="required" v-slot="{ field, errorMessage }">                          
+                        <Field name="bulk_evaluated_user_uuid" label="Usuário(s) Avaliado(s) (360)" :rules="{required: creationMode === '360'}" v-slot="{ field, errorMessage }">                          
                           <v-autocomplete
                             v-model="evaluated360UserUuid"
                             @update:model-value="(uuidValue: any) => {

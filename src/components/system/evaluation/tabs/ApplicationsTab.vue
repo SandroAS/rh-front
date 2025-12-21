@@ -147,16 +147,16 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
             pill
             size="small"
             class="mt-1"
-            :class="{'pl-0': !item.evaluated_user.profile_img_url}"
+            :class="{'pl-0': !item?.evaluated_user?.profile_img_url}"
           >
-            <v-avatar v-if="item.evaluated_user.profile_img_url" start>
+            <v-avatar v-if="item?.evaluated_user?.profile_img_url" start>
               <v-img :src="item.evaluated_user.profile_img_url"></v-img>
             </v-avatar>
             <v-avatar v-else color="primary" class="mr-1">
-              <span class="text-white">{{ getInitials(item.evaluated_user.name) }}</span>
+              <span class="text-white">{{ getInitials(item?.evaluated_user?.name || '') }}</span>
             </v-avatar>
 
-            {{ item.evaluated_user.name }}
+            {{ item?.evaluated_user?.name }}
           </v-chip>
         </div>
       </template>
@@ -167,16 +167,16 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
             pill
             size="small"
             class="mt-1"
-            :class="{'pl-0': !item.submitting_user.profile_img_url}"
+            :class="{'pl-0': !item?.submitting_user?.profile_img_url}"
           >
-            <v-avatar v-if="item.submitting_user.profile_img_url" start>
+            <v-avatar v-if="item?.submitting_user?.profile_img_url" start>
               <v-img :src="item.submitting_user.profile_img_url"></v-img>
             </v-avatar>
             <v-avatar v-else color="primary" class="mr-1">
-              <span class="text-white">{{ getInitials(item.submitting_user.name) }}</span>
+              <span class="text-white">{{ getInitials(item?.submitting_user?.name || '') }}</span>
             </v-avatar>
 
-            {{ item.submitting_user.name }}
+            {{ item?.submitting_user?.name }}
           </v-chip>
         </div>
       </template>

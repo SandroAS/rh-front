@@ -71,8 +71,8 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
             const enrichedApplication: EvaluationApplication = {
               ...newAppFromServer,
               evaluation: newAppFromServer.evaluation, 
-              evaluated_user: originalAppData?.evaluated_user || application.evaluated_user,
-              submitting_user: originalAppData?.submitting_user || application.submitting_user,
+              evaluated_user: newAppFromServer.evaluated_user,
+              submitting_user: newAppFromServer.submitting_user
             } as EvaluationApplication;
 
             this.evaluation_applications?.unshift(enrichedApplication);
