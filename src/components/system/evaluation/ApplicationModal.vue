@@ -178,7 +178,9 @@ const generate360Applications = (evaluatedUuids: string[] | null) => {
   const uniqueRelations = new Set<string>();
 
   evaluatedUuids.forEach(evaluatedUserUuid => {
-    const evaluatedUser = accountUserStore.accountUsersOptionsTeams.find(user => user.value === evaluatedUserUuid);
+    const evaluatedUser = accountUserStore.accountUsersOptionsTeams.find(
+      user => user.value === evaluatedUserUuid
+    );
 
     if (!evaluatedUser) {
       console.error(`Dados do usuário avaliado ${evaluatedUserUuid} não encontrados no store.`);
@@ -203,13 +205,13 @@ const generate360Applications = (evaluatedUuids: string[] | null) => {
     teams.forEach(team => {
       const teamMembersUuids = team.teamMembers.map(tm => tm.user.uuid);
       const leaderUuid = team.leader.uuid;
+      
+      const staffMembersUuids = teamMembersUuids.filter(uuid => uuid !== leaderUuid);
 
-      const subordinatesUuids = teamMembersUuids.filter(uuid => uuid !== leaderUuid);
-
-      // A. O usuário avaliado é o líder do time? (Avaliação por Liderado)
+      // --- A. CENÁRIO: O AVALIADO É O LÍDER ---
       if (evaluatedUserUuid === leaderUuid) {
-        // Líder (Avaliado) é avaliado pelos Subordinados (Avaliadores)
-        subordinatesUuids.forEach(subordinateUuid => {
+        // Se eu sou o líder, todos os membros do time (staff) são meus SUBORDINADOS
+        staffMembersUuids.forEach(subordinateUuid => {
           addUniqueApplication(
             combinedApplications,
             uniqueRelations,
@@ -219,10 +221,11 @@ const generate360Applications = (evaluatedUuids: string[] | null) => {
           );
         });
       } 
-
-      // B. O usuário avaliado é um subordinado? (Avaliação por Líder)
-      if (subordinatesUuids.includes(evaluatedUserUuid)) {
-        // Subordinado (Avaliado) é avaliado pelo Líder (Avaliador)
+      
+      // --- B. CENÁRIO: O AVALIADO É UM MEMBRO (STAFF) ---
+      else if (staffMembersUuids.includes(evaluatedUserUuid)) {
+        
+        // 1. O líder do time avalia o membro como LÍDER (Downward)
         addUniqueApplication(
           combinedApplications,
           uniqueRelations,
@@ -230,39 +233,39 @@ const generate360Applications = (evaluatedUuids: string[] | null) => {
           evaluatedUserUuid,
           EvaluationType.LEADER
         );
-      }
 
-      // C. Avaliação por Pares (Peer)
-      // O usuário avaliado é avaliado por seus colegas de time (peers)
-      teamMembersUuids.forEach(peerUuid => {
-        // Adiciona PEER se o Avaliador for diferente do Avaliado e diferente de Líder
-        if (peerUuid !== evaluatedUserUuid && peerUuid !== leaderUuid) {
-          addUniqueApplication(
-            combinedApplications,
-            uniqueRelations,
-            peerUuid,
-            evaluatedUserUuid,
-            EvaluationType.PEER
-          );
-        }
-      });
+        // 2. Os outros membros do staff avaliam como PAR (Peer)
+        staffMembersUuids.forEach(peerUuid => {
+          // Só adiciona se for outro membro, diferente de mim mesmo
+          if (peerUuid !== evaluatedUserUuid) {
+            addUniqueApplication(
+              combinedApplications,
+              uniqueRelations,
+              peerUuid,
+              evaluatedUserUuid,
+              EvaluationType.PEER
+            );
+          }
+        });
+      }
     });
   });
 
   evaluationApplicationFormData.applications = combinedApplications;
 
   applicationsGrupedByEvaluated = evaluatedUuids.map(userUuid => {
-    return combinedApplications.filter(application => application.evaluated_user_uuid === userUuid)
-  })
+    return combinedApplications.filter(app => app.evaluated_user_uuid === userUuid);
+  });
 
-  // Se houver mais de um usuário sem time, exibe um warning no final.
   const usersWithoutTeams = evaluatedUuids.filter(uuid => {
-    const user = accountUserStore.accountUsersOptionsTeams.find(user => user.value === uuid);
+    const user = accountUserStore.accountUsersOptionsTeams.find(u => u.value === uuid);
     return user && (!user.teams || user.teams.length === 0);
   });
 
   if (usersWithoutTeams.length > 0) {
-    const names = usersWithoutTeams.map(uuid => accountUserStore.accountUsersOptionsTeams.find(user => user.value === uuid)?.title).join(', ');
+    const names = usersWithoutTeams
+      .map(uuid => accountUserStore.accountUsersOptionsTeams.find(u => u.value === uuid)?.title)
+      .join(', ');
     snackbarStore.show(`Usuário(s) sem time (${names}) não geraram todas as relações 360.`, 'warning');
   }
 };
