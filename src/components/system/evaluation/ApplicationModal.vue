@@ -353,11 +353,11 @@ async function onSubmit(formValues: Record<string, any>) {
               </v-col>
 
               <v-col cols="12" sm="6">
-                <Field name="started_date" label="Data de Aplicação" rules="required" v-slot="{ field, errorMessage }">
+                <Field name="started_date" label="Data de envio da aplicação" rules="required" v-slot="{ field, errorMessage }">
                   <v-text-field
                     v-bind="field"
                     v-model="evaluationApplicationFormData.started_date"
-                    label="Data de Aplicação"
+                    label="Data de envio da aplicação"
                     type="date"
                     variant="solo-filled"
                     density="compact"

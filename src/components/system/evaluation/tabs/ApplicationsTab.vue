@@ -6,6 +6,7 @@ import loadItems from '@/utils/loadItems.util';
 import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
 import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import ApplicationModal from '../ApplicationModal.vue';
+import { getInitials } from '@/utils/getInitialsFromName.util';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const accountUserStore = useAccountUserStore();
@@ -64,7 +65,7 @@ const getApplicationTypeDisplayName = (type: EvaluationType) => {
 
 const getApplicationStatusDisplayName = (status: EvaluationApplicationStatus) => {
   switch (status) {
-    case EvaluationApplicationStatus.CREATED: return 'CRIADO';
+    case EvaluationApplicationStatus.CREATED: return 'ENVIO AGENDADO';
     case EvaluationApplicationStatus.SENDED: return 'ENVIADO';
     case EvaluationApplicationStatus.IN_PROGRESS: return 'EM PROGRESSO';
     case EvaluationApplicationStatus.ACCESSED: return 'ACESSADO';
@@ -77,7 +78,7 @@ const getApplicationStatusDisplayName = (status: EvaluationApplicationStatus) =>
 
 const getStatusColor = (status: EvaluationApplicationStatus) => {
   switch (status) {
-    case EvaluationApplicationStatus.CREATED:
+    case EvaluationApplicationStatus.CREATED: return 'warning';
     case EvaluationApplicationStatus.SENDED: return 'info';
     case EvaluationApplicationStatus.IN_PROGRESS: 
     case EvaluationApplicationStatus.ACCESSED: return 'warning';
@@ -116,7 +117,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
         { title: 'Tipo', value: 'type', sortable: true },
         { title: 'Avaliado', value: 'evaluated_user', sortable: true },
         { title: 'Avaliador', value: 'submitting_user', sortable: true },
-        { title: 'Data de Início', value: 'started_date', sortable: true },
+        { title: 'Envio', value: 'started_date', sortable: true },
         { title: 'Status', value: 'status', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
@@ -140,16 +141,58 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
         </v-chip>
       </template>
 
-      <template v-slot:[`item.evaluated_collaborator_uuid`]="{ item }">
-        {{ item.evaluated_user.name }}
+      <template v-slot:[`item.evaluated_user`]="{ item }">
+        <div class="mb-1">
+          <v-chip
+            pill
+            size="small"
+            class="mt-1"
+            :class="{'pl-0': !item.evaluated_user.profile_img_url}"
+          >
+            <v-avatar v-if="item.evaluated_user.profile_img_url" start>
+              <v-img :src="item.evaluated_user.profile_img_url"></v-img>
+            </v-avatar>
+            <v-avatar v-else color="primary" class="mr-1">
+              <span class="text-white">{{ getInitials(item.evaluated_user.name) }}</span>
+            </v-avatar>
+
+            {{ item.evaluated_user.name }}
+          </v-chip>
+        </div>
       </template>
 
-      <template v-slot:[`item.evaluator_collaborator_uuid`]="{ item }">
-        {{ item.submitting_user.name }}
+      <template v-slot:[`item.submitting_user`]="{ item }">
+        <div class="mb-1">
+          <v-chip
+            pill
+            size="small"
+            class="mt-1"
+            :class="{'pl-0': !item.submitting_user.profile_img_url}"
+          >
+            <v-avatar v-if="item.submitting_user.profile_img_url" start>
+              <v-img :src="item.submitting_user.profile_img_url"></v-img>
+            </v-avatar>
+            <v-avatar v-else color="primary" class="mr-1">
+              <span class="text-white">{{ getInitials(item.submitting_user.name) }}</span>
+            </v-avatar>
+
+            {{ item.submitting_user.name }}
+          </v-chip>
+        </div>
       </template>
 
       <template v-slot:[`item.started_date`]="{ item }">
-        {{ new Date(item.started_date).toLocaleDateString() }}
+        <div class="d-flex align-center gap-2">
+          <v-icon
+            size="small"
+            :color="new Date(item.started_date) > new Date() ? 'warning' : 'success'"
+          >
+            {{ new Date(item.started_date) > new Date() ? 'mdi-clock-outline' : 'mdi-check-circle-outline' }}
+          </v-icon>
+          <span :class="{ 'text-warning font-weight-bold': new Date(item.started_date) > new Date() }">
+            {{ new Date(item.started_date).toLocaleDateString('pt-BR') }}
+          </span>
+        </div>
       </template>
 
       <template v-slot:[`item.status`]="{ item }">
