@@ -15,8 +15,8 @@ export interface EvaluationApplicationPayload {
   uuid?: string;
   evaluation_uuid: string;
   evaluation?: Evaluation;
-  started_date?: Date;
-  expiration_date?: Date;
+  started_date?: Date | string;
+  expiration_date?: Date | string;
   status: EvaluationApplicationStatus;
   applications?: CreateEvaluationApplication[];
   type?: EvaluationType;

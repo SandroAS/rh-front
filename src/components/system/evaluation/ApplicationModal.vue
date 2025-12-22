@@ -58,37 +58,53 @@ const applicationTypeOptions = [
 
 let applicationsGrupedByEvaluated = reactive<CreateEvaluationApplication[][] | []>([]);
 
-const getInitialApplicationState = async (selectedApplication: EvaluationApplication | null): Promise<void> => {  
+/**
+ * Converte uma string de data ou objeto Date para o formato YYYY-MM-DD
+ * exigido pelos inputs de data do navegador/vuetify.
+ */
+ const formatDateForInput = (dateSource: string | Date | undefined): string => {
+  if (!dateSource) return new Date().toISOString().split('T')[0];
+  
+  const d = new Date(dateSource);
+  // Verifica se a data é válida para evitar erros de renderização
+  if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
+  
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+const getInitialApplicationState = async (selectedApplication: EvaluationApplication | null): Promise<void> => {
   try {
-    let fetchedEvaluationApplication: EvaluationApplication | undefined;
+    evaluationApplicationFormData.uuid = selectedApplication?.uuid || undefined;
+    evaluationApplicationFormData.evaluation_uuid = selectedApplication?.evaluation_uuid || '';
+    evaluationApplicationFormData.evaluation = selectedApplication?.evaluation || undefined;
+    evaluationApplicationFormData.type = selectedApplication?.type || EvaluationType.SELF;
+    evaluationApplicationFormData.evaluated_user_uuid = selectedApplication?.evaluated_user_uuid || '';
+    evaluationApplicationFormData.evaluated_user = selectedApplication?.evaluated_user || null;
+    evaluationApplicationFormData.submitting_user_uuid = selectedApplication?.submitting_user_uuid || '';
+    evaluationApplicationFormData.submitting_user = selectedApplication?.submitting_user || null;
 
-    if (selectedApplication?.uuid) {
-      fetchedEvaluationApplication = await evaluationApplicationStore.getEvaluationApplication(selectedApplication.uuid);
-    }
+    evaluationApplicationFormData.started_date = formatDateForInput(selectedApplication?.started_date);
+    evaluationApplicationFormData.expiration_date = formatDateForInput(selectedApplication?.expiration_date);
 
-    evaluationApplicationFormData.uuid = fetchedEvaluationApplication?.uuid || undefined;
-    evaluationApplicationFormData.evaluation_uuid = fetchedEvaluationApplication?.evaluation_uuid || '';
-    evaluationApplicationFormData.evaluation = fetchedEvaluationApplication?.evaluation || undefined;
-    evaluationApplicationFormData.type = fetchedEvaluationApplication?.type || EvaluationType.SELF;
-    evaluationApplicationFormData.evaluated_user_uuid = fetchedEvaluationApplication?.evaluated_user_uuid || '';
-    evaluationApplicationFormData.evaluated_user = fetchedEvaluationApplication?.evaluated_user || null;
-    evaluationApplicationFormData.submitting_user_uuid = fetchedEvaluationApplication?.submitting_user_uuid || '';
-    evaluationApplicationFormData.submitting_user = fetchedEvaluationApplication?.submitting_user || null;
-    evaluationApplicationFormData.started_date = fetchedEvaluationApplication?.started_date || new Date();
-    evaluationApplicationFormData.expiration_date = fetchedEvaluationApplication?.expiration_date || new Date();
-    evaluationApplicationFormData.status = fetchedEvaluationApplication?.status || EvaluationApplicationStatus.CREATED;
+    evaluationApplicationFormData.status = selectedApplication?.status || EvaluationApplicationStatus.CREATED;
 
     if (selectedApplication) {
-      creationMode.value = '360';
-      evaluated360UserUuid.value = [];
-      evaluationApplicationFormData.applications = [{
-        type: fetchedEvaluationApplication?.type || EvaluationType.SELF,
-        evaluated_user_uuid: fetchedEvaluationApplication?.evaluated_user_uuid || '',
-        evaluated_user: fetchedEvaluationApplication?.evaluated_user || null,
-        submitting_user_uuid: fetchedEvaluationApplication?.submitting_user_uuid || '',
-        submitting_user: fetchedEvaluationApplication?.submitting_user || null,
-      }];
+      setTimeout(() => {
+        evaluationApplicationFormData.applications = [{
+          type: selectedApplication?.type || EvaluationType.SELF,
+          evaluated_user_uuid: selectedApplication?.evaluated_user_uuid || '',
+          evaluated_user: selectedApplication?.evaluated_user || null,
+          submitting_user_uuid: selectedApplication?.submitting_user_uuid || '',
+          submitting_user: selectedApplication?.submitting_user || null,
+        }];
+      }, 50)
     }
+
+    console.log('evaluationApplicationFormData.applications', evaluationApplicationFormData.applications)
   } catch (err) {
     console.error(err);
   }
@@ -368,7 +384,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 </Field>
               </v-col>
 
-              <v-divider />
+              <v-divider v-if="!props.selectedApplication?.uuid"/>
 
               <v-col v-if="!props.selectedApplication?.uuid" cols="12" sm="12">
                 <v-radio-group v-model="creationMode" hide-details>
@@ -476,7 +492,7 @@ async function onSubmit(formValues: Record<string, any>) {
 
             <v-divider class="my-4" />
 
-            <v-row v-if="creationMode === '360'">
+            <v-row v-if="creationMode === '360' && !props.selectedApplication?.uuid">
               <v-col cols="12" v-if="evaluationApplicationFormData?.applications?.length && evaluated360UserUuid.length > 0">
                 <v-card v-for="evaluatedApplications in applicationsGrupedByEvaluated" variant="outlined" class="pa-4 border mb-2">
                   <p class="font-weight-medium mb-2">Aplicações Geradas para <b>{{ evaluatedApplications[0].evaluated_user?.name }}</b> :</p>
@@ -492,13 +508,13 @@ async function onSubmit(formValues: Record<string, any>) {
                   </v-list>
                 </v-card>
               </v-col>
-              <v-col cols="12" v-else-if="evaluated360UserUuid.length === 0">
+              <v-col cols="12" v-else-if="evaluated360UserUuid.length === 0 && !props.selectedApplication?.uuid">
                 <v-alert type="info" variant="tonal" density="compact">Selecione um ou mais usuários para gerar automaticamente as aplicações 360.</v-alert>
               </v-col>
             </v-row>
 
             <v-row v-else>
-              <v-col cols="12" class="d-flex justify-space-between align-center">
+              <v-col v-if="!props.selectedApplication?.uuid" cols="12" class="d-flex justify-space-between align-center">
                 <h4 class="text-primary">Aplicações Manuais ({{ evaluationApplicationFormData?.applications?.length }})</h4>
                 <v-btn color="primary" size="small" @click="addApplication" prepend-icon="mdi-plus-circle">
                   Adicionar Aplicação
@@ -507,7 +523,7 @@ async function onSubmit(formValues: Record<string, any>) {
 
               <v-col cols="12" v-for="(app, index) in evaluationApplicationFormData?.applications" :key="index" class="py-2">
                 <v-card variant="flat" class="pa-4 border">
-                  <div class="d-flex justify-space-between align-center mb-4">
+                  <div v-if="!props.selectedApplication?.uuid" class="d-flex justify-space-between align-center mb-4">
                     <div class="text-subtitle-1">Aplicação #{{ index + 1 }}</div>
                     <v-btn v-if="evaluationApplicationFormData?.applications?.length"
                       icon="mdi-close"
@@ -517,7 +533,7 @@ async function onSubmit(formValues: Record<string, any>) {
                       @click="removeApplication(index)"
                     />
                   </div>
-                  
+
                   <v-row>
                     <v-col cols="12" sm="4">
                       <Field :name="`applications[${index}].type`" label="Tipo de Avaliação" rules="required" v-slot="{ field, errorMessage }">
@@ -529,6 +545,7 @@ async function onSubmit(formValues: Record<string, any>) {
                           variant="solo-filled"
                           :error="!!errorMessage"
                           :error-messages="errorMessage"
+                          :hide-details="!!props.selectedApplication?.uuid"
                         ></v-select>
                       </Field>
                     </v-col>
@@ -549,6 +566,7 @@ async function onSubmit(formValues: Record<string, any>) {
                           variant="solo-filled"
                           :error="!!errorMessage"
                           :error-messages="errorMessage"
+                          :hide-details="!!props.selectedApplication?.uuid"
                         >
                           <template v-slot:selection="{ item }">
                             <div v-if="item?.raw?.value" class="d-flex align-center w-full">
@@ -598,6 +616,7 @@ async function onSubmit(formValues: Record<string, any>) {
                           variant="solo-filled"
                           :error="!!errorMessage"
                           :error-messages="errorMessage"
+                          :hide-details="!!props.selectedApplication?.uuid"
                         >
                           <template v-slot:selection="{ item }">
                             <div v-if="item?.raw?.value" class="d-flex align-center w-full">
@@ -607,9 +626,6 @@ async function onSubmit(formValues: Record<string, any>) {
                                 size="24" 
                                 class="mr-2"
                               />
-
-
-                              
                               <v-avatar 
                                 v-else 
                                 color="primary" 
@@ -642,7 +658,14 @@ async function onSubmit(formValues: Record<string, any>) {
         <v-card-actions>
           <v-spacer />
           <v-btn text @click="close">Cancelar</v-btn>
-          <v-btn color="primary" type="submit" :disabled="!evaluationApplicationFormData?.applications?.length">Salvar Aplicações ({{ evaluationApplicationFormData?.applications?.length }})</v-btn>
+          <v-btn color="primary" type="submit" :disabled="!evaluationApplicationFormData?.applications?.length">
+            <template v-if="!props.selectedApplication?.uuid">
+              Salvar Aplicações ({{ evaluationApplicationFormData?.applications?.length }})
+            </template>
+            <template v-else>
+              Salvar Aplicação
+            </template>
+          </v-btn>
         </v-card-actions>
       </v-card>
     </Form>

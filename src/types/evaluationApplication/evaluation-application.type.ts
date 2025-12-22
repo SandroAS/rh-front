@@ -30,8 +30,8 @@ export interface EvaluationApplication {
   evaluated_user: UserAvatar;
   submitting_user_uuid: string;
   submitting_user: UserAvatar;
-  started_date: Date;
-  expiration_date: Date;
+  started_date: Date | string;
+  expiration_date: Date | string;
   status: EvaluationApplicationStatus;
   evaluation_application_topics?: EvaluationApplicationTopic[];
 }
