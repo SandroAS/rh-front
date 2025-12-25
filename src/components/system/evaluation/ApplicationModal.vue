@@ -59,20 +59,34 @@ const applicationTypeOptions = [
 let applicationsGrupedByEvaluated = reactive<CreateEvaluationApplication[][] | []>([]);
 
 /**
- * Converte uma string de data ou objeto Date para o formato YYYY-MM-DD
- * exigido pelos inputs de data do navegador/vuetify.
+ * Converte uma string de data (ISO) ou objeto Date para o formato YYYY-MM-DD.
+ * Esta versão corrige o problema de "um dia a menos" ao lidar com strings UTC (Z).
  */
  const formatDateForInput = (dateSource: string | Date | undefined): string => {
-  if (!dateSource) return new Date().toISOString().split('T')[0];
-  
+  if (!dateSource) {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+
+  if (typeof dateSource === 'string') {
+    const isoDatePart = dateSource.substring(0, 10);
+    
+    if (/^\d{4}-\d{2}-\d{2}$/.test(isoDatePart)) {
+      return isoDatePart;
+    }
+  }
+
   const d = new Date(dateSource);
-  // Verifica se a data é válida para evitar erros de renderização
-  if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
   
+  if (isNaN(d.getTime())) {
+    const fallback = new Date();
+    return `${fallback.getFullYear()}-${String(fallback.getMonth() + 1).padStart(2, '0')}-${String(fallback.getDate()).padStart(2, '0')}`;
+  }
+
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
-  
+
   return `${year}-${month}-${day}`;
 };
 

@@ -190,7 +190,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
             {{ new Date(item.started_date) > new Date() ? 'mdi-clock-outline' : 'mdi-check-circle-outline' }}
           </v-icon>
           <span :class="{ 'text-warning font-weight-bold': new Date(item.started_date) > new Date() }">
-            {{ new Date(item.started_date).toLocaleDateString('pt-BR') }}
+            {{ new Date(item.started_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) }}
           </span>
         </div>
       </template>

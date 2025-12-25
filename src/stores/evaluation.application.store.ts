@@ -48,17 +48,16 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
 
         if (uuid) {
           await updateEvaluationApplication(application, uuid);
-          const evaluationSaved: EvaluationApplication = {
-            ...application,
-            uuid: uuid,
-            evaluation: application.evaluation,
-            evaluated_user: application.evaluated_user,
-            submitting_user: application.submitting_user,
+          const evaluationApplication = this.evaluation_applications.find(x => x.uuid === uuid);
+          const updatedEvaluationApplication = {
+            ...evaluationApplication,
+            started_date: application.started_date,
+            expiration_date: application.expiration_date,
           } as EvaluationApplication;
 
           const index = this.evaluation_applications.findIndex(x => x.uuid === uuid);
           if (index !== -1) {
-            this.evaluation_applications.splice(index, 1, evaluationSaved);
+            this.evaluation_applications.splice(index, 1, updatedEvaluationApplication);
           }
         } else {
           const res: EvaluationApplication[] = await createEvaluationApplication(application);
