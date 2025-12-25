@@ -91,7 +91,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
 </script>
 
 <template>
-  <div>
+  <v-container fluid>
     <div class="flex-column flex-md-row d-flex justify-space-between mb-4 mt-2 align-center">
       <v-text-field
         v-model="searchTerm"
@@ -217,5 +217,5 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
     </v-data-table>
 
     <ApplicationModal v-model="dialog" :selectedApplication="selectedApplication" />
-  </div>
+  </v-container>
 </template>

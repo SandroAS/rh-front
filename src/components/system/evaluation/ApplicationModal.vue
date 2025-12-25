@@ -101,21 +101,25 @@ const getInitialApplicationState = async (selectedApplication: EvaluationApplica
           submitting_user_uuid: selectedApplication?.submitting_user_uuid || '',
           submitting_user: selectedApplication?.submitting_user || null,
         }];
-        const inputType = document.querySelector(`#applications_0_type`) as HTMLInputElement;
-        if(inputType && selectedApplication?.type) {
-          inputType.value = selectedApplication.type;
-          inputType.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        const inputEvaluatedUserUuid = document.querySelector(`#applications_0_evaluated_user_uuid`) as HTMLInputElement;
-        if(inputEvaluatedUserUuid && selectedApplication?.evaluated_user_uuid) {
-          inputEvaluatedUserUuid.value = selectedApplication.evaluated_user_uuid;
-          inputEvaluatedUserUuid.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        const inputSubmittingUserUuid = document.querySelector(`#applications_0_submitting_user_uuid`) as HTMLInputElement;
-        if(inputSubmittingUserUuid && selectedApplication?.submitting_user_uuid) {
-          inputSubmittingUserUuid.value = selectedApplication.submitting_user_uuid;
-          inputSubmittingUserUuid.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        setTimeout(() => {
+          const inputType = document.querySelector(`#applications_0_type`) as HTMLInputElement;
+          if(inputType && selectedApplication?.type) {
+            inputType.value = selectedApplication.type;
+            inputType.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const inputEvaluatedUserUuid = document.querySelector(`#applications_0_evaluated_user_uuid`) as HTMLInputElement;
+          if(inputEvaluatedUserUuid && selectedApplication?.evaluated_user_uuid) {
+            inputEvaluatedUserUuid.value = selectedApplication.evaluated_user_uuid;
+            inputEvaluatedUserUuid.dispatchEvent(new Event('change', { bubbles: true }));
+            inputEvaluatedUserUuid.style.display = 'none';
+          }
+          const inputSubmittingUserUuid = document.querySelector(`#applications_0_submitting_user_uuid`) as HTMLInputElement;
+          if(inputSubmittingUserUuid && selectedApplication?.submitting_user_uuid) {
+            inputSubmittingUserUuid.value = selectedApplication.submitting_user_uuid;
+            inputSubmittingUserUuid.dispatchEvent(new Event('change', { bubbles: true }));
+            inputSubmittingUserUuid.style.display = 'none';
+          }
+        }, 50)
       }, 50)
     }
   } catch (err) {
@@ -365,6 +369,7 @@ async function onSubmit(formValues: Record<string, any>) {
                     density="compact"
                     :error="!!errorMessage"
                     :error-messages="errorMessage"
+                    :disabled="!!props.selectedApplication?.uuid"
                   ></v-select>
                 </Field>
               </v-col>
@@ -380,6 +385,7 @@ async function onSubmit(formValues: Record<string, any>) {
                     density="compact"
                     :error="!!errorMessage"
                     :error-messages="errorMessage"
+                    :disabled="props.selectedApplication?.status === EvaluationApplicationStatus.SENDED"
                   ></v-text-field>
                 </Field>
               </v-col>
@@ -561,6 +567,7 @@ async function onSubmit(formValues: Record<string, any>) {
                           :error="!!errorMessage"
                           :error-messages="errorMessage"
                           :hide-details="!!props.selectedApplication?.uuid"
+                          :disabled="!!props.selectedApplication?.uuid"
                         ></v-select>
                       </Field>
                     </v-col>
@@ -569,6 +576,7 @@ async function onSubmit(formValues: Record<string, any>) {
                       <Field :name="`applications[${index}].evaluated_user_uuid`" label="Usuário Avaliado" rules="required" v-slot="{ field, errorMessage }">
                         <v-autocomplete
                           :id="`applications_${index}_evaluated_user_uuid`"
+                          v-bind="field"
                           :model-value="app.evaluated_user_uuid"
                           @update:model-value="(uuidValue: any) => {
                             const finalValue = uuidValue?.value || uuidValue; 
@@ -583,6 +591,7 @@ async function onSubmit(formValues: Record<string, any>) {
                           :error="!!errorMessage"
                           :error-messages="errorMessage"
                           :hide-details="!!props.selectedApplication?.uuid"
+                          :disabled="!!props.selectedApplication?.uuid"
                         >
                           <template v-slot:selection="{ item }">
                             <div v-if="item?.raw?.value" class="d-flex align-center w-full">
@@ -619,6 +628,7 @@ async function onSubmit(formValues: Record<string, any>) {
                       <Field :name="`applications[${index}].submitting_user_uuid`" label="Usuário Avaliador" :rules="{required: app.type !== EvaluationType.SELF}" v-slot="{ field, errorMessage }">
                         <v-autocomplete
                           :id="`applications_${index}_submitting_user_uuid`"
+                          v-bind="field"
                           :model-value="app.submitting_user_uuid"
                           @update:model-value="(uuidValue: any) => {
                             const finalValue = uuidValue?.value || uuidValue; 
@@ -629,7 +639,7 @@ async function onSubmit(formValues: Record<string, any>) {
                           :items="accountUserStore.accountUsersOptionsTeams"
                           item-title="title"
                           item-value="value"
-                          :disabled="app.type === EvaluationType.SELF"
+                          :disabled="app.type === EvaluationType.SELF || !!props.selectedApplication?.uuid"
                           variant="solo-filled"
                           :error="!!errorMessage"
                           :error-messages="errorMessage"
