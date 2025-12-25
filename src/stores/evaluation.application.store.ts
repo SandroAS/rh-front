@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication, cancelEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
+import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication, cancelEvaluationApplication, sendEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
 import { EvaluationApplicationStatus, type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
@@ -141,6 +141,21 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar cancelar aplicação de avaliação.';
         console.error('Erro ao cancelar aplicação de avaliação:', err);
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async sendEvaluationApplication(uuid: string, forEmail: boolean, forSystem: boolean) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        await sendEvaluationApplication(uuid, forEmail, forSystem);
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar enviar aplicação de avaliação.';
+        console.error('Erro ao enviar aplicação de avaliação:', err);
         throw err;
       } finally {
         this.loading = false;

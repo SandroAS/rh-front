@@ -45,6 +45,10 @@ export async function cancelEvaluationApplication(uuid: string): Promise<void> {
   await api.patch(`/evaluation-applications/cancel/${uuid}`);
 }
 
+export async function sendEvaluationApplication(uuid: string, forEmail: boolean, forSystem: boolean): Promise<void> {
+  await api.post(`/evaluation-applications/send/${uuid}`, { for_email: forEmail, for_system: forSystem });
+}
+
 export async function deleteEvaluationApplication(uuid: string): Promise<void> {
   await api.delete(`/evaluation-applications/${uuid}`);
 }

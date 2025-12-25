@@ -20,8 +20,8 @@ async function cancelApplication() {
   if(!props.selectedApplication?.uuid) return;
   try {
     await evaluationApplicationStore.cancelEvaluationApplication(props.selectedApplication.uuid);
-    close();
     snackbarStore.show('Aplicação de avaliação cancelada com sucesso.', 'success');
+    close();
   } catch (error) {
     console.error(error);
     snackbarStore.show('Erro ao cancelar aplicação de avaliação.', 'error');

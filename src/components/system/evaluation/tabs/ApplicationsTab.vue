@@ -8,6 +8,7 @@ import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication
 import ApplicationModal from '../ApplicationModal.vue';
 import { getInitials } from '@/utils/getInitialsFromName.util';
 import ApplicationModalCancel from '../ApplicationModalCancel.vue';
+import ApplicationModalSend from '../ApplicationModalSend.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const accountUserStore = useAccountUserStore();
@@ -15,9 +16,11 @@ const evaluationStore = useEvaluationStore();
 
 const dialog = ref(false);
 const dialogCancel = ref(false);
+const dialogSend = ref(false);
 
 const selectedApplication = ref<EvaluationApplication | null>(null);
 const selectedApplicationCancel = ref<EvaluationApplication | null>(null);
+const selectedApplicationSend = ref<EvaluationApplication | null>(null);
 
 const currentPage = ref(evaluationApplicationStore.page);
 const itemsPerPage = ref(evaluationApplicationStore.limit);
@@ -32,6 +35,11 @@ const openDialog = (item?: EvaluationApplication) => {
 const openDialogCancel = (item?: EvaluationApplication) => {
   selectedApplicationCancel.value = item || null;
   dialogCancel.value = true;
+};
+
+const openDialogSend = (item?: EvaluationApplication) => {
+  selectedApplicationSend.value = item || null;
+  dialogSend.value = true;
 };
 
 const loadEvaluationApplications = async () => {
@@ -212,7 +220,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
 
       <template v-slot:[`item.actions`]="{ item }">
         <div class="d-flex">
-          <v-btn icon @click="openDialog(item)" size="small" color="primary">
+          <v-btn icon @click="openDialogSend(item)" size="small" color="primary">
             <v-icon>mdi-send</v-icon>
           </v-btn>
           <v-btn icon @click="openDialog(item)" size="small">
@@ -230,6 +238,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
 
     <ApplicationModal v-model="dialog" :selectedApplication="selectedApplication" />
     <ApplicationModalCancel v-model="dialogCancel" :selectedApplication="selectedApplicationCancel" />
+    <ApplicationModalSend v-model="dialogSend" :selectedApplication="selectedApplicationSend" />
 
   </v-container>
 </template>
