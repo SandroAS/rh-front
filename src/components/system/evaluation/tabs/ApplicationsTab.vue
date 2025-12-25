@@ -7,13 +7,17 @@ import { useEvaluationApplicationStore } from '@/stores/evaluation.application.s
 import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import ApplicationModal from '../ApplicationModal.vue';
 import { getInitials } from '@/utils/getInitialsFromName.util';
+import ApplicationModalCancel from '../ApplicationModalCancel.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const accountUserStore = useAccountUserStore();
 const evaluationStore = useEvaluationStore();
 
 const dialog = ref(false);
+const dialogCancel = ref(false);
+
 const selectedApplication = ref<EvaluationApplication | null>(null);
+const selectedApplicationCancel = ref<EvaluationApplication | null>(null);
 
 const currentPage = ref(evaluationApplicationStore.page);
 const itemsPerPage = ref(evaluationApplicationStore.limit);
@@ -23,6 +27,11 @@ const sortBy = ref(evaluationApplicationStore.sort_column ? [{ key: evaluationAp
 const openDialog = (item?: EvaluationApplication) => {
   selectedApplication.value = item || null;
   dialog.value = true;
+};
+
+const openDialogCancel = (item?: EvaluationApplication) => {
+  selectedApplicationCancel.value = item || null;
+  dialogCancel.value = true;
 };
 
 const loadEvaluationApplications = async () => {
@@ -209,6 +218,9 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
           <v-btn icon @click="openDialog(item)" size="small">
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
+          <v-btn icon @click="openDialogCancel(item)" size="small" color="error">
+            <v-icon>mdi-cancel</v-icon>
+          </v-btn>
           <!-- <v-btn icon color="red" @click="evaluationApplicationStore.deleteEvaluationApplication(item.uuid)" size="small">
             <v-icon>mdi-delete</v-icon>
           </v-btn> -->
@@ -217,5 +229,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
     </v-data-table>
 
     <ApplicationModal v-model="dialog" :selectedApplication="selectedApplication" />
+    <ApplicationModalCancel v-model="dialogCancel" :selectedApplication="selectedApplicationCancel" />
+
   </v-container>
 </template>

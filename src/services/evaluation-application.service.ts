@@ -41,6 +41,10 @@ export async function updateEvaluationApplication(
   return response.data;
 }
 
+export async function cancelEvaluationApplication(uuid: string): Promise<void> {
+  await api.patch(`/evaluation-applications/cancel/${uuid}`);
+}
+
 export async function deleteEvaluationApplication(uuid: string): Promise<void> {
   await api.delete(`/evaluation-applications/${uuid}`);
 }

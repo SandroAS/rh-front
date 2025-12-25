@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
-import { type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
+import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication, cancelEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
+import { EvaluationApplicationStatus, type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
 import { type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
@@ -91,64 +91,57 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
       }
     },
 
-    // async getEvaluationApplications(params: DataTableFilterParams) {
-    //   this.loading = true;
-    //   this.error = null;
-
-    //   try {
-    //     const res: EvaluationApplicationResponsePagination = await getEvaluationApplications(
-    //       params.page,
-    //       params.limit,
-    //       params.sort_column,
-    //       params.sort_order,
-    //       params.search_term
-    //     );
-    //     this.evaluation_applications = res.data;
-    //     this.total = res.total;
-    //     this.page = res.page;
-    //     this.limit = res.limit;
-    //     this.last_page = res.last_page;
-    //     this.sort_column = params.sort_column;
-    //     this.sort_order = params.sort_order;
-    //     this.search_term = params.search_term;
-    //   } catch (err: any) {
-    //     this.error = err.response?.data?.message || 'Erro ao tentar buscar aplicações de avaliação.';
-    //     console.error('Erro ao buscar aplicações de avaliação:', err);
-    //     throw err;
-    //   } finally {
-    //     this.loading = false;
-    //   }
-    // },
-
     async getEvaluationApplications(params: DataTableFilterParams) {
       this.loading = true;
       this.error = null;
 
       try {
-        if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
-          // Lógica para dados mockados
-          this.evaluation_applications = [];
-          this.total = 1;
-          this.page = params.page;
-          this.limit = params.limit;
-          this.last_page = 1;
-          this.sort_column = params.sort_column;
-          this.sort_order = params.sort_order;
-          this.search_term = params.search_term;
-        } else {
-          // Lógica de API real
-          const res: EvaluationApplicationResponsePagination = await getEvaluationApplications(
-            params.page,
-            params.limit,
-            params.sort_column,
-            params.sort_order,
-            params.search_term
-          );
-          this.evaluation_applications = res.data;
-          // ... (resto da lógica)
+        const res: EvaluationApplicationResponsePagination = await getEvaluationApplications(
+          params.page,
+          params.limit,
+          params.sort_column,
+          params.sort_order,
+          params.search_term
+        );
+        this.evaluation_applications = res.data;
+        this.total = res.total;
+        this.page = res.page;
+        this.limit = res.limit;
+        this.last_page = res.last_page;
+        this.sort_column = params.sort_column;
+        this.sort_order = params.sort_order;
+        this.search_term = params.search_term;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar aplicações de avaliação.';
+        console.error('Erro ao buscar aplicações de avaliação:', err);
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async cancelEvaluationApplication(uuid: string) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        if (!this.evaluation_applications) this.evaluation_applications = [];
+
+        await cancelEvaluationApplication(uuid);
+        const evaluationApplication = this.evaluation_applications.find(x => x.uuid === uuid);
+        const updatedEvaluationApplication = {
+          ...evaluationApplication,
+          status: EvaluationApplicationStatus.CANCELED,
+        } as EvaluationApplication;
+
+        const index = this.evaluation_applications.findIndex(x => x.uuid === uuid);
+        if (index !== -1) {
+          this.evaluation_applications.splice(index, 1, updatedEvaluationApplication);
         }
       } catch (err: any) {
-        // ... (erro)
+        this.error = err.response?.data?.message || 'Erro ao tentar cancelar aplicação de avaliação.';
+        console.error('Erro ao cancelar aplicação de avaliação:', err);
+        throw err;
       } finally {
         this.loading = false;
       }
