@@ -294,6 +294,30 @@ watch(() => props.selectedApplication, async (val) => {
   getInitialApplicationState(val ?? null)
 }, { immediate: true });
 
+watch(() => props.modelValue, async (val) => {
+  if(val && !!props.selectedApplication?.uuid) {
+    setTimeout(() => {
+      const inputType = document.querySelector(`#applications_0_type`) as HTMLInputElement;
+      if(inputType && props.selectedApplication?.type) {
+        inputType.value = props.selectedApplication.type;
+        inputType.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const inputEvaluatedUserUuid = document.querySelector(`#applications_0_evaluated_user_uuid`) as HTMLInputElement;
+      if(inputEvaluatedUserUuid && props.selectedApplication?.evaluated_user_uuid) {
+        inputEvaluatedUserUuid.value = props.selectedApplication.evaluated_user_uuid;
+        inputEvaluatedUserUuid.dispatchEvent(new Event('change', { bubbles: true }));
+        inputEvaluatedUserUuid.style.display = 'none';
+      }
+      const inputSubmittingUserUuid = document.querySelector(`#applications_0_submitting_user_uuid`) as HTMLInputElement;
+      if(inputSubmittingUserUuid && props.selectedApplication?.submitting_user_uuid) {
+        inputSubmittingUserUuid.value = props.selectedApplication.submitting_user_uuid;
+        inputSubmittingUserUuid.dispatchEvent(new Event('change', { bubbles: true }));
+        inputSubmittingUserUuid.style.display = 'none';
+      }
+    }, 50)
+  }
+}, { immediate: true });
+
 watch(creationMode, (newMode) => {
   evaluationApplicationFormData.applications = [];
   evaluated360UserUuid.value = [];
