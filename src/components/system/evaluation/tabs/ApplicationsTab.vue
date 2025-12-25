@@ -220,13 +220,21 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
 
       <template v-slot:[`item.actions`]="{ item }">
         <div class="d-flex">
-          <v-btn icon @click="openDialogSend(item)" size="small" color="primary">
-            <v-icon>mdi-send</v-icon>
-          </v-btn>
           <v-btn icon @click="openDialog(item)" size="small">
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
-          <v-btn icon @click="openDialogCancel(item)" size="small" color="error">
+          <v-btn icon @click="openDialogSend(item)" size="small" color="primary"
+            :disabled="[
+              EvaluationApplicationStatus.CANCELED,
+              EvaluationApplicationStatus.FINISHED,
+              EvaluationApplicationStatus.EXPIRED,
+              EvaluationApplicationStatus.ACCESSED,
+              EvaluationApplicationStatus.IN_PROGRESS
+            ].includes(item.status)"
+          >
+            <v-icon>mdi-send</v-icon>
+          </v-btn>
+          <v-btn icon @click="openDialogCancel(item)" size="small" color="error" :disabled="item.status === EvaluationApplicationStatus.CANCELED">
             <v-icon>mdi-cancel</v-icon>
           </v-btn>
           <!-- <v-btn icon color="red" @click="evaluationApplicationStore.deleteEvaluationApplication(item.uuid)" size="small">
