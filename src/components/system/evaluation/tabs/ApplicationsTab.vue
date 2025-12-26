@@ -9,6 +9,7 @@ import ApplicationModal from '../ApplicationModal.vue';
 import { getInitials } from '@/utils/getInitialsFromName.util';
 import ApplicationModalCancel from '../ApplicationModalCancel.vue';
 import ApplicationModalSend from '../ApplicationModalSend.vue';
+import getApplicationTypeName from '@/utils/getApplicationTypeName.util';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const accountUserStore = useAccountUserStore();
@@ -69,16 +70,6 @@ onMounted(async () => {
   await accountUserStore.getAllAccountUsersWithTeams();
   await evaluationStore.getAllEvaluations();
 });
-
-const getApplicationTypeDisplayName = (type: EvaluationType) => {
-  switch (type) {
-    case EvaluationType.PEER: return 'Por Pares';
-    case EvaluationType.SELF: return 'Autoavaliação';
-    case EvaluationType.LEADER: return 'Por Líder';
-    case EvaluationType.SUBORDINATE: return 'Por Subordinado';
-    default: return type;
-  }
-};
 
 const getApplicationStatusDisplayName = (status: EvaluationApplicationStatus) => {
   switch (status) {
@@ -154,7 +145,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
 
       <template v-slot:[`item.type`]="{ item }">
         <v-chip size="small" :color="item.type === EvaluationType.SELF ? 'blue-grey' : 'orange'">
-          {{ getApplicationTypeDisplayName(item.type) }}
+          {{ getApplicationTypeName(item.type) }}
         </v-chip>
       </template>
 
