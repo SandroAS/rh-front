@@ -14,12 +14,17 @@ function goBack() {
 
 <template>
   <v-app-bar app dark height="40">
+    <v-icon
+      icon="mdi-arrow-left"
+      class="ml-2"
+      @click="goBack"
+    />
     <NavBarLogo />
 
     <v-spacer />
 
-    <NotificationMenu />
     <AvatarMenu />
+
   </v-app-bar>
 
   <v-main class="bg-grey-lighten-4">
