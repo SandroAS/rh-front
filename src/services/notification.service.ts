@@ -22,6 +22,14 @@ export async function getNotifications(
   return response.data;
 }
 
+export const markAllAsReadNotifications = async (): Promise<void> => {
+  await api.patch('/notifications/mark-all-as-read');
+};
+
+export const markAsReadNotification = async (uuid: string): Promise<void> => {
+  await api.patch(`/notifications/${uuid}/mark-as-read`);
+};
+
 export const getNotification = async (uuid: string): Promise<Notification> => {
   const response: AxiosResponse<Notification> = await api.get(`/notifications/${uuid}`);
   return response.data;

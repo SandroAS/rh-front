@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type Notification from '@/types/notification/notification.type';
-import { getNotifications, saveNotification } from '@/services/notification.service';
+import { getNotifications, markAllAsReadNotifications, markAsReadNotification, saveNotification } from '@/services/notification.service';
 import type NotificationResponsePagination from '@/types/notification/notification-response-pagination.type';
 import type NotificationPayload from '@/types/notification/notification-payload.type';
 
@@ -93,6 +93,45 @@ export const useNotificationStore = defineStore('notification', {
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar notificações.';
         console.error('Erro ao buscar notificações:', err);
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async markAsRead(uuid: string) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        await markAsReadNotification(uuid);
+        if(this.notifications) {
+          const index = this.notifications.findIndex(x => x.uuid === uuid);
+          if (index !== -1) {
+            this.notifications[index].viewed_at = new Date();
+          }
+        }
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar marcar notificação como lida.';
+        console.error('Erro ao marcar notificação como lida:', err);
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async markAllAsRead() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        await markAllAsReadNotifications();
+        if(this.notifications) {
+          this.notifications = this.notifications.map(notification => ({ ...notification, viewed_at: new Date() }));
+        }
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar marcar todas as notificações como lidas.';
+        console.error('Erro ao marcar todas as notificações como lidas:', err);
         throw err;
       } finally {
         this.loading = false;

@@ -1,145 +1,213 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import dayjs from '@/plugins/dayjs.ts'
+  import { computed, onMounted } from 'vue'
+  import dayjs from 'dayjs'
+  import isToday from 'dayjs/plugin/isToday'
+  import isYesterday from 'dayjs/plugin/isYesterday'
+  import { useNotificationStore } from '@/stores/notification.store'
+  import type Notification from '@/types/notification/notification.type'
+  import { NotificationCategory } from '@/types/notification/notification.type'
+  import { EvaluationType } from '@/types/evaluationApplication/evaluation-application.type'
 
-interface Notification {
-  id: number
-  title: string
-  createdAt: string
-  read: boolean
-}
+  dayjs.extend(isToday)
+  dayjs.extend(isYesterday)
 
-const notifications = ref<Notification[]>([
-  { id: 1, title: 'Paciente João Silva reagendou a consulta', createdAt: '2025-05-20T09:45:00Z', read: false },
-  { id: 2, title: 'Novo agendamento: Maria Oliveira - 21/05 às 14h', createdAt: '2025-05-20T08:30:00Z', read: false },
-  { id: 3, title: 'Fatura da clínica foi paga com sucesso', createdAt: '2025-05-19T15:00:00Z', read: true },
-  { id: 4, title: 'Paciente Carlos Mendes cancelou a consulta', createdAt: '2025-05-19T11:00:00Z', read: false },
-  { id: 5, title: 'Novo paciente cadastrado: Ana Paula', createdAt: '2025-05-18T18:20:00Z', read: true },
-  { id: 6, title: 'Consulta de Lucas Martins confirmada', createdAt: '2025-05-17T10:00:00Z', read: true },
-  { id: 7, title: 'Relatório mensal de atendimentos disponível', createdAt: '2025-05-17T08:45:00Z', read: false },
-])
+  const notificationStore = useNotificationStore()
 
-const updates = [
-  {
-    time: 'Há 2 horas',
-    description: 'Paciente João Silva realizou um novo agendamento.',
-  },
-  {
-    time: 'Há 5 horas',
-    description: 'Prontuário da paciente Maria Oliveira foi atualizado.',
-    link: '#',
-  },
-  {
-    time: 'Ontem',
-    description: 'Novo paciente cadastrado: Ana Paula.',
-  },
-  {
-    time: '2 dias atrás',
-    description:
-      'Consulta de limpeza dental finalizada para o paciente Lucas Martins.',
-  },
-  {
-    time: '3 dias atrás',
-    description:
-      'Dentista Dra. Fernanda adicionada ao quadro clínico da unidade.',
-    link: '#',
-  },
-];
+  enum NotificationTemplateKey {
+    EVALUATION_APPLICATION_PEER = 'EVALUATION_APPLICATION_' + EvaluationType.PEER,
+    EVALUATION_APPLICATION_SELF = 'EVALUATION_APPLICATION_' + EvaluationType.SELF,
+    EVALUATION_APPLICATION_LEADER = 'EVALUATION_APPLICATION_' + EvaluationType.LEADER,
+    EVALUATION_APPLICATION_SUBORDINATE = 'EVALUATION_APPLICATION_' + EvaluationType.SUBORDINATE,
+    EVALUATION_APPLICATION_CLIENT = 'EVALUATION_APPLICATION_' + EvaluationType.CLIENT,
+    EVALUATION_APPLICATION_OTHER = 'EVALUATION_APPLICATION_' + EvaluationType.OTHER,
+  }
 
-// Agrupa por data legível
-const groupedNotifications = computed(() => {
-  const groups: Record<string, Notification[]> = {}
+  const TEMPLATE_MESSAGES: Record<string, string> = {
+    [NotificationTemplateKey.EVALUATION_APPLICATION_SELF]: 'Você tem uma autoavaliação pendente.',
+    [NotificationTemplateKey.EVALUATION_APPLICATION_PEER]: 'Você tem uma avaliação de pares pendente.',
+    [NotificationTemplateKey.EVALUATION_APPLICATION_LEADER]: 'Você tem uma avaliação de líder pendente.',
+    [NotificationTemplateKey.EVALUATION_APPLICATION_SUBORDINATE]: 'Você tem uma avaliação de liderado pendente.',
+    [NotificationTemplateKey.EVALUATION_APPLICATION_CLIENT]: 'Você tem uma avaliação de cliente pendente.',
+    'DEFAULT': 'Você recebeu uma atualização no sistema.'
+  }
 
-  notifications.value.forEach(n => {
-    const date = dayjs(n.createdAt)
-    let label = date.format('DD/MM/YYYY')
+  const CATEGORY_CONFIG = {
+    [NotificationCategory.INFO]: { icon: 'mdi-information', color: 'blue' },
+    [NotificationCategory.WARNING]: { icon: 'mdi-alert-circle', color: 'orange' },
+    [NotificationCategory.URGENT]: { icon: 'mdi-alert-decagram', color: 'red' }
+  }
 
-    if (date.isToday()) label = 'Hoje'
-    else if (date.isYesterday()) label = 'Ontem'
-
-    if (!groups[label]) groups[label] = []
-    groups[label].push(n)
+  onMounted(async () => {
+    await notificationStore.getNotifications({ 
+      page: 1, 
+      limit: 20, 
+      sort_column: 'created_at', 
+      sort_order: 'desc', 
+      search_term: '' 
+    })
   })
 
-  return groups
-})
+  const notifications = computed(() => (notificationStore.notifications as Notification[]) || [])
 
-const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
-</script>
+  const formatNotification = (n: Notification) => {
+    const config = CATEGORY_CONFIG[n.category] || CATEGORY_CONFIG[NotificationCategory.INFO]
 
-<template>
-  <v-menu offset-y :close-on-content-click="false">
-    <template #activator="{ props }">
-      <v-btn icon v-bind="props" class="ml-2">
-        <v-badge
-          :content="unreadCount"
-          v-if="unreadCount > 0"
-          color="red"
-          overlap
-          dot
-        >
-          <v-icon>mdi-bell</v-icon>
-        </v-badge>
-        <v-icon v-else>mdi-bell-outline</v-icon>
-      </v-btn>
-    </template>
+    return {
+      uuid: n.uuid,
+      time: dayjs(n.created_at).format('HH:mm'),
+      description: TEMPLATE_MESSAGES[n.template_key] || TEMPLATE_MESSAGES['DEFAULT'],
+      link: n.evaluation_application_uuid ? `/evaluation-applications/${n.evaluation_application_uuid}` : null,
+      viewed: !!n.viewed_at,
+      icon: config.icon,
+      color: config.color
+    }
+  }
 
-    <v-card style="min-width: 300px; max-width: 400px;">
-      <v-card-title class="text-subtitle-1 font-weight-bold">Notificações</v-card-title>
-      <v-divider />
+  const groupedNotifications = computed(() => {
+    const groups: Record<string, ReturnType<typeof formatNotification>[]> = {}
 
-      <v-card-text style="max-height: 300px; overflow-y: auto;">
-        <template v-for="[group, items] in Object.entries(groupedNotifications)" :key="group">
-          <div class="text-caption text-medium-emphasis mt-2 mb-1">{{ group }}</div>
-          <v-list
-            class="mx-auto pe-4"
-            style="max-width: 380px"
-            rounded
-            density="default"
+    notifications.value.forEach(n => {
+      if (n.is_hidden) return
+
+      const date = dayjs(n.created_at)
+      let label = date.format('DD [de] MMMM')
+
+      if (date.isToday()) label = 'Hoje'
+      else if (date.isYesterday()) label = 'Ontem'
+
+      if (!groups[label]) groups[label] = []
+      groups[label].push(formatNotification(n))
+    })
+
+    return groups
+  })
+
+  const unreadCount = computed(() => notifications.value.filter(n => !n.viewed_at && !n.is_hidden).length)
+
+  const markAsRead = async (uuid: string) => {
+    await notificationStore.markAsRead(uuid)
+  }
+  </script>
+
+  <template>
+    <v-menu offset-y :close-on-content-click="false" location="bottom end" transition="slide-y-transition">
+      <template #activator="{ props }">
+        <v-btn icon v-bind="props">
+          <v-badge
+            :content="unreadCount"
+            :model-value="unreadCount > 0"
+            color="red-accent-4"
+            overlap
           >
-            <v-timeline
-              align="start"
-              side="end"
-              truncate-line="start"
-              density="compact"
-            >
-              <v-timeline-item
-                v-for="(event, index) in updates"
-                :key="index"
-                dot-color="primary"
-                fill-dot
-                size="12"
-                :line-inset="0"
-              >
-                <v-card flat class="bg-transparent">
-                  <v-card-text class="pa-0">
-                    <span class="text-caption text-medium-emphasis">
-                      {{ event.time }}
-                    </span>
-                    <div class="mb-1">{{ event.description }}</div>
-                    <div v-if="event.link">
-                      <a
-                        :href="event.link"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-decoration-none text-medium-emphasis"
-                      >
-                        <small>Ver detalhes →</small>
-                      </a>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-timeline-item>
-            </v-timeline>
-          </v-list>
-        </template>
-      </v-card-text>
-    </v-card>
-  </v-menu>
-</template>
+            <v-icon>{{ unreadCount > 0 ? 'mdi-bell' : 'mdi-bell-outline' }}</v-icon>
+          </v-badge>
+        </v-btn>
+      </template>
 
-<style>
-/* .v-timeline-divider__after {
-  height: 100%;
-} */
-</style>
+      <v-card width="380" elevation="12" border class="rounded-lg">
+        <v-card-title class="d-flex justify-space-between align-center py-4 px-4">
+          <div class="d-flex align-center">
+            <span class="text-h6 font-weight-bold">Notificações</span>
+            <v-chip v-if="unreadCount > 0" size="x-small" color="primary" class="ml-2 font-weight-bold">
+              {{ unreadCount }} NOVAS
+            </v-chip>
+          </div>
+          <v-btn 
+            v-if="unreadCount > 0" 
+            variant="text" 
+            density="comfortable" 
+            size="small" 
+            color="primary"
+            class="text-none"
+            @click="notificationStore.markAllAsRead()"
+          >
+            Marcar tudo como lido
+          </v-btn>
+        </v-card-title>
+
+        <v-divider />
+
+        <v-card-text class="pa-0" style="max-height: 450px; overflow-y: auto;">
+          <div v-if="notifications.length === 0" class="pa-10 text-center">
+            <v-icon size="64" class="mb-4" color="grey-lighten-2">mdi-bell-sleep-outline</v-icon>
+            <div class="text-body-1 text-medium-emphasis">Tudo em dia!</div>
+            <div class="text-caption text-disabled">Você não tem notificações no momento.</div>
+          </div>
+
+          <template v-else v-for="(items, group) in groupedNotifications" :key="group">
+            <div class="px-4 py-2 bg-grey-lighten-4 text-caption font-weight-bold text-uppercase text-grey-darken-1">
+              {{ group }}
+            </div>
+
+            <v-list class="pa-0" lines="three">
+              <v-list-item
+                v-for="item in items"
+                :key="item.uuid"
+                :active="!item.viewed"
+                link
+                class="notification-item"
+                @click="markAsRead(item.uuid)"
+              >
+                <template #prepend>
+                  <v-avatar :color="item.viewed ? 'grey-lighten-3' : item.color + '-lighten-5'" size="40">
+                    <v-icon :color="item.viewed ? 'grey' : item.color" size="20">
+                      {{ item.icon }}
+                    </v-icon>
+                  </v-avatar>
+                </template>
+
+                <v-list-item-title 
+                  :class="['text-body-2', item.viewed ? 'text-medium-emphasis' : 'font-weight-bold']"
+                >
+                  {{ item.description }}
+                </v-list-item-title>
+
+                <v-list-item-subtitle class="mt-1 d-flex flex-column">
+                  <span class="text-caption mb-1">{{ item.time }}</span>
+                  <router-link 
+                    v-if="item.link" 
+                    :to="item.link" 
+                    class="text-primary text-decoration-none text-caption font-weight-bold d-flex align-center"
+                  >
+                    ACESSAR AVALIAÇÃO <v-icon size="14" class="ml-1">mdi-arrow-right</v-icon>
+                  </router-link>
+                </v-list-item-subtitle>
+
+                <template #append v-if="!item.viewed">
+                  <div class="unread-dot"></div>
+                </template>
+              </v-list-item>
+            </v-list>
+          </template>
+        </v-card-text>
+
+        <v-divider />
+        <v-btn variant="text" block class="text-none font-weight-bold py-3" height="auto">
+          Ver Histórico Completo
+        </v-btn>
+      </v-card>
+    </v-menu>
+  </template>
+
+  <style scoped>
+  .notification-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    transition: background-color 0.2s;
+  }
+
+  .unread-dot {
+    width: 8px;
+    height: 8px;
+    background-color: rgb(var(--v-theme-primary));
+    border-radius: 50%;
+  }
+
+  :deep(.v-list-item--active) {
+    background-color: rgba(var(--v-theme-primary), 0.04) !important;
+    opacity: 1 !important;
+  }
+
+  .text-wrap {
+    white-space: normal;
+  }
+  </style>
