@@ -1,4 +1,4 @@
-import type EvaluationApplication from './evaluation-application.type';
+import type { EvaluationApplication } from './evaluation-application.type';
 
 export default interface EvaluationApplicationResponsePagination {
   data: EvaluationApplication[];

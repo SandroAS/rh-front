@@ -3,7 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import EvaluationBarChart from '@/components/system/evaluation/EvaluationBarChart.vue';
-import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
+import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
 import type EvaluationApplication from '@/types/evaluationApplication/evaluation-application.type';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();

@@ -2,7 +2,7 @@
 import { watch, ref, reactive } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useEvaluationStore } from '@/stores/evaluation.store';
-import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
+import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
 import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';

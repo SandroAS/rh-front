@@ -46,7 +46,7 @@ onMounted(() => {
 
     <v-spacer />
 
-    <!-- <NotificationMenu /> -->
+    <NotificationMenu />
     <AvatarMenu />
   </v-app-bar>
 
@@ -69,3 +69,9 @@ onMounted(() => {
 
   <Toast />
 </template>
+
+<style>
+  .v-toolbar-title__placeholder {
+    width: fit-content;
+  }
+</style>

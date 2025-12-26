@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
+import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
 import { EvaluationApplicationStatus, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { ref } from 'vue';

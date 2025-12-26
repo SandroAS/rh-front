@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from 'vue';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import loadItems from '@/utils/loadItems.util';
-import { useEvaluationApplicationStore } from '@/stores/evaluation.application.store';
+import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
 import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import ApplicationModal from '../ApplicationModal.vue';
 import { getInitials } from '@/utils/getInitialsFromName.util';
