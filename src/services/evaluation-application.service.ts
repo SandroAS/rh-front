@@ -46,7 +46,7 @@ export async function cancelEvaluationApplication(uuid: string): Promise<void> {
 }
 
 export async function sendEvaluationApplication(uuid: string, forEmail: boolean, forSystem: boolean): Promise<void> {
-  await api.post(`/evaluation-applications/send/${uuid}`, { for_email: forEmail, for_system: forSystem });
+  await api.post(`/evaluation-applications/send/${uuid}`, { forEmail, forSystem });
 }
 
 export async function deleteEvaluationApplication(uuid: string): Promise<void> {

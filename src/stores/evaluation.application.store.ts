@@ -153,6 +153,21 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
 
       try {
         await sendEvaluationApplication(uuid, forEmail, forSystem);
+
+        if (!this.evaluation_applications) this.evaluation_applications = [];
+        const evaluationApplication = this.evaluation_applications.find(x => x.uuid === uuid);
+        if(evaluationApplication?.status === EvaluationApplicationStatus.CREATED) {
+          const updatedEvaluationApplication = {
+            ...evaluationApplication,
+            started_date: new Date(),
+            status: EvaluationApplicationStatus.SENDED,
+          } as EvaluationApplication;
+
+          const index = this.evaluation_applications.findIndex(x => x.uuid === uuid);
+          if (index !== -1) {
+            this.evaluation_applications.splice(index, 1, updatedEvaluationApplication);
+          }
+        }
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar enviar aplicação de avaliação.';
         console.error('Erro ao enviar aplicação de avaliação:', err);
