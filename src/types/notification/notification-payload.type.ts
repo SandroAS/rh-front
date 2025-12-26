@@ -10,5 +10,6 @@ export default interface NotificationPayload {
   evaluationApplication?: EvaluationApplication;
   viewed_at?: Date;
   is_hidden: boolean;
+  redirect_url?: string;
   created_at: Date;
 }

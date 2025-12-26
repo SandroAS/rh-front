@@ -116,14 +116,14 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
-    path: '/forms/:uuid',
+    path: '/forms',
     component: LayoutForms,
     children: [
       {
-        path: '',
+        path: 'avaliacao/:uuid',
         name: 'evaluationForm',
         component: EvaluationApplicationForm,
-        meta: { isPublic: true, title: 'Formulário de Avaliação - ' + SISTEM_NAME }
+        meta: { isPublic: false, title: 'Formulário de Avaliação - ' + SISTEM_NAME }
       }
     ]
   }
