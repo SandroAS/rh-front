@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
+import { EvaluationApplicationStatus } from '@/types/evaluationApplication/evaluation-application.type';
 import type { EvaluationApplicationForm } from '@/types/evaluationApplication/evaluation-application.type';
 import getApplicationTypeName from '@/utils/getApplicationTypeName.util';
 import { QuestionType } from '@/types/evaluation/evaluation-question.type';
@@ -19,6 +20,7 @@ const router = useRouter();
 
 const loading = ref(true);
 const submitting = ref(false);
+const isFinished = ref(false);
 const evaluationApplication = ref<EvaluationApplicationForm | null>(null);
 
 const formAnswers = ref<Record<string, any>>({});
@@ -45,6 +47,10 @@ onMounted(async () => {
     if (response) {
       evaluationApplication.value = response;
 
+      if (evaluationApplication.value.status === EvaluationApplicationStatus.FINISHED) {
+        isFinished.value = true;
+      }
+
       response.formApplication?.topics.forEach(topic => {
         topic.questions.forEach(question => {
           if (question.uuid) {
@@ -62,7 +68,7 @@ onMounted(async () => {
 });
 
 const isFormValid = computed(() => {
-  if (!form.value) return false;
+  if (!form.value || isFinished.value) return false; 
   for (const topic of form.value.topics) {
     for (const question of topic.questions) {
       if (question.is_required) {
@@ -81,6 +87,8 @@ const isFormValid = computed(() => {
 });
 
 async function submitEvaluation() {
+  if (isFinished.value) return;
+  
   if (!isFormValid.value) {
     snackbarStore.show('Por favor, preencha todos os campos obrigatórios.', 'warning');
     return;
@@ -136,7 +144,10 @@ async function submitEvaluation() {
     await formResponseStore.submitAnswers(evaluationApplicationUuid, payload);
 
     snackbarStore.show('Avaliação enviada com sucesso!', 'success');
-    router.push('/system/dashboard');
+
+    setTimeout(() => {
+      router.push('/system/dashboard');
+    }, 1000);
   } catch (error) {
     console.error('Erro ao enviar:', error);
     snackbarStore.show('Erro ao enviar sua avaliação.', 'error');
@@ -152,17 +163,34 @@ async function submitEvaluation() {
   </v-container>
 
   <v-container v-else-if="evaluationApplication && form" class="py-8">
-    <v-card class="pa-0 mx-auto overflow-hidden" max-width="900" elevation="3" rounded="lg">
+    
+    <!-- Alerta de Avaliação já enviada -->
+    <v-alert
+      v-if="isFinished"
+      type="success"
+      variant="tonal"
+      icon="mdi-check-circle"
+      title="Avaliação Concluída"
+      class="mb-6 rounded-lg"
+      text="Esta avaliação já foi respondida e enviada com sucesso. Você pode visualizar os detalhes abaixo, mas não é possível realizar alterações."
+    >
+      <template #append>
+        <v-btn color="success" variant="flat" to="/system/dashboard" prepend-icon="mdi-view-dashboard">
+          Ir para Dashboard
+        </v-btn>
+      </template>
+    </v-alert>
 
+    <v-card class="pa-0 mx-auto overflow-hidden" max-width="900" elevation="3" rounded="lg" :disabled="isFinished">
       <!-- Banner Superior -->
-      <v-sheet color="primary" height="10" width="100%"></v-sheet>
+      <v-sheet :color="isFinished ? 'success' : 'primary'" height="10" width="100%"></v-sheet>
 
       <div class="pa-8">
         <!-- Cabeçalho -->
         <header class="mb-8">
-          <h1 class="text-h4 font-weight-bold mb-2">{{ evaluationApplication.evaluation?.name }} {{ 
-              evaluationApplication.evaluation?.drd ? (' - DRD: ' + evaluationApplication.evaluation?.drd?.jobPosition?.title) : ''
-            }}
+          <h1 class="text-h4 font-weight-bold mb-2">
+            {{ evaluationApplication.evaluation?.name }} 
+            {{ evaluationApplication.evaluation?.drd ? (' - DRD: ' + evaluationApplication.evaluation?.drd?.jobPosition?.title) : '' }}
           </h1>
 
           <p v-if="form.description" class="text-body-1 text-medium-emphasis mb-6">
@@ -177,13 +205,16 @@ async function submitEvaluation() {
                 <div class="mb-2">
                   <h3>Avaliado:</h3>
                   <div class="d-flex align-center gap-2">
-                    <v-img 
-                      v-if="evaluationApplication.evaluated_user?.profile_img_url" 
-                      :src="evaluationApplication.evaluated_user.profile_img_url"
-                    ></v-img>
-                    <v-avatar v-else color="primary">
+                    <v-avatar v-if="!evaluationApplication.evaluated_user?.profile_img_url" color="primary">
                       <span class="text-white">{{ getInitials(evaluationApplication.evaluated_user.name) }}</span>
                     </v-avatar>
+                    <v-img 
+                      v-else
+                      :src="evaluationApplication.evaluated_user.profile_img_url"
+                      max-width="40"
+                      max-height="40"
+                      class="rounded-circle"
+                    ></v-img>
                     <div class="">
                       <div class="text-subtitle-1 font-weight-bold">
                         {{ evaluationApplication.evaluated_user?.name }}
@@ -207,8 +238,8 @@ async function submitEvaluation() {
 
         <!-- Tópicos -->
         <div v-for="(topic, tIdx) in form.topics" :key="topic.uuid" class="mb-12">
-          <div class="topic-header mb-6">
-            <h2 class="text-h5 font-weight-bold text-primary">
+          <div class="topic-header mb-6" :style="{ borderLeftColor: isFinished ? 'rgb(var(--v-theme-success))' : 'rgb(var(--v-theme-primary))' }">
+            <h2 class="text-h5 font-weight-bold" :class="isFinished ? 'text-success' : 'text-primary'">
               {{ tIdx + 1 }}. {{ topic.title }}
             </h2>
             <p v-if="topic.description" class="text-body-2 text-medium-emphasis mt-1">
@@ -226,7 +257,7 @@ async function submitEvaluation() {
             <div class="mb-4">
               <div class="text-subtitle-1 font-weight-bold mb-1">
                 {{ question.title }}
-                <span v-if="question.is_required" class="text-error" title="Obrigatório">*</span>
+                <span v-if="question.is_required && !isFinished" class="text-error" title="Obrigatório">*</span>
               </div>
               <div v-if="question.description" class="text-body-2 text-medium-emphasis">
                 {{ question.description }}
@@ -235,15 +266,15 @@ async function submitEvaluation() {
 
             <!-- INPUTS BASEADOS NO TIPO -->
             <div class="question-input-container">
-
-              <!-- RATE (Estrelas ou Números) -->
+              <!-- RATE -->
               <template v-if="question.type === QuestionType.RATE">
                 <div class="d-flex align-center flex-column">
                   <v-rating
                     v-model="formAnswers[question.uuid!]"
-                    color="amber-darken-3"
-                    active-color="amber-darken-3"
-                    hover
+                    :color="isFinished ? 'success' : 'amber-darken-3'"
+                    :active-color="isFinished ? 'success' : 'amber-darken-3'"
+                    :hover="!isFinished"
+                    :readonly="isFinished"
                     density="comfortable"
                     size="x-large"
                     :length="5"
@@ -260,7 +291,8 @@ async function submitEvaluation() {
                   v-model="formAnswers[question.uuid!]"
                   variant="outlined"
                   density="compact"
-                  placeholder="Resposta curta..."
+                  :placeholder="isFinished ? '' : 'Resposta curta...'"
+                  :readonly="isFinished"
                   hide-details
                 ></v-text-field>
               </template>
@@ -270,14 +302,15 @@ async function submitEvaluation() {
                 <v-textarea
                   v-model="formAnswers[question.uuid!]"
                   variant="outlined"
-                  placeholder="Escreva detalhadamente sua resposta..."
+                  :placeholder="isFinished ? '' : 'Escreva detalhadamente sua resposta...'"
                   rows="4"
                   auto-grow
+                  :readonly="isFinished"
                   hide-details
                 ></v-textarea>
               </template>
 
-              <!-- SINGLE_CHOICE / RADIO -->
+              <!-- SINGLE_CHOICE / DROPDOWN -->
               <template v-else-if="question.type === QuestionType.SINGLE_CHOICE || question.type === QuestionType.DROPDOWN">
                 <v-select
                   v-if="question.type === QuestionType.DROPDOWN || (question.options?.length || 0) > 5"
@@ -288,15 +321,16 @@ async function submitEvaluation() {
                   label="Selecione uma opção"
                   variant="outlined"
                   density="compact"
+                  :readonly="isFinished"
                 ></v-select>
                 
-                <v-radio-group v-else v-model="formAnswers[question.uuid!]">
+                <v-radio-group v-else v-model="formAnswers[question.uuid!]" :readonly="isFinished">
                   <v-radio
                     v-for="opt in question.options"
                     :key="opt.uuid"
                     :label="opt.text"
                     :value="opt.uuid"
-                    color="primary"
+                    :color="isFinished ? 'success' : 'primary'"
                   ></v-radio>
                 </v-radio-group>
               </template>
@@ -310,13 +344,13 @@ async function submitEvaluation() {
                     v-model="formAnswers[question.uuid!]"
                     :label="opt.text"
                     :value="opt.uuid"
-                    color="primary"
+                    :color="isFinished ? 'success' : 'primary'"
                     density="compact"
+                    :readonly="isFinished"
                     hide-details
                   ></v-checkbox>
                 </div>
               </template>
-
             </div>
           </v-card>
         </div>
@@ -330,9 +364,10 @@ async function submitEvaluation() {
             to="/system/dashboard" 
             :disabled="submitting"
           >
-            Sair sem salvar
+            {{ isFinished ? 'Voltar' : 'Sair sem salvar' }}
           </v-btn>
           <v-btn 
+            v-if="!isFinished"
             color="primary"
             elevation="1"
             :disabled="!isFormValid"
@@ -354,10 +389,10 @@ async function submitEvaluation() {
       variant="tonal"
       max-width="500"
       title="Formulário não encontrado"
-      text="Não foi possível carregar os dados desta avaliação. Pode ser que o link tenha expirado ou a avaliação já tenha sido enviada."
+      text="Não foi possível carregar os dados desta avaliação. Pode ser que o link tenha expirado."
     >
       <template #append>
-        <v-btn color="error" variant="flat" to="/dashboard">Voltar ao Início</v-btn>
+        <v-btn color="error" variant="flat" to="/system/dashboard">Voltar ao Início</v-btn>
       </template>
     </v-alert>
   </v-container>
@@ -365,26 +400,23 @@ async function submitEvaluation() {
 
 <style scoped>
 .topic-header {
-  border-left: 6px solid rgb(var(--v-theme-primary));
+  border-left: 6px solid;
   padding-left: 20px;
+  transition: border-color 0.3s ease;
 }
 
 .border {
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
 }
 
-.gap-1 {
-  gap: 4px;
-}
-.gap-4 {
-  gap: 16px;
-}
+.gap-1 { gap: 4px; }
+.gap-4 { gap: 16px; }
 
-/* Transição suave para o rating */
 :deep(.v-rating__item) {
   transition: transform 0.2s ease;
 }
-:deep(.v-rating__item:hover) {
+:deep(.v-rating__item:not(.v-rating__item--readonly):hover) {
   transform: scale(1.2);
 }
 </style>
+  
