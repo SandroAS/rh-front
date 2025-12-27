@@ -6,6 +6,7 @@ import { useEvaluationApplicationStore } from '@/stores/evaluation-application.s
 import type { EvaluationApplicationForm } from '@/types/evaluationApplication/evaluation-application.type';
 import getApplicationTypeName from '@/utils/getApplicationTypeName.util';
 import { QuestionType } from '@/types/evaluation/evaluation-question.type';
+import { getInitials } from '@/utils/getInitialsFromName.util';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const snackbarStore = useSnackbarStore();
@@ -22,9 +23,6 @@ const evaluationApplicationUuid = route.params.uuid as string;
 
 const form = computed(() => evaluationApplication.value?.formApplication);
 
-/**
- * Inicializa os valores padrão das respostas com base no tipo da questão
- */
 const getInitialValue = (type: QuestionType) => {
   switch (type) {
     case QuestionType.MULTI_CHOICE:
@@ -116,40 +114,54 @@ async function submitEvaluation() {
 
   <v-container v-else-if="evaluationApplication && form" class="py-8">
     <v-card class="pa-0 mx-auto overflow-hidden" max-width="900" elevation="3" rounded="lg">
-      
+
       <!-- Banner Superior -->
       <v-sheet color="primary" height="10" width="100%"></v-sheet>
 
       <div class="pa-8">
         <!-- Cabeçalho -->
         <header class="mb-8">
-          <h1 class="text-h4 font-weight-bold mb-2">{{ form.name }}</h1>
+          <h1 class="text-h4 font-weight-bold mb-2">{{ evaluationApplication.evaluation?.name }} {{ 
+              evaluationApplication.evaluation?.drd ? (' - DRD: ' + evaluationApplication.evaluation?.drd?.jobPosition?.title) : ''
+            }}
+          </h1>
+
           <p v-if="form.description" class="text-body-1 text-medium-emphasis mb-6">
             {{ form.description }}
           </p>
-          
+
           <v-divider class="mb-6"></v-divider>
 
           <v-row align="center">
-            <v-col cols="12" sm="auto">
-              <v-avatar size="64" color="grey-lighten-3">
-                <v-img 
-                  v-if="evaluationApplication.evaluated_user?.profile_img_url" 
-                  :src="evaluationApplication.evaluated_user.profile_img_url"
-                ></v-img>
-                <v-icon v-else icon="mdi-account" size="32"></v-icon>
-              </v-avatar>
-            </v-col>
-            <v-col>
-              <div class="text-subtitle-1 font-weight-bold">
-                {{ evaluationApplication.evaluated_user?.name }}
+            <v-col cols="12">
+              <div class="d-md-flex justify-space-between gap-4">
+                <div class="mb-2">
+                  <h3>Avaliado:</h3>
+                  <div class="d-flex align-center gap-2">
+                    <v-img 
+                      v-if="evaluationApplication.evaluated_user?.profile_img_url" 
+                      :src="evaluationApplication.evaluated_user.profile_img_url"
+                    ></v-img>
+                    <v-avatar v-else color="primary">
+                      <span class="text-white">{{ getInitials(evaluationApplication.evaluated_user.name) }}</span>
+                    </v-avatar>
+                    <div class="">
+                      <div class="text-subtitle-1 font-weight-bold">
+                        {{ evaluationApplication.evaluated_user?.name }}
+                      </div>
+                      <div class="text-caption text-medium-emphasis">
+                        {{ evaluationApplication.evaluated_user?.email }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3>Tipo de avaliação:</h3>
+                  <v-chip size="large" color="primary" variant="flat" class="mt-1">
+                    {{ getApplicationTypeName(evaluationApplication.type) }}
+                  </v-chip>
+                </div>
               </div>
-              <div class="text-caption text-medium-emphasis">
-                {{ evaluationApplication.evaluated_user?.email }}
-              </div>
-              <v-chip size="x-small" color="primary" variant="flat" class="mt-1">
-                {{ getApplicationTypeName(evaluationApplication.type) }}
-              </v-chip>
             </v-col>
           </v-row>
         </header>
@@ -181,10 +193,10 @@ async function submitEvaluation() {
                 {{ question.description }}
               </div>
             </div>
-            
+
             <!-- INPUTS BASEADOS NO TIPO -->
             <div class="question-input-container">
-              
+
               <!-- RATE (Estrelas ou Números) -->
               <template v-if="question.type === QuestionType.RATE">
                 <div class="d-flex align-center flex-column">
@@ -276,15 +288,13 @@ async function submitEvaluation() {
         <div class="d-flex flex-column flex-sm-row justify-end gap-4">
           <v-btn 
             variant="text" 
-            size="large" 
-            to="/dashboard" 
+            to="/system/dashboard" 
             :disabled="submitting"
           >
             Sair sem salvar
           </v-btn>
           <v-btn 
             color="primary"
-            size="large"
             elevation="1"
             :disabled="!isFormValid"
             :loading="submitting"
