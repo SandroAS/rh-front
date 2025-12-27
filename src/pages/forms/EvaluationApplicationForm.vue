@@ -7,8 +7,12 @@ import type { EvaluationApplicationForm } from '@/types/evaluationApplication/ev
 import getApplicationTypeName from '@/utils/getApplicationTypeName.util';
 import { QuestionType } from '@/types/evaluation/evaluation-question.type';
 import { getInitials } from '@/utils/getInitialsFromName.util';
+import type FormAnswer from '@/types/formAnswer/form-answer.type';
+import { useFormResponseStore } from '@/stores/form-response.store';
+import type FormResponsePayload from '@/types/formResponse/form-response-payload.type';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
+const formResponseStore = useFormResponseStore();
 const snackbarStore = useSnackbarStore();
 const route = useRoute();
 const router = useRouter();
@@ -20,7 +24,6 @@ const evaluationApplication = ref<EvaluationApplicationForm | null>(null);
 const formAnswers = ref<Record<string, any>>({});
 
 const evaluationApplicationUuid = route.params.uuid as string;
-
 const form = computed(() => evaluationApplication.value?.formApplication);
 
 const getInitialValue = (type: QuestionType) => {
@@ -60,18 +63,16 @@ onMounted(async () => {
 
 const isFormValid = computed(() => {
   if (!form.value) return false;
-
   for (const topic of form.value.topics) {
     for (const question of topic.questions) {
       if (question.is_required) {
         const answer = formAnswers.value[question.uuid as string];
-        
         if (question.type === QuestionType.MULTI_CHOICE) {
           if (!answer || answer.length === 0) return false;
         } else if (question.type === QuestionType.RATE) {
-          if (!answer || answer === 0) return false;
+          if (answer === 0 || answer === null) return false;
         } else {
-          if (!answer) return false;
+          if (answer === null || answer === '') return false;
         }
       }
     }
@@ -87,19 +88,57 @@ async function submitEvaluation() {
 
   try {
     submitting.value = true;
-    
-    // Formata o payload conforme sua API espera (geralmente um array de objetos)
-    const payload = Object.entries(formAnswers.value).map(([questionUuid, value]) => ({
-      question_uuid: questionUuid,
-      answer: value
-    }));
+    const answers: FormAnswer[] = [];
 
-    console.log('Enviando payload:', payload);
-    // await evaluationApplicationStore.submitAnswers(evaluationApplicationUuid, payload);
+    form.value?.topics.forEach(topic => {
+      topic.questions.forEach(question => {
+        const rawValue = formAnswers.value[question.uuid as string];
+        
+        if (rawValue === null || rawValue === undefined || (Array.isArray(rawValue) && rawValue.length === 0)) {
+          return;
+        }
+
+        const answerEntry: FormAnswer = {
+          application_question_uuid: question.uuid as string
+        };
+
+        switch (question.type) {
+          case QuestionType.SHORT_TEXT:
+          case QuestionType.LONG_TEXT:
+            answerEntry.text_value = String(rawValue);
+            break;
+
+          case QuestionType.RATE:
+            answerEntry.number_value = Number(rawValue);
+            break;
+
+          case QuestionType.SINGLE_CHOICE:
+          case QuestionType.DROPDOWN:
+            answerEntry.application_option_uuid = String(rawValue);
+            break;
+
+          case QuestionType.MULTI_CHOICE:
+            answerEntry.multiOptions = (rawValue as string[]).map(uuid => ({
+              application_option_uuid: uuid
+            }));
+            break;
+        }
+
+        answers.push(answerEntry);
+      });
+    });
+
+    const payload: FormResponsePayload = {
+      is_completed: true,
+      answers: answers
+    };
     
+    await formResponseStore.submitAnswers(evaluationApplicationUuid, payload);
+
     snackbarStore.show('Avaliação enviada com sucesso!', 'success');
-    router.push('/dashboard');
+    router.push('/system/dashboard');
   } catch (error) {
+    console.error('Erro ao enviar:', error);
     snackbarStore.show('Erro ao enviar sua avaliação.', 'error');
   } finally {
     submitting.value = false;
