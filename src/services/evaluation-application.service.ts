@@ -1,8 +1,8 @@
 import type { AxiosResponse } from 'axios';
 import api from './api.service';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
-import { type CreateEvaluationApplication, type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
-import { type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
+import { type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
+import { type EvaluationApplication, type EvaluationApplicationForm } from '@/types/evaluationApplication/evaluation-application.type';
 
 export async function getEvaluationApplications(
   page: number = 1,
@@ -21,8 +21,8 @@ export async function getEvaluationApplications(
   return response.data;
 }
 
-export const getEvaluationApplication = async (uuid: string): Promise<EvaluationApplication> => {
-  const response: AxiosResponse<EvaluationApplication> = await api.get(`/evaluation-applications/${uuid}`);
+export const getEvaluationApplication = async (uuid: string): Promise<EvaluationApplicationForm> => {
+  const response: AxiosResponse<EvaluationApplicationForm> = await api.get(`/evaluation-applications/${uuid}`);
   return response.data;
 };
 
