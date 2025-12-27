@@ -8,6 +8,10 @@ const router = useRouter()
 const nomeUsuario = useUserStore().userName
 const emailUsuario = useUserStore().userEmail
 
+const props = defineProps<{
+  color?: string
+}>()
+
 const siglaUsuario = computed(() => {
   if(!nomeUsuario) return '??'
   const nomes = nomeUsuario.trim().split(' ')
@@ -29,9 +33,10 @@ function irPara(path: string) {
         variant="text"
         icon
         size="x-small"
+        style="align-content: center;"
       >
-        <v-avatar size="36">
-          <span class="text-primary text-subtitle-2 mb-1">{{ siglaUsuario }}</span>
+        <v-avatar :color="color" size="36">
+          <span class="text-subtitle-2" :class="color ? 'text-white' : 'text-primary'">{{ siglaUsuario }}</span>
         </v-avatar>
       </v-btn>
     </template>

@@ -23,7 +23,7 @@ function goBack() {
 
     <v-spacer />
 
-    <AvatarMenu />
+    <AvatarMenu color="primary" />
 
   </v-app-bar>
 
