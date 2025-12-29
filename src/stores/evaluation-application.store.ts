@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication, cancelEvaluationApplication, sendEvaluationApplication } from '@/services/evaluation-application.service'; // Importar os serviços
-import { EvaluationApplicationStatus, type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
+import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication, cancelEvaluationApplication, sendEvaluationApplication, getEvaluationApplicationsFilterMetrics } from '@/services/evaluation-application.service'; // Importar os serviços
+import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
 import { type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
@@ -35,6 +35,13 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
   getters: {
     getApplicationByUuid: (state) => (uuid: string) => {
       return state.evaluation_applications?.find(app => app.uuid === uuid);
+    },
+    getEvaluationApplicationsOptions(state) {
+      if(!state.evaluation_applications?.length) return [];
+      return state.evaluation_applications.map(app => ({
+        title: app.evaluated_user.name,
+        value: app.uuid,
+      }));
     }
   },
 
@@ -185,6 +192,28 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
         return await getEvaluationApplication(uuid);
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar Aplicação de Avaliação.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getEvaluationApplicationsFilterMetrics(
+      name?: string | null,
+      type?: EvaluationType | null,
+      evaluated_user_uuid?: string | null,
+      submitted_user_uuid?: string | null,
+      start_date?: string | null,
+      end_date?: string | null
+    ) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: EvaluationApplication[] = await getEvaluationApplicationsFilterMetrics(name, type, evaluated_user_uuid, submitted_user_uuid, start_date, end_date);
+        this.evaluation_applications = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar aplicações de avaliação por filtros.';
         throw err;
       } finally {
         this.loading = false;
