@@ -7,6 +7,9 @@ import EvaluationLineChart from '@/components/system/evaluation/EvaluationLineCh
 import { EvaluationType } from '@/types/evaluationApplication/evaluation-application.type';
 import getApplicationTypeName from '@/utils/getApplicationTypeName.util';
 import type GroupedMetric from '@/types/evaluationMetrics/grouped-metric.type';
+import type EvaluationMetricApplication from '@/types/evaluationMetrics/evaluation-metric-application.type';
+import type EvaluationMetricResponse from '@/types/evaluationMetrics/evaluation-metric-response.type';
+import type EvaluationMetricAnswer from '@/types/evaluationMetrics/evaluation-metric-answer.type';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const evaluationStore = useEvaluationStore();
@@ -48,6 +51,28 @@ const applicationTypeOptions = [
 ];
 
 const groupedMetrics = ref<GroupedMetric[]>([]);
+
+function hasTextResponses(applications: EvaluationMetricApplication[]) {
+  return applications.some(app => 
+    app.formResponses?.some((resp: any) => 
+      resp.answers?.some((ans: any) => 
+        ['SHORT_TEXT', 'LONG_TEXT'].includes(ans.question?.type) && ans.text_value
+      )
+    )
+  );
+}
+
+function getTextAnswers(app: EvaluationMetricApplication) {
+  const answers: EvaluationMetricAnswer[] = [];
+  app.formResponses?.forEach((resp: EvaluationMetricResponse) => {
+    resp.answers?.forEach((answer: EvaluationMetricAnswer) => {
+      if (['SHORT_TEXT', 'LONG_TEXT'].includes(answer.question?.type)) {
+        answers.push(answer);
+      }
+    });
+  });
+  return answers;
+}
 
 async function loadMetricsData(isOnMounted: boolean = false) {
   loadingData.value = true;
@@ -95,17 +120,13 @@ async function loadMetricsData(isOnMounted: boolean = false) {
       }
 
       group.applications.forEach((app: any) => {
-        // Usando started_date do retorno da API
         const appDate = new Date(app.started_date);
         const monthLabel = appDate.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
 
-        // Ajuste no acesso: formResponses (plural conforme seu JSON de retorno)
         app.formResponses?.forEach((resp: any) => {
           resp.answers?.forEach((answer: any) => {
-            // Tópico pode vir do formulário, se não houver, agrupamos em "Geral"
             const topic = "Geral"; 
             
-            // Verificação baseada na estrutura do JSON: answer.question.type
             if (answer.question?.type === 'RATE' && answer.number_value !== null) {
               const val = parseFloat(answer.number_value);
 
@@ -186,6 +207,7 @@ onMounted(async () => {
 
 <template>
   <v-container fluid class="bg-grey-lighten-4 fill-height align-start">
+    <!-- Filtros Superior -->
     <v-card class="mb-6 w-100 pa-4" elevation="1">
       <v-row dense>
         <v-col cols="12" md="4">
@@ -247,14 +269,17 @@ onMounted(async () => {
       </v-row>
     </v-card>
 
+    <!-- Loading State -->
     <div v-if="loadingData" class="w-100 d-flex justify-center py-10">
       <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
     </div>
 
+    <!-- Empty State -->
     <div v-else-if="groupedMetrics.length === 0" class="w-100 text-center py-10">
       <v-alert type="info" variant="tonal">Nenhum dado encontrado.</v-alert>
     </div>
 
+    <!-- Listagem de Cards de Avaliação -->
     <div v-else class="w-100">
       <v-card 
         v-for="(group, idx) in groupedMetrics" 
@@ -264,36 +289,36 @@ onMounted(async () => {
         rounded="lg"
       >
         <v-toolbar color="secondary" dark>
-          <v-toolbar-title>{{ group.name }}</v-toolbar-title>
+          <v-toolbar-title class="text-h6">{{ group.name }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-chip color="white" size="small" class="mr-4 text-white">
-            {{ group.applications.length }} Avaliações Concluídas
+          <v-chip color="white" size="small" class="mr-4 text-white" variant="outlined">
+            {{ group.applications.length }} Respostas
           </v-chip>
         </v-toolbar>
 
         <v-row class="pa-6">
-          <!-- Coluna de Notas -->
-          <v-col cols="12" lg="6">
-            <h3 class="text-subtitle-1 font-weight-bold mb-4">
+          <!-- Coluna de Notas: Se não houver texto, expande para largura total -->
+          <v-col cols="12" :lg="hasTextResponses(group.applications) ? 6 : 12">
+            <h3 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center">
               <v-icon color="amber-darken-2" class="mr-2">mdi-star</v-icon>
-              Desempenho por Pergunta
+              Desempenho Médio por Pergunta
             </h3>
             <v-expansion-panels variant="accordion">
               <v-expansion-panel v-for="(tData, tName) in group.stats" :key="tName">
                 <v-expansion-panel-title>
-                  <div class="d-flex justify-space-between w-100 pr-4">
-                    <span>{{ tName }}</span>
-                    <v-chip size="small" color="success">
+                  <div class="d-flex justify-space-between w-100 pr-4 align-center">
+                    <span class="font-weight-medium">{{ tName }}</span>
+                    <v-chip size="small" color="success" class="font-weight-bold">
                       {{ (tData.sum / tData.count).toFixed(2) }}
                     </v-chip>
                   </div>
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
                   <v-list density="compact">
-                    <v-list-item v-for="(qData, qTitle) in tData.questions" :key="qTitle">
-                      <v-list-item-title class="text-body-2">{{ qTitle }}</v-list-item-title>
+                    <v-list-item v-for="(qData, qTitle) in tData.questions" :key="qTitle" class="px-0">
+                      <v-list-item-title class="text-body-2 text-wrap pr-4">{{ qTitle }}</v-list-item-title>
                       <template v-slot:append>
-                        <span class="font-weight-bold">{{ (qData.sum / qData.count).toFixed(2) }}</span>
+                        <span class="text-body-2 font-weight-bold">{{ (qData.sum / qData.count).toFixed(2) }}</span>
                       </template>
                     </v-list-item>
                   </v-list>
@@ -302,46 +327,57 @@ onMounted(async () => {
             </v-expansion-panels>
           </v-col>
 
-          <!-- Coluna de Comentários -->
-          <v-col cols="12" lg="6">
-            <h3 class="text-subtitle-1 font-weight-bold mb-4">
+          <!-- Coluna de Respostas de Texto Aberto (Condicional) -->
+          <v-col v-if="hasTextResponses(group.applications)" cols="12" lg="6">
+            <h3 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center">
               <v-icon color="blue" class="mr-2">mdi-message-text-outline</v-icon>
-              Feedbacks Individuais
+              Respostas de texto aberto
             </h3>
-            <v-list lines="three" style="max-height: 400px; overflow-y: auto;">
+            <v-list lines="three" style="max-height: 400px; overflow-y: auto;" class="rounded border">
               <template v-for="(app, aIdx) in group.applications" :key="aIdx">
-                <v-list-item>
-                  <v-list-item-title class="font-weight-bold">
-                    {{ app.evaluated_user?.name }}
-                  </v-list-item-title>
-                  <v-list-item-subtitle>
-                    Tipo: {{ getApplicationTypeName(app.type) }} | De: {{ app.submitting_user?.name }}
-                  </v-list-item-subtitle>
-                  <template v-slot:append>
-                    <v-btn icon="mdi-chevron-down" variant="text" @click="toggleExpand(`${idx}-${aIdx}`)"></v-btn>
-                  </template>
-                </v-list-item>
+                <!-- Só exibe o item na lista se a aplicação em questão tiver alguma resposta de texto -->
+                <template v-if="getTextAnswers(app).length > 0">
+                  <v-list-item>
+                    <v-list-item-title class="font-weight-bold text-primary">
+                      {{ app.evaluated_user?.name }}
+                    </v-list-item-title>
+                    <v-list-item-subtitle class="text-caption">
+                      Tipo: {{ getApplicationTypeName(app.type) }} | De: {{ app.submitting_user?.name }}
+                    </v-list-item-subtitle>
+                    <template v-slot:append>
+                      <v-btn 
+                        :icon="expandedCards[`${idx}-${aIdx}`] ? 'mdi-chevron-up' : 'mdi-chevron-down'" 
+                        variant="text" 
+                        size="small"
+                        @click="toggleExpand(`${idx}-${aIdx}`)"
+                      ></v-btn>
+                    </template>
+                  </v-list-item>
 
-                <v-expand-transition>
-                  <div v-if="expandedCards[`${idx}-${aIdx}`]" class="pa-4 bg-grey-lighten-4 rounded mx-4 mb-2">
-                    <div v-for="resp in app.formResponses" :key="resp.uuid">
-                      <div v-for="ans in resp.answers.filter(a => a.question.type !== 'RATE')" :key="ans.uuid" class="mb-2">
-                        <div class="text-caption font-weight-bold">{{ ans.question.title }}</div>
-                        <div class="text-body-2">{{ ans.text_value || 'Sem comentário.' }}</div>
+                  <v-expand-transition>
+                    <div v-if="expandedCards[`${idx}-${aIdx}`]" class="pa-4 bg-grey-lighten-4 rounded mx-4 mb-2">
+                      <div v-for="ans in getTextAnswers(app)" :key="ans.uuid" class="mb-3">
+                        <div class="text-caption font-weight-bold text-grey-darken-2">{{ ans.question.title }}</div>
+                        <div class="text-body-2 bg-white pa-2 rounded border-s-lg border-primary">
+                          {{ ans.text_value }}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </v-expand-transition>
-                <v-divider></v-divider>
+                  </v-expand-transition>
+                  <v-divider v-if="aIdx < group.applications.length - 1"></v-divider>
+                </template>
               </template>
             </v-list>
           </v-col>
 
-          <!-- Gráfico -->
+          <!-- Gráfico de Evolução -->
           <v-col cols="12" class="mt-6">
             <v-divider class="mb-6"></v-divider>
-            <h3 class="text-subtitle-1 font-weight-bold mb-4">Evolução Temporal</h3>
-            <div style="height: 300px;">
+            <h3 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center">
+              <v-icon color="grey-darken-3" class="mr-2">mdi-chart-line</v-icon>
+              Evolução Temporal das Notas
+            </h3>
+            <div style="height: 350px;">
               <EvaluationLineChart :chart-data="group.chartData" />
             </div>
           </v-col>
