@@ -151,6 +151,7 @@ export const useUserStore = defineStore('user', {
         this.user!.cellphone = personalInformation.cellphone;
         this.user!.cpf = personalInformation.cpf;
         if(response.profile_img_url) this.user!.profile_img_url = response.profile_img_url;
+        localStorage.setItem('user', JSON.stringify(this.user));
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar atualizar usuário.';
         throw err;
