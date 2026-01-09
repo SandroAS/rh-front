@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import logo from '@/assets/logo.png';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { useUserStore } from '@/stores/auth.store';
@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router';
 import { Form, Field } from '@/plugins/vee-validate';
 import type { UserRegister } from '@/types/user/user-register.type';
 import TermsOfServiceAndPrivacyPoliciesModal from './TermsOfServiceAndPrivacyPoliciesModal.vue';
+import { checkPasswordStrength, passwordScore } from '@/utils/checkPasswordStrength.util';
 
 enum SystemModuleName {
   EMPLOYEE_MANAGEMENT = 'EMPLOYEE_MANAGEMENT',
@@ -34,6 +35,16 @@ const router = useRouter();
 
 const showPassword = ref<boolean>(false);
 const showConfirmPassword = ref<boolean>(false);
+const passwordField = ref(''); 
+
+const passwordStrengthScore = computed(() => {
+  return checkPasswordStrength(passwordField.value);
+});
+
+const passwordIndicator = computed(() => {
+  const score = passwordStrengthScore.value;
+  return passwordScore(score);
+});
 
 const moduleTypes = [
   { label: 'Selecione uma opção', value: '', disabled: true },
@@ -147,7 +158,7 @@ async function onSubmit(formValues: Record<string, any>) {
         </Field>
 
         <Field
-          name="clinicType"
+          name="moduleType"
           rules="required"
           v-slot="{ field, errorMessage }"
         >
@@ -176,6 +187,7 @@ async function onSubmit(formValues: Record<string, any>) {
         >
           <v-text-field
             v-bind="field"
+            v-model="passwordField"
             label="Senha"
             :type="showPassword ? 'text' : 'password'"
             prepend-inner-icon="mdi-lock"
@@ -188,7 +200,18 @@ async function onSubmit(formValues: Record<string, any>) {
             class="mb-1"
           />
         </Field>
-        <div class="text-caption text-red mb-3">Nível de segurança da senha: <strong>Baixo</strong></div>
+        <v-progress-linear
+            v-if="passwordField.length > 0"
+            :model-value="passwordIndicator.value"
+            :color="passwordIndicator.color"
+            height="6"
+            rounded
+            class="mb-2"
+          />
+        <div class="text-caption mb-3" :class="`text-${passwordIndicator.color}`">
+          Nível de segurança da senha: 
+          <strong class="text-capitalize">{{ passwordIndicator.text }}</strong>
+        </div>
 
         <Field
           name="confirmPassword"
