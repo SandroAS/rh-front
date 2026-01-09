@@ -8,6 +8,18 @@ import { Form, Field } from '@/plugins/vee-validate';
 import type { UserRegister } from '@/types/user/user-register.type';
 import TermsOfServiceAndPrivacyPoliciesModal from './TermsOfServiceAndPrivacyPoliciesModal.vue';
 
+enum SystemModuleName {
+  EMPLOYEE_MANAGEMENT = 'EMPLOYEE_MANAGEMENT',
+  RECRUITMENT = 'RECRUITMENT',
+  PERFORMANCE_MANAGEMENT = 'PERFORMANCE_MANAGEMENT',
+  CAREER_DEVELOPMENT = 'CAREER_DEVELOPMENT',
+  TRAINING_DEVELOPMENT = 'TRAINING_DEVELOPMENT',
+  PAYROLL = 'PAYROLL',
+  TIME_ATTENDANCE = 'TIME_ATTENDANCE',
+  BENEFITS_COMPENSATION = 'BENEFITS_COMPENSATION',
+  ONBOARDING_OFFBOARDING = 'ONBOARDING_OFFBOARDING',
+}
+
 const dialog = ref(false)
 const typeOfDocument = ref<'terms' | 'privacy'>('terms')
 
@@ -23,11 +35,17 @@ const router = useRouter();
 const showPassword = ref<boolean>(false);
 const showConfirmPassword = ref<boolean>(false);
 
-const clinicTypes = [
+const moduleTypes = [
   { label: 'Selecione uma opção', value: '', disabled: true },
-  { label: 'Odontológica', value: 'odontologica' },
-  { label: 'Psicologia (em breve)', value: 'psicologia', disabled: true },
-  { label: 'Fisioterapia (em breve)', value: 'fisioterapia', disabled: true },
+  { label: 'Desenvolvimento de Carreira', value: SystemModuleName.CAREER_DEVELOPMENT },
+  { label: 'Gestão de Colaboradores (em breve)', value: SystemModuleName.EMPLOYEE_MANAGEMENT, disabled: true },
+  { label: 'Recrutamento e Seleção (em breve)', value: SystemModuleName.RECRUITMENT, disabled: true },
+  { label: 'Gestão de Desempenho (em breve)', value: SystemModuleName.PERFORMANCE_MANAGEMENT, disabled: true },
+  { label: 'Desenvolvimento de Treinamentos (em breve)', value: SystemModuleName.TRAINING_DEVELOPMENT, disabled: true },
+  { label: 'Folha de Pagamento (em breve)', value: SystemModuleName.PAYROLL, disabled: true },
+  { label: 'Controle de Ponto e Acesso (em breve)', value: SystemModuleName.TIME_ATTENDANCE, disabled: true },
+  { label: 'Benefícios e Compensação (em breve)', value: SystemModuleName.BENEFITS_COMPENSATION, disabled: true },
+  { label: 'Onboarding e Offboarding (em breve)', value: SystemModuleName.ONBOARDING_OFFBOARDING, disabled: true },
 ]
 
 async function onSubmit(formValues: Record<string, any>) {
@@ -136,7 +154,7 @@ async function onSubmit(formValues: Record<string, any>) {
           <v-select
             v-bind="field"
             label="Tipo de Clínica"
-            :items="clinicTypes"
+            :items="moduleTypes"
             item-title="label"
             item-value="value"
             variant="solo-filled"
