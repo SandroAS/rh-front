@@ -164,7 +164,7 @@ async function onSubmit(formValues: Record<string, any>) {
         >
           <v-select
             v-bind="field"
-            label="Tipo de Clínica"
+            label="Módulos do sistema para ativar"
             :items="moduleTypes"
             item-title="label"
             item-value="value"
