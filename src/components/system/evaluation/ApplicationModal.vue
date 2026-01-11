@@ -352,7 +352,6 @@ async function onSubmit(formValues: Record<string, any>) {
     started_date: evaluationApplicationFormData.started_date,
     expiration_date: evaluationApplicationFormData.expiration_date,
     status: evaluationApplicationFormData.status,
-    type: evaluationApplicationFormData.type,
     applications: applicationsToSave.map(app => ({
       uuid: app.uuid,
       evaluation_uuid: evaluationApplicationFormData.evaluation_uuid,
