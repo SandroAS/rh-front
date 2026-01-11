@@ -854,7 +854,7 @@ async function onSubmit(formValues: Record<string, any>) {
 
           <h2 class="text-h6 mb-3">Métricas de Avaliação</h2>
           <div v-for="(drdMetric, index) in drd.drdMetrics" :key="index" class="metric-group mb-4 pa-4 border rounded">
-            <div class="d-flex justify-space-between align-start gap-2">
+            <div class="d-flex gap-4">
               <Field :name="`drdMetrics[${index}].name`" :label="'métrica '+(index+1)" rules="required" v-slot="{ field, errorMessage }">
                 <v-text-field
                   :id="`drdMetrics_${index}_name`"
@@ -865,60 +865,76 @@ async function onSubmit(formValues: Record<string, any>) {
                   density="compact"
                   :error="!!errorMessage"
                   :error-messages="errorMessage"
-                  class="flex-grow-1 mt-5"
+                  class="flex-grow-1"
                 />
               </Field>
 
-              <Field :name="`drdMetrics[${index}].type`" label="Tipo" rules="required" v-slot="{ field, errorMessage }">
-                <v-select
-                  :id="`drdMetrics_${index}_type`"
+              <Field :name="`drdMetrics[${index}].classification`" label="Classificação" v-slot="{ field }">
+                <v-text-field
+                  :id="`drdMetrics_${index}_classification`"
                   v-bind="field"
-                  v-model="drdMetric.type"
-                  label="Tipo"
-                  :items="metricTypeOptions"
-                  item-value="value"
-                  item-title="title"
+                  v-model="drdMetric.classification"
+                  label="Classificação"
                   variant="solo-filled"
                   density="compact"
-                  :error="!!errorMessage"
-                  :error-messages="errorMessage"
-                  class="flex-grow-1 mt-5"
-                  style="max-width: 135px;"
-                >
-                  <template v-slot:selection="{ item }">
-                    <div class="d-flex align-center">
-                      <v-icon :icon="item.raw.icon" size="small" class="mr-2" />
-                      {{ item.title }}
-                    </div>
-                  </template>
-
-                  <template v-slot:item="{ item, props: itemProps }">
-                    <v-list-item v-bind="itemProps">
-                      <template v-slot:prepend>
-                        <v-icon :icon="item.raw.icon" size="small" />
-                      </template>
-                    </v-list-item>
-                  </template>
-                </v-select>
-              </Field>
-
-              <Field :name="`drdMetrics[${index}].prefix`" label="Prefixo" rules="required" v-slot="{ field, errorMessage }">
-                <v-select
-                  :id="`drdMetrics_${index}_prefix`"
-                  v-bind="field"
-                  v-model="drdMetric.prefix"
-                  label="Prefixo"
-                  :items="prefixOptions"
-                  variant="solo-filled"
-                  density="compact"
-                  :error="!!errorMessage"
-                  :error-messages="errorMessage"
-                  class="mt-5"
-                  style="max-width: 135px;"
+                  class="flex-grow-1"
                 />
               </Field>
+            </div>
 
-              <div class="d-flex overflow-x-auto pb-2 flex-shrink-0" style="max-width: 40%; min-width: 400px; gap: 1rem;">
+            <v-row class="">
+              <v-col cols="12" md="6" class="d-flex gap-4">
+                <Field :name="`drdMetrics[${index}].type`" label="Tipo" rules="required" v-slot="{ field, errorMessage }">
+                  <v-select
+                    :id="`drdMetrics_${index}_type`"
+                    v-bind="field"
+                    v-model="drdMetric.type"
+                    label="Tipo"
+                    :items="metricTypeOptions"
+                    item-value="value"
+                    item-title="title"
+                    variant="solo-filled"
+                    density="compact"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                    class="flex-grow-1 mt-5"
+                    style="max-width: 135px;"
+                  >
+                    <template v-slot:selection="{ item }">
+                      <div class="d-flex align-center">
+                        <v-icon :icon="item.raw.icon" size="small" class="mr-2" />
+                        {{ item.title }}
+                      </div>
+                    </template>
+  
+                    <template v-slot:item="{ item, props: itemProps }">
+                      <v-list-item v-bind="itemProps">
+                        <template v-slot:prepend>
+                          <v-icon :icon="item.raw.icon" size="small" />
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-select>
+                </Field>
+  
+                <Field :name="`drdMetrics[${index}].prefix`" label="Prefixo" rules="required" v-slot="{ field, errorMessage }">
+                  <v-select
+                    :id="`drdMetrics_${index}_prefix`"
+                    v-bind="field"
+                    v-model="drdMetric.prefix"
+                    label="Prefixo"
+                    :items="prefixOptions"
+                    variant="solo-filled"
+                    density="compact"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                    class="mt-5"
+                    style="max-width: 135px;"
+                  />
+                </Field>
+              </v-col>
+
+              <v-col cols="12" md="6" class="d-flex overflow-x-auto pb-2 flex-shrink-0 px-1" style="max-width: 40%; min-width: 400px; gap: 1rem;">
                 <div
                   v-for="(score, levelIndex) in drdMetric.scoresByLevel" 
                   :key="levelIndex" 
@@ -944,7 +960,7 @@ async function onSubmit(formValues: Record<string, any>) {
                   </Field>
                   <Field :name="`drdMetrics[${index}].scoresByLevel[${levelIndex}].drd_level_order`" type="hidden" />
                 </div>
-              </div>
+              </v-col>
 
               <v-btn
                 v-if="drd.drdMetrics.length > 1"
@@ -957,21 +973,7 @@ async function onSubmit(formValues: Record<string, any>) {
               >
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
-            </div>
-
-            <div class="d-flex gap-4">
-              <Field :name="`drdMetrics[${index}].classification`" label="Classificação" v-slot="{ field }">
-                <v-text-field
-                  :id="`drdMetrics_${index}_classification`"
-                  v-bind="field"
-                  v-model="drdMetric.classification"
-                  label="Classificação"
-                  variant="solo-filled"
-                  density="compact"
-                  class="flex-grow-1"
-                />
-              </Field>
-            </div>
+            </v-row>
           </div>
 
           <v-btn
