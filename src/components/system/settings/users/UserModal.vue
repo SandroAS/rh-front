@@ -5,11 +5,13 @@ import type AccountUserPayload from '@/types/account/account-user-payload.type';
 import type AccountUser from '@/types/account/account-user.type';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
+import { useJobPositionStore } from '@/stores/job-position.store';
 import { RoleType } from '@/types/user/user-role.type';
 import { checkPasswordStrength, passwordScore } from '@/utils/checkPasswordStrength.util';
 
 const accountUserStore = useAccountUserStore();
 const snackbarStore = useSnackbarStore();
+const jobPositionStore = useJobPositionStore();
 
 const props = defineProps<{
   modelValue: boolean,
@@ -18,11 +20,23 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:modelValue'])
 
-const close = () => emit('update:modelValue', false)
+const close = () => {
+  emit('update:modelValue', false);
+}
+
+function modalValueChanged(value: boolean) {
+  emit('update:modelValue', value);
+  if (!value) {
+    currentJobPosition.value = '';
+    userAccount.job_position_uuid = undefined;
+  }
+}
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
-const passwordField = ref(''); 
+const passwordField = ref('');
+
+const currentJobPosition = ref(props.selectedAccountUser?.jobPosition?.uuid || '');
 
 const userTypes = [
   {
@@ -52,7 +66,8 @@ let userAccount = reactive<AccountUserPayload>({
   cpf: props.selectedAccountUser?.cpf || '',
   password: props.selectedAccountUser?.password || '',
   confirmPassword: '',
-  role: props.selectedAccountUser?.role?.name || RoleType.MEMBER 
+  role: props.selectedAccountUser?.role?.name || RoleType.MEMBER,
+  job_position_uuid: props.selectedAccountUser?.jobPosition?.uuid || undefined
 })
 
 watch(() => props.selectedAccountUser, (val) => {
@@ -63,10 +78,21 @@ watch(() => props.selectedAccountUser, (val) => {
     cpf: val?.cpf || '',
     password: '', 
     confirmPassword: '',
-    role: val?.role?.name || RoleType.MEMBER
+    role: val?.role?.name || RoleType.MEMBER,
+    job_position_uuid: val?.jobPosition?.uuid || undefined
   });
   passwordField.value = '';
 }, { immediate: true });
+
+watch(() => props.modelValue, async (isOpen) => {
+  if (isOpen) {
+    await getAllJobPositions();
+  }
+});
+
+async function getAllJobPositions() {
+  await jobPositionStore.getAllJobPositions();
+}
 
 const passwordStrengthScore = computed(() => {
   return checkPasswordStrength(passwordField.value);
@@ -76,6 +102,16 @@ const passwordIndicator = computed(() => {
   const score = passwordStrengthScore.value;
   return passwordScore(score);
 });
+
+function setJobPositionFromItem(item: any): string {
+  const uuidValue = item?.value ?? (typeof item === 'string' ? item : '');
+  currentJobPosition.value = uuidValue;
+  return uuidValue;
+}
+
+function jobPositionOnBlur(field: any) {
+  field.onBlur();
+}
 
 async function onSubmit(formValues: Record<string, any>) {
   const accountUser: AccountUserPayload = formValues as AccountUserPayload;
@@ -92,7 +128,7 @@ async function onSubmit(formValues: Record<string, any>) {
 </script>
 
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" max-width="500px">
+  <v-dialog :model-value="modelValue" @update:model-value="modalValueChanged" max-width="500px">
     <Form @submit="onSubmit" :initial-values="userAccount">
       <v-card>
         <v-card-title>
@@ -213,11 +249,41 @@ async function onSubmit(formValues: Record<string, any>) {
               persistent-placeholder
               :error="!!errorMessage"
               :error-messages="errorMessage"
+              class="mb-3"
             >
               <template v-slot:item="{ item, props: itemProps }">
                 <v-list-item v-bind="itemProps" :title="item.title" :subtitle="item.raw.subtitle" :disabled="item.raw.disabled" />
               </template>
             </v-select>
+          </Field>
+
+          <Field name="job_position_uuid" label="Cargo" v-slot="{ field, errorMessage }">
+            <v-autocomplete
+              :model-value="currentJobPosition"
+              @update:model-value="(item: any) => {
+                const uuidValue = setJobPositionFromItem(item);
+                field.onChange(uuidValue);
+              }"
+              @blur="jobPositionOnBlur(field)"
+              label="Cargo"
+              :items="jobPositionStore.jobPositionsOptions"
+              item-title="title"
+              item-value="value"
+              variant="solo-filled"
+              density="compact"
+              clearable
+              :error="!!errorMessage"
+              :error-messages="errorMessage"
+            >
+              <template v-slot:item="{ props, item }">
+                <v-list-item 
+                  v-bind="props"
+                  :title="item.raw.title"
+                  :disabled="item.raw.disabled"
+                  density="compact"
+                />
+              </template>
+            </v-autocomplete>
           </Field>
         </v-card-text>
         <v-card-actions>

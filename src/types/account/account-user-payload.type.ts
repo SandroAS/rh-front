@@ -8,4 +8,5 @@ export default interface AccountUserPayload {
   password: string;
   confirmPassword: string;
   role: RoleType;
+  job_position_uuid?: string;
 }

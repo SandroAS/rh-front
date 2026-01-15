@@ -1,4 +1,5 @@
 import type { Role } from '../role/role.type';
+import type JobPosition from '../jobPosition/job-position.type';
 
 export default interface AccountUser {
   uuid?: string;
@@ -9,5 +10,6 @@ export default interface AccountUser {
   is_active: boolean;
   profile_img_url?: string;
   password?: string | null;
-  role: Role
+  role: Role;
+  jobPosition?: JobPosition;
 }

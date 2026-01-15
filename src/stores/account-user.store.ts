@@ -91,7 +91,16 @@ export const useAccountUserStore = defineStore('accountUser', {
             name: accountUser.role,
             created_at: '',
             permissions: []
-          }
+          },
+          jobPosition: accountUser.job_position_uuid ? {
+            uuid: accountUser.job_position_uuid,
+            title: '',
+            description: '',
+            cbo_code: undefined,
+            base_salary: undefined,
+            levelsGroup: undefined,
+            drd_uuid: undefined
+          } : undefined
         }
         if(uuid) {
           const accountUserFind = this.account_users.find(x => x.uuid === uuid);
