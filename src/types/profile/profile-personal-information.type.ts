@@ -5,4 +5,5 @@ export interface ProfilePersonalInformation {
   cpf: string | undefined;
   gender: string | null | undefined;
   profile_img_url: string | null | undefined;
+  job_position_uuid?: string;
 }

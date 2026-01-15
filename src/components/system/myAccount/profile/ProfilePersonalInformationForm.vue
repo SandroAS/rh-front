@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch, onMounted } from 'vue';
 import profile_img_default from '@/assets/profile_img_default.png'
 import { useUserStore } from '@/stores/auth.store';
 import type { ProfilePersonalInformation } from '@/types/profile/profile-personal-information.type';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useSnackbarStore } from '@/stores/snackbar.store';
+import { useJobPositionStore } from '@/stores/job-position.store';
 
 const userStore = useUserStore();
 const snackbarStore = useSnackbarStore();
+const jobPositionStore = useJobPositionStore();
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const selectedImage = ref<File | null>(null);
@@ -44,19 +46,40 @@ function onFileSelected(event: Event) {
   }
 }
 
+const currentJobPosition = ref(userStore?.user?.jobPosition?.uuid || userStore?.user?.job_position_uuid || '');
+
 const personalInformationDefault = reactive<ProfilePersonalInformation>({
   name: userStore?.user?.name || '',
   email: userStore?.user?.email || '',
   cellphone: userStore?.user?.cellphone,
   cpf: userStore?.user?.cpf,
   gender: userStore?.user?.gender ? (userStore?.user?.gender === 'MALE' ? 'Masculino' : 'Feminino') : null,
-  profile_img_url: userStore?.user?.profile_img_url
+  profile_img_url: userStore?.user?.profile_img_url,
+  job_position_uuid: userStore?.user?.jobPosition?.uuid || userStore?.user?.job_position_uuid || undefined,
 })
 
 const genderTypes = [
   { text: 'Masculino', value: 'MALE' },
   { text: 'Feminino', value: 'FEMALE' }
 ];
+
+async function getAllJobPositions() {
+  await jobPositionStore.getAllJobPositions();
+}
+
+function setJobPositionFromItem(item: any): string {
+  const uuidValue = item?.value ?? (typeof item === 'string' ? item : '');
+  currentJobPosition.value = uuidValue;
+  return uuidValue;
+}
+
+function jobPositionOnBlur(field: any) {
+  field.onBlur();
+}
+
+onMounted(async () => {
+  await getAllJobPositions();
+});
 
 async function onSubmit(formValues: Record<string, any>) {
   const formData = new FormData();
@@ -66,7 +89,10 @@ async function onSubmit(formValues: Record<string, any>) {
 
   for (const key in formValues) {
     if (Object.prototype.hasOwnProperty.call(formValues, key)) {
-      formData.append(key, formValues[key]);
+      const value = formValues[key];
+      if (value !== undefined && value !== null) {
+        formData.append(key, value);
+      }
     }
   }
 
@@ -213,6 +239,40 @@ async function onSubmit(formValues: Record<string, any>) {
                 :error="!!errorMessage"
                 :error-messages="errorMessage"
               />
+            </Field>
+          </v-col>
+          <v-col cols="12" sm="6">
+            <Field
+              name="job_position_uuid"
+              label="Cargo"
+              v-slot="{ field, errorMessage }"
+            >
+              <v-autocomplete
+                :model-value="currentJobPosition"
+                @update:model-value="(item: any) => {
+                  const uuidValue = setJobPositionFromItem(item);
+                  field.onChange(uuidValue);
+                }"
+                @blur="jobPositionOnBlur(field)"
+                label="Cargo"
+                :items="jobPositionStore.jobPositionsOptions"
+                item-title="title"
+                item-value="value"
+                variant="solo-filled"
+                density="compact"
+                clearable
+                :error="!!errorMessage"
+                :error-messages="errorMessage"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item 
+                    v-bind="props"
+                    :title="item.raw.title"
+                    :disabled="item.raw.disabled"
+                    density="compact"
+                  />
+                </template>
+              </v-autocomplete>
             </Field>
           </v-col>
         </v-row>
