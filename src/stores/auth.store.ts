@@ -144,17 +144,24 @@ export const useUserStore = defineStore('user', {
     async updateUserPersonalInformation(formData: FormData, personalInformation: ProfilePersonalInformation) {
       this.loading = true;
       this.error = null;
+
       try {
         const response = await updateUserPersonalInformation(this.user!.uuid, formData);
+
         this.user!.name = personalInformation.name;
         this.user!.email = personalInformation.email;
         this.user!.cellphone = personalInformation.cellphone;
         this.user!.cpf = personalInformation.cpf;
-        if(response.profile_img_url) this.user!.profile_img_url = response.profile_img_url;
-        console.log(personalInformation)
+        this.user!.gender = personalInformation.gender as 'MALE' | 'FEMALE' | null;
+
+        if(response.profile_img_url) {
+          this.user!.profile_img_url = response.profile_img_url;
+        }
+
         if(personalInformation.job_position_uuid !== undefined) {
           this.user!.job_position_uuid = personalInformation.job_position_uuid || undefined;
         }
+
         localStorage.setItem('user', JSON.stringify(this.user));
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar atualizar usuário.';
