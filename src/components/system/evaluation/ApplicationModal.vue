@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, ref, reactive } from 'vue';
+import { watch, ref, reactive, computed } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
@@ -24,12 +24,14 @@ const close = () => {
   emit('update:modelValue', false);
 };
 
-const evaluationApplicationFormData = reactive<EvaluationApplicationPayload>({
+const evaluationApplicationFormData = reactive<EvaluationApplicationPayload & { duration_days?: number; recurrence?: string }>({
   uuid: props.selectedApplication?.uuid || undefined,
   evaluation_uuid: props.selectedApplication?.evaluation_uuid || '',
   evaluation: props.selectedApplication?.evaluation || undefined,
   started_date: props.selectedApplication?.started_date || new Date(),
   expiration_date: props.selectedApplication?.expiration_date || new Date(),
+  duration_days: undefined,
+  recurrence: undefined,
   status: props.selectedApplication?.status || EvaluationApplicationStatus.CREATED,
   applications: props.selectedApplication && props.selectedApplication.type
   ? [{
@@ -56,6 +58,77 @@ const applicationTypeOptions = [
   { title: 'Avaliação por Líder', value: EvaluationType.LEADER },
   { title: 'Avaliação por Liderado', value: EvaluationType.SUBORDINATE },
 ];
+
+const recurrenceOptions = [
+  { title: 'Mensal', value: 'month' },
+  { title: 'Bimestral', value: 'bimonth' },
+  { title: 'Trimestral', value: 'quarter' },
+  { title: 'Semestral', value: 'semester' },
+  { title: 'Anual', value: 'year' },
+];
+
+/**
+ * Label dinâmica para o campo de data inicial baseado na seleção de recorrência
+ */
+const startedDateLabel = computed(() => {
+  return evaluationApplicationFormData.recurrence 
+    ? 'Data de início da recorrência' 
+    : 'Data de envio da aplicação';
+});
+
+/**
+ * Calcula a data de expiração baseada na data de início e duração em dias
+ */
+const calculatedExpirationDate = computed(() => {
+  if (!evaluationApplicationFormData.started_date || !evaluationApplicationFormData.duration_days) {
+    return null;
+  }
+  
+  const startDate = new Date(evaluationApplicationFormData.started_date);
+  const expirationDate = new Date(startDate);
+  expirationDate.setDate(expirationDate.getDate() + (evaluationApplicationFormData.duration_days || 0));
+  
+  return expirationDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+});
+
+/**
+ * Calcula os primeiros 3 períodos de recorrência baseados na data de início e tipo de recorrência
+ */
+const recurrencePeriods = computed(() => {
+  if (!evaluationApplicationFormData.started_date || !evaluationApplicationFormData.recurrence) {
+    return [];
+  }
+  
+  const startDate = new Date(evaluationApplicationFormData.started_date);
+  const periods = [];
+  let currentDate = new Date(startDate);
+  
+  for (let i = 0; i < 5; i++) {
+    const periodDate = new Date(currentDate);
+    periods.push(periodDate.toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }));
+    
+    // Avança para o próximo período baseado no tipo de recorrência
+    switch (evaluationApplicationFormData.recurrence) {
+      case 'month':
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        break;
+      case 'bimonth':
+        currentDate.setMonth(currentDate.getMonth() + 2);
+        break;
+      case 'quarter':
+        currentDate.setMonth(currentDate.getMonth() + 3);
+        break;
+      case 'semester':
+        currentDate.setMonth(currentDate.getMonth() + 6);
+        break;
+      case 'year':
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
+        break;
+    }
+  }
+  
+  return periods;
+});
 
 let applicationsGrupedByEvaluated = reactive<CreateEvaluationApplication[][] | []>([]);
 
@@ -104,6 +177,17 @@ const getInitialApplicationState = async (selectedApplication: EvaluationApplica
 
     evaluationApplicationFormData.started_date = formatDateForInput(selectedApplication?.started_date);
     evaluationApplicationFormData.expiration_date = formatDateForInput(selectedApplication?.expiration_date);
+    
+    // Calcular duration_days se houver started_date e expiration_date
+    if (selectedApplication?.started_date && selectedApplication?.expiration_date) {
+      const start = new Date(selectedApplication.started_date);
+      const expiration = new Date(selectedApplication.expiration_date);
+      const diffTime = expiration.getTime() - start.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      evaluationApplicationFormData.duration_days = diffDays > 0 ? diffDays : undefined;
+    }
+    
+    evaluationApplicationFormData.recurrence = undefined;
 
     evaluationApplicationFormData.status = selectedApplication?.status || EvaluationApplicationStatus.CREATED;
 
@@ -347,17 +431,27 @@ watch(evaluated360UserUuid, (val) => {
 async function onSubmit(formValues: Record<string, any>) {
   console.log('formValues', formValues)
   const applicationsToSave = evaluationApplicationFormData.applications || [];
+  
+  // Calcular expiration_date se houver duration_days e started_date
+  let expirationDate = evaluationApplicationFormData.expiration_date;
+  if (evaluationApplicationFormData.started_date && evaluationApplicationFormData.duration_days && !evaluationApplicationFormData.recurrence) {
+    const startDate = new Date(evaluationApplicationFormData.started_date);
+    const calculatedExpiration = new Date(startDate);
+    calculatedExpiration.setDate(calculatedExpiration.getDate() + evaluationApplicationFormData.duration_days);
+    expirationDate = calculatedExpiration.toISOString().split('T')[0];
+  }
+  
   const payload = {
     uuid: evaluationApplicationFormData.uuid,
     evaluation_uuid: evaluationApplicationFormData.evaluation_uuid,
     started_date: evaluationApplicationFormData.started_date,
-    expiration_date: evaluationApplicationFormData.expiration_date,
+    expiration_date: expirationDate,
     status: evaluationApplicationFormData.status,
     applications: applicationsToSave.map(app => ({
       uuid: app.uuid,
       evaluation_uuid: evaluationApplicationFormData.evaluation_uuid,
       started_date: evaluationApplicationFormData.started_date,
-      expiration_date: evaluationApplicationFormData.expiration_date,
+      expiration_date: expirationDate,
       status: evaluationApplicationFormData.status,
       type: app.type,
       evaluated_user_uuid: app.evaluated_user_uuid,
@@ -447,12 +541,29 @@ async function onSubmit(formValues: Record<string, any>) {
                 </v-radio-group>
               </v-col>
 
+              <v-col cols="12" sm="12">
+                <Field name="recurrence" label="Recorrência" v-slot="{ field, errorMessage }">
+                  <v-select
+                    v-bind="field"
+                    v-model="evaluationApplicationFormData.recurrence"
+                    :items="recurrenceOptions"
+                    label="Recorrência (opcional)"
+                    variant="solo-filled"
+                    density="compact"
+                    clearable
+                    hide-details
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  ></v-select>
+                </Field>
+              </v-col>
+              
               <v-col cols="12" sm="6">
-                <Field name="started_date" label="Data de envio da aplicação" rules="required" v-slot="{ field, errorMessage }">
+                <Field name="started_date" :label="startedDateLabel" rules="required" v-slot="{ field, errorMessage }">
                   <v-text-field
                     v-bind="field"
                     v-model="evaluationApplicationFormData.started_date"
-                    label="Data de envio da aplicação"
+                    :label="startedDateLabel"
                     type="date"
                     variant="solo-filled"
                     density="compact"
@@ -462,19 +573,39 @@ async function onSubmit(formValues: Record<string, any>) {
                   ></v-text-field>
                 </Field>
               </v-col>
+              
               <v-col cols="12" sm="6">
-                <Field name="expiration_date" label="Disponível até" rules="required" v-slot="{ field, errorMessage }">
-                  <v-text-field
-                    v-bind="field"
-                    v-model="evaluationApplicationFormData.expiration_date"
-                    label="Disponível até"
-                    type="date"
-                    variant="solo-filled"
-                    density="compact"
-                    :error="!!errorMessage"
-                    :error-messages="errorMessage"
-                  ></v-text-field>
-                </Field>
+                <div>
+                  <Field name="duration_days" label="Duração" :rules="{required: !evaluationApplicationFormData.recurrence}" v-slot="{ field, errorMessage }">
+                    <v-text-field
+                      v-bind="field"
+                      v-model.number="evaluationApplicationFormData.duration_days"
+                      label="Tempo em dias que ficará disponível para responder"
+                      type="number"
+                      min="1"
+                      variant="solo-filled"
+                      density="compact"
+                      :error="!!errorMessage"
+                      :error-messages="errorMessage"
+                    ></v-text-field>
+                  </Field>
+                </div>
+                <div v-if="!evaluationApplicationFormData.recurrence && calculatedExpirationDate" cols="12" sm="4" class="d-flex align-center">
+                  <span class="text-caption text-medium-emphasis">
+                    Ficará disponível para responder até: {{ calculatedExpirationDate }}
+                  </span>
+                </div>
+              </v-col>
+              
+              <v-col v-if="evaluationApplicationFormData.recurrence && recurrencePeriods.length > 0" cols="12" sm="12">
+                <v-alert type="info" variant="tonal" density="compact">
+                  <div class="text-body-2">
+                    <strong>Períodos de recorrência:</strong>
+                    <div class="mt-1">
+                      {{ recurrencePeriods.join(', ') }}...
+                    </div>
+                  </div>
+                </v-alert>
               </v-col>
 
               <v-divider v-if="!props.selectedApplication?.uuid"/>
