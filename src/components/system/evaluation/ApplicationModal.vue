@@ -9,6 +9,7 @@ import { getInitials } from '@/utils/getInitialsFromName.util';
 import { type CreateEvaluationApplication, type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
 import EvaluationCreationTypeSelector from './applicationModal/EvaluationCreationTypeSelector.vue';
 import EvaluationCreationModeSelector from './applicationModal/EvaluationCreationModeSelector.vue';
+import RecurrencePeriodsDisplay from './applicationModal/RecurrencePeriodsDisplay.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const accountUserStore = useAccountUserStore();
@@ -91,44 +92,6 @@ const calculatedExpirationDate = computed(() => {
   return expirationDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 });
 
-/**
- * Calcula os primeiros 3 períodos de recorrência baseados na data de início e tipo de recorrência
- */
-const recurrencePeriods = computed(() => {
-  if (!evaluationApplicationFormData.started_date || !evaluationApplicationFormData.recurrence) {
-    return [];
-  }
-  
-  const startDate = new Date(evaluationApplicationFormData.started_date);
-  const periods = [];
-  let currentDate = new Date(startDate);
-  
-  for (let i = 0; i < 5; i++) {
-    const periodDate = new Date(currentDate);
-    periods.push(periodDate.toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }));
-    
-    // Avança para o próximo período baseado no tipo de recorrência
-    switch (evaluationApplicationFormData.recurrence) {
-      case 'month':
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        break;
-      case 'bimonth':
-        currentDate.setMonth(currentDate.getMonth() + 2);
-        break;
-      case 'quarter':
-        currentDate.setMonth(currentDate.getMonth() + 3);
-        break;
-      case 'semester':
-        currentDate.setMonth(currentDate.getMonth() + 6);
-        break;
-      case 'year':
-        currentDate.setFullYear(currentDate.getFullYear() + 1);
-        break;
-    }
-  }
-  
-  return periods;
-});
 
 let applicationsGrupedByEvaluated = reactive<CreateEvaluationApplication[][] | []>([]);
 
@@ -553,15 +516,11 @@ async function onSubmit(formValues: Record<string, any>) {
                 </div>
               </v-col>
               
-              <v-col v-if="evaluationApplicationFormData.recurrence && recurrencePeriods.length > 0" cols="12" sm="12">
-                <v-alert type="info" variant="tonal" density="compact">
-                  <div class="text-body-2">
-                    <strong>Períodos de recorrência:</strong>
-                    <div class="mt-1">
-                      {{ recurrencePeriods.join(', ') }}...
-                    </div>
-                  </div>
-                </v-alert>
+              <v-col v-if="evaluationApplicationFormData.recurrence" cols="12" sm="12">
+                <RecurrencePeriodsDisplay 
+                  :started-date="evaluationApplicationFormData.started_date"
+                  :recurrence="evaluationApplicationFormData.recurrence"
+                />
               </v-col>
 
               <v-divider v-if="!props.selectedApplication?.uuid"/>
