@@ -102,6 +102,7 @@ const handleEvaluatedUserChange = (index: number, uuidValue: any, field: any) =>
   const evaluatedUser = accountUserStore.accountUsersOptionsTeams.find(user => user.value === finalValue);
 
   const newApplications = [...props.applications];
+  const isSelfEvaluation = newApplications[index].type === EvaluationType.SELF;
 
   let evaluationUuid = newApplications[index].evaluation_uuid;
   if (props.creationType === 'AUTOMATIC' && finalValue) {
@@ -113,16 +114,22 @@ const handleEvaluatedUserChange = (index: number, uuidValue: any, field: any) =>
     evaluationUuid = props.evaluationUuid;
   }
 
+  const evaluatedUserData = evaluatedUser ? {
+    uuid: evaluatedUser.value,
+    profile_img_url: evaluatedUser.avatar,
+    name: evaluatedUser.title,
+    email: ''
+  } : null;
+
   newApplications[index] = {
     ...newApplications[index],
     evaluation_uuid: evaluationUuid,
     evaluated_user_uuid: finalValue,
-    evaluated_user: evaluatedUser ? {
-      uuid: evaluatedUser.value,
-      profile_img_url: evaluatedUser.avatar,
-      name: evaluatedUser.title,
-      email: ''
-    } : null
+    evaluated_user: evaluatedUserData,
+    ...(isSelfEvaluation && {
+      submitting_user_uuid: finalValue,
+      submitting_user: evaluatedUserData
+    })
   };
   
   emit('update:applications', newApplications);
@@ -152,6 +159,15 @@ const handleSubmittingUserChange = (index: number, uuidValue: any, field: any) =
   emit('update:applications', newApplications);
   field.onChange(finalValue);
 };
+
+/**
+ * Busca o nome da avaliação baseado no evaluation_uuid
+ */
+const getEvaluationName = (evaluationUuid?: string): string => {
+  if (!evaluationUuid) return '';
+  const foundEvaluation = evaluationStore.evaluations_simple?.find(evaluation => evaluation.uuid === evaluationUuid);
+  return foundEvaluation?.name || '';
+};
 </script>
 
 <template>
@@ -166,7 +182,12 @@ const handleSubmittingUserChange = (index: number, uuidValue: any, field: any) =
     <v-col cols="12" v-for="(app, index) in applications" :key="index" class="py-2">
       <v-card variant="flat" class="pa-4 border">
         <div v-if="!selectedApplication?.uuid" class="d-flex justify-space-between align-center mb-4">
-          <div class="text-subtitle-1">Aplicação #{{ index + 1 }}</div>
+          <div class="text-subtitle-1">
+            Aplicação #{{ index + 1 }}
+            <span v-if="app.evaluation_uuid">
+              - Modelo: <b>{{ getEvaluationName(app.evaluation_uuid) }}</b>
+            </span>
+          </div>
           <v-btn 
             v-if="applications?.length"
             icon="mdi-close"
