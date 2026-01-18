@@ -10,6 +10,7 @@ const snackbarStore = useSnackbarStore();
 
 const props = defineProps<{
   evaluatedUuids: string[];
+  creationType?: 'AUTOMATIC' | 'SELECTED_EVALUATION';
 }>();
 
 const emit = defineEmits<{

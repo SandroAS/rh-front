@@ -390,6 +390,7 @@ async function onSubmit(formValues: Record<string, any>) {
               <v-col cols="12" v-if="evaluated360UserUuid.length > 0">
                 <GeneratedApplications 
                   :evaluated-uuids="evaluated360UserUuid"
+                  :creation-type="creationType"
                   @update:applications="evaluationApplicationFormData.applications = $event"
                   @update:applications-grouped="applicationsGrupedByEvaluated = $event"
                 />
