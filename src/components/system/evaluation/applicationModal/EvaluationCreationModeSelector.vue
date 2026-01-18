@@ -25,6 +25,34 @@ const evaluated360UserUuidModel = computed({
   get: () => props.evaluated360UserUuid,
   set: (value) => emit('update:evaluated360UserUuid', value)
 });
+
+/**
+ * Verifica se todos os usuários disponíveis estão selecionados
+ */
+const isAllSelected = computed(() => {
+  const availableUuids = accountUserStore.accountUsersOptionsTeams.map(u => u.value);
+  return availableUuids.length > 0 && props.evaluated360UserUuid.length === availableUuids.length;
+});
+
+/**
+ * Alterna entre selecionar todos os usuários ou limpar a seleção
+ */
+const toggleSelectAll = (evaluated360UserUuids: any) => {
+  console.log(evaluated360UserUuids);
+  let newValue: string[] = [];
+  
+  if (!isAllSelected.value) {
+    // Selecionar todos
+    newValue = accountUserStore.accountUsersOptionsTeams.map(u => u.value);
+  } else {
+    // Limpar seleção (Selecionar individualmente)
+    newValue = [];
+  }
+  
+  emit('update:evaluated360UserUuid', newValue);
+  // Importante atualizar o estado interno do VeeValidate para validação em tempo real
+  evaluated360UserUuids.onChange(newValue);
+};
 </script>
 
 <template>
@@ -42,8 +70,24 @@ const evaluated360UserUuidModel = computed({
           </div>
         </v-card-title>
         <v-card-text class="pa-0">
-          <p class="mb-3 text-caption">Selecione o(s) usuário(s) que será(ão) avaliado(s). O sistema buscará automaticamente o Líder, Pares e Liderados deste usuário para gerar as aplicações necessárias.</p>
+          <p class="mb-1 text-caption">Selecione o(s) usuário(s) que será(ão) avaliado(s). O sistema buscará automaticamente o Líder, Pares e Liderados.</p>
+          
           <Field name="bulk_evaluated_user_uuid" label="Usuário(s) Avaliado(s) (360)" :rules="{required: creationMode === '360'}" v-slot="{ field, errorMessage }">                          
+            <div class="d-flex justify-end mb-1">
+              <v-btn
+                variant="text"
+                density="compact"
+                size="x-small"
+                color="primary"
+                class="text-none"
+                style="height: 16px;"
+                :disabled="creationMode === 'MANUAL' || !accountUserStore.accountUsersOptionsTeams.length"
+                @click="toggleSelectAll(field)"
+              >
+                {{ isAllSelected ? 'Limpar seleção (Individual)' : 'Selecionar todos os usuários' }}
+              </v-btn>
+            </div>
+
             <v-autocomplete
               :model-value="evaluated360UserUuidModel"
               @update:model-value="(uuidValue: any) => {
@@ -59,33 +103,16 @@ const evaluated360UserUuidModel = computed({
               item-title="title"
               item-value="value"
               variant="solo-filled"
-              chips
-              closable-chips
               multiple
+              clear-on-select
+              counter
+              :counter-value="evaluated360UserUuidModel.length"
               :error="!!errorMessage"
               :error-messages="errorMessage"
               :disabled="creationMode === 'MANUAL'"
+              hide-details="auto"
             >
-              <template v-slot:chip="{ props, item }">
-                <v-chip
-                  v-bind="props"
-                  pill
-                  size="small"
-                  class="mt-1 pl-0"
-                >
-                  <v-avatar v-if="item.raw.avatar" start class="ml-0">
-                    <v-img :src="item.raw.avatar"></v-img>
-                  </v-avatar>
-
-                  <v-avatar v-else color="primary" class="mr-1">
-                    <span class="text-white">{{ getInitials(item.raw.title) }}</span>
-                  </v-avatar>
-
-                  {{ item.raw.title }}
-                </v-chip>
-              </template>
               <template v-slot:item="{ props, item }">
-
                 <v-list-item v-if="item.raw.avatar"
                   v-bind="props"
                   :prepend-avatar="item.raw.avatar"
@@ -106,6 +133,42 @@ const evaluated360UserUuidModel = computed({
                     </v-avatar>
                   </template>
                 </v-list-item>
+              </template>
+
+              <template v-slot:selection="{ item, index }">
+                <template v-if="index < 3">
+                  <v-chip
+                    pill
+                    size="small"
+                    closable
+                    @click:close="() => {
+                      const newValue = evaluated360UserUuidModel.filter((uuid: string) => uuid !== item.raw.value);
+                      emit('update:evaluated360UserUuid', newValue);
+                      field.onChange(newValue);
+                    }"
+                    class="mt-1 mr-1 pl-0"
+                  >
+                    <v-avatar v-if="item.raw.avatar" start class="ml-0">
+                      <v-img :src="item.raw.avatar"></v-img>
+                    </v-avatar>
+                    <v-avatar v-else color="primary" class="mr-1">
+                      <span class="text-white">{{ getInitials(item.raw.title) }}</span>
+                    </v-avatar>
+                    {{ item.raw.title }}
+                  </v-chip>
+                </template>
+                <template v-else-if="index === 3 && evaluated360UserUuidModel.length > 3">
+                  <span class="text-caption mr-1 mt-1">...</span>
+                  <v-chip
+                    pill
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                    class="mt-1"
+                  >
+                    +{{ evaluated360UserUuidModel.length - 3 }} mais
+                  </v-chip>
+                </template>
               </template>
             </v-autocomplete>
           </Field>
