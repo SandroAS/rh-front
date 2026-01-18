@@ -208,50 +208,6 @@ const removeApplication = (index: number) => {
   }
 };
 
-/**
- * Adiciona uma aplicação de avaliação ao payload, garantindo que não haja duplicação.
- * @param applications Array onde as aplicações serão adicionadas.
- * @param keySet Set para rastrear chaves únicas (Avaliador|Avaliado|Tipo).
- * @param submittingUuid UUID do Avaliador.
- * @param evaluatedUuid UUID do Avaliado.
- * @param type Tipo de Avaliação.
- */
-const addUniqueApplication = (
-  applications: EvaluationApplicationPayload['applications'],
-  keySet: Set<string>,
-  submittingUuid: string,
-  evaluatedUuid: string,
-  type: EvaluationType
-) => {
-  const key = `${submittingUuid}|${evaluatedUuid}|${type}`;
-
-  if (!applications || keySet.has(key)) {
-    return;
-  }
-
-  if (submittingUuid === evaluatedUuid && type !== EvaluationType.SELF) {
-    return;
-  }
-
-  const submittingUser = accountUserStore.accountUsersOptionsTeams.find(user => user.value === submittingUuid) || null;
-  const evaluatedUser = accountUserStore.accountUsersOptionsTeams.find(user => user.value === evaluatedUuid) || null;
-
-  if (!submittingUser || !evaluatedUser) {
-    console.warn(`Usuário não encontrado para Avaliador (${submittingUuid}) ou Avaliado (${evaluatedUuid})`);
-    return;
-  }
-
-  applications.push({
-    type: type,
-    evaluated_user_uuid: evaluatedUuid,
-    evaluated_user: {uuid: evaluatedUser.value, profile_img_url: evaluatedUser.avatar, name: evaluatedUser.title, email: ''}, 
-    submitting_user_uuid: submittingUuid,
-    submitting_user: {uuid: submittingUser.value, profile_img_url: submittingUser.avatar, name: submittingUser.title, email: ''}
-  });
-  keySet.add(key);
-};
-
-
 watch(() => props.selectedApplication, async (val) => {
   getInitialApplicationState(val ?? null)
 }, { immediate: true });
