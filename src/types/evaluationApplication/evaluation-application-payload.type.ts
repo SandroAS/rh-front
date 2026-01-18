@@ -4,6 +4,7 @@ import type { EvaluationApplicationStatus, EvaluationType } from './evaluation-a
 
 export interface CreateEvaluationApplication {
   uuid?: string;
+  evaluation_uuid: string;
   type: EvaluationType;
   evaluated_user_uuid: string;
   evaluated_user: UserAvatar | null;

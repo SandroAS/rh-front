@@ -38,6 +38,7 @@ const evaluationApplicationFormData = reactive<EvaluationApplicationPayload & { 
   applications: props.selectedApplication && props.selectedApplication.type
   ? [{
     type: props.selectedApplication.type,
+    evaluation_uuid: props.selectedApplication.evaluation_uuid || '',
     evaluated_user_uuid: props.selectedApplication.evaluated_user_uuid || '',
     evaluated_user: props.selectedApplication.evaluated_user || null,
     submitting_user_uuid: props.selectedApplication.submitting_user_uuid || '',
@@ -158,6 +159,7 @@ const getInitialApplicationState = async (selectedApplication: EvaluationApplica
       setTimeout(() => {
         evaluationApplicationFormData.applications = [{
           type: selectedApplication?.type || EvaluationType.SELF,
+          evaluation_uuid: selectedApplication?.evaluation_uuid || '',
           evaluated_user_uuid: selectedApplication?.evaluated_user_uuid || '',
           evaluated_user: selectedApplication?.evaluated_user || null,
           submitting_user_uuid: selectedApplication?.submitting_user_uuid || '',
@@ -193,6 +195,7 @@ const addApplication = () => {
   if(evaluationApplicationFormData.applications) {
     evaluationApplicationFormData.applications.push({
       type: EvaluationType.SELF,
+      evaluation_uuid: evaluationApplicationFormData.evaluation_uuid, // || cargo do usuário avaliado (DESENVOLVER)
       evaluated_user_uuid: '',
       evaluated_user: null,
       submitting_user_uuid: '',
@@ -242,9 +245,8 @@ watch(creationMode, (newMode) => {
 
 
 async function onSubmit(formValues: Record<string, any>) {
-  console.log('formValues', formValues)
   const applicationsToSave = evaluationApplicationFormData.applications || [];
-  
+
   // Calcular expiration_date se houver duration_days e started_date
   let expirationDate = evaluationApplicationFormData.expiration_date;
   if (evaluationApplicationFormData.started_date && evaluationApplicationFormData.duration_days && !evaluationApplicationFormData.recurrence) {
@@ -253,7 +255,7 @@ async function onSubmit(formValues: Record<string, any>) {
     calculatedExpiration.setDate(calculatedExpiration.getDate() + evaluationApplicationFormData.duration_days);
     expirationDate = calculatedExpiration.toISOString().split('T')[0];
   }
-  
+
   const payload = {
     uuid: evaluationApplicationFormData.uuid,
     evaluation_uuid: evaluationApplicationFormData.evaluation_uuid,
@@ -262,7 +264,7 @@ async function onSubmit(formValues: Record<string, any>) {
     status: evaluationApplicationFormData.status,
     applications: applicationsToSave.map(app => ({
       uuid: app.uuid,
-      evaluation_uuid: evaluationApplicationFormData.evaluation_uuid,
+      evaluation_uuid: evaluationApplicationFormData.evaluation_uuid || app.evaluation_uuid,
       started_date: evaluationApplicationFormData.started_date,
       expiration_date: expirationDate,
       status: evaluationApplicationFormData.status,
