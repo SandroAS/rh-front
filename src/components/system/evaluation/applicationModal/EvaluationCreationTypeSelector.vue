@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { Field } from '@/plugins/vee-validate';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 
@@ -23,6 +23,13 @@ const creationType = computed({
 const evaluationUuidModel = computed({
   get: () => props.evaluationUuid,
   set: (value) => emit('update:evaluationUuid', value)
+});
+
+// Limpar evaluation_uuid quando mudar para AUTOMATIC
+watch(() => props.modelValue, (newValue) => {
+  if (newValue === 'AUTOMATIC' && props.evaluationUuid) {
+    emit('update:evaluationUuid', '');
+  }
 });
 </script>
 
