@@ -91,9 +91,6 @@ const updateApplication = (index: number, field: keyof CreateEvaluationApplicati
     ...newApplications[index],
     [field]: value
   };
-  if(field === 'evaluated_user_uuid') {
-    console.log('newApplications', newApplications);
-  }
   emit('update:applications', newApplications);
 };
 
