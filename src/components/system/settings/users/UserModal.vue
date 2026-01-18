@@ -81,6 +81,7 @@ watch(() => props.selectedAccountUser, (val) => {
     role: val?.role?.name || RoleType.MEMBER,
     job_position_uuid: val?.jobPosition?.uuid || undefined
   });
+  currentJobPosition.value = val?.jobPosition?.uuid || '';
   passwordField.value = '';
 }, { immediate: true });
 
