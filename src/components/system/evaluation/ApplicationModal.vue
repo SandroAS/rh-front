@@ -3,17 +3,15 @@ import { watch, ref, reactive, computed } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
 import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
-import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
-import { getInitials } from '@/utils/getInitialsFromName.util';
 import { type CreateEvaluationApplication, type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
 import EvaluationCreationTypeSelector from './applicationModal/EvaluationCreationTypeSelector.vue';
 import EvaluationCreationModeSelector from './applicationModal/EvaluationCreationModeSelector.vue';
 import RecurrencePeriodsDisplay from './applicationModal/RecurrencePeriodsDisplay.vue';
 import GeneratedApplications from './applicationModal/GeneratedApplications.vue';
+import ManualApplications from './applicationModal/ManualApplications.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
-const accountUserStore = useAccountUserStore();
 const snackbarStore = useSnackbarStore();
 
 const props = defineProps<{
@@ -55,12 +53,6 @@ const creationType = ref<'AUTOMATIC' | 'SELECTED_EVALUATION'>('AUTOMATIC');
 const creationMode = ref<'MANUAL' | '360'>('360');
 const evaluated360UserUuid = ref<string[]>(props.selectedApplication ? [props.selectedApplication.evaluated_user_uuid || ''] : []);
 
-const applicationTypeOptions = [
-  { title: 'Autoavaliação', value: EvaluationType.SELF },
-  { title: 'Avaliação por Pares', value: EvaluationType.PEER },
-  { title: 'Avaliação por Líder', value: EvaluationType.LEADER },
-  { title: 'Avaliação por Liderado', value: EvaluationType.SUBORDINATE },
-];
 
 const recurrenceOptions = [
   { title: 'Mensal', value: 'month' },
@@ -191,25 +183,6 @@ const getInitialApplicationState = async (selectedApplication: EvaluationApplica
   }
 }
 
-const addApplication = () => {
-  if(evaluationApplicationFormData.applications) {
-    evaluationApplicationFormData.applications.push({
-      type: EvaluationType.SELF,
-      evaluation_uuid: evaluationApplicationFormData.evaluation_uuid, // || cargo do usuário avaliado (DESENVOLVER)
-      evaluated_user_uuid: '',
-      evaluated_user: null,
-      submitting_user_uuid: '',
-      submitting_user: null,
-    });
-  }
-};
-
-const removeApplication = (index: number) => {
-  if (evaluationApplicationFormData?.applications?.length) {
-    evaluationApplicationFormData?.applications.splice(index, 1);
-  }
-};
-
 watch(() => props.selectedApplication, async (val) => {
   getInitialApplicationState(val ?? null)
 }, { immediate: true });
@@ -242,7 +215,6 @@ watch(creationMode, (newMode) => {
   evaluationApplicationFormData.applications = [];
   evaluated360UserUuid.value = [];
 });
-
 
 async function onSubmit(formValues: Record<string, any>) {
   const applicationsToSave = evaluationApplicationFormData.applications || [];
@@ -403,152 +375,14 @@ async function onSubmit(formValues: Record<string, any>) {
               </v-col>
             </v-row>
 
-            <v-row v-else>
-              <v-col v-if="!props.selectedApplication?.uuid" cols="12" class="d-flex justify-space-between align-center">
-                <h4 class="text-primary">Aplicações Manuais ({{ evaluationApplicationFormData?.applications?.length }})</h4>
-                <v-btn color="primary" size="small" @click="addApplication" prepend-icon="mdi-plus-circle">
-                  Adicionar Aplicação
-                </v-btn>
-              </v-col>
-
-              <v-col cols="12" v-for="(app, index) in evaluationApplicationFormData?.applications" :key="index" class="py-2">
-                <v-card variant="flat" class="pa-4 border">
-                  <div v-if="!props.selectedApplication?.uuid" class="d-flex justify-space-between align-center mb-4">
-                    <div class="text-subtitle-1">Aplicação #{{ index + 1 }}</div>
-                    <v-btn v-if="evaluationApplicationFormData?.applications?.length"
-                      icon="mdi-close"
-                      variant="text"
-                      size="small"
-                      color="error"
-                      @click="removeApplication(index)"
-                    />
-                  </div>
-
-                  <v-row>
-                    <v-col cols="12" sm="4">
-                      <Field :name="`applications[${index}].type`" label="Tipo de Avaliação" rules="required" v-slot="{ field, errorMessage }">
-                        <v-select
-                          :id="`applications_${index}_type`"
-                          v-bind="field"
-                          v-model="app.type"
-                          :items="applicationTypeOptions"
-                          label="Tipo"
-                          variant="solo-filled"
-                          :error="!!errorMessage"
-                          :error-messages="errorMessage"
-                          :hide-details="!!props.selectedApplication?.uuid"
-                          :disabled="!!props.selectedApplication?.uuid"
-                        ></v-select>
-                      </Field>
-                    </v-col>
-
-                    <v-col cols="12" sm="4">
-                      <Field :name="`applications[${index}].evaluated_user_uuid`" label="Usuário Avaliado" rules="required" v-slot="{ field, errorMessage }">
-                        <v-autocomplete
-                          :id="`applications_${index}_evaluated_user_uuid`"
-                          v-bind="field"
-                          :model-value="app.evaluated_user_uuid"
-                          @update:model-value="(uuidValue: any) => {
-                            const finalValue = uuidValue?.value || uuidValue; 
-                            app.evaluated_user_uuid = finalValue;
-                            field.onChange(finalValue);
-                          }"
-                          label="Avaliado"
-                          :items="accountUserStore.accountUsersOptionsTeams"
-                          item-title="title"
-                          item-value="value"
-                          variant="solo-filled"
-                          :error="!!errorMessage"
-                          :error-messages="errorMessage"
-                          :hide-details="!!props.selectedApplication?.uuid"
-                          :disabled="!!props.selectedApplication?.uuid"
-                        >
-                          <template v-slot:selection="{ item }">
-                            <div v-if="item?.raw?.value" class="d-flex align-center w-full">
-                              <v-avatar 
-                                v-if="item?.raw?.avatar" 
-                                :image="item?.raw?.avatar" 
-                                size="24" 
-                                class="mr-2"
-                              />
-                              <v-avatar 
-                                v-else 
-                                color="primary" 
-                                size="24" 
-                                class="mr-2"
-                              >
-                                <span class="text-white text-caption">{{ getInitials(item.raw.title) }}</span>
-                              </v-avatar>
-                              <span class="text-body-2 font-weight-medium text-truncate">{{ item.raw.title }}</span>
-                            </div>
-                          </template>
-                          <template v-slot:item="{ props, item }">
-                            <v-list-item v-if="item.raw.avatar" v-bind="props" :prepend-avatar="item.raw.avatar" :title="item.raw.title" density="compact"></v-list-item>
-                            <v-list-item v-else v-bind="props" :title="item.raw.title" density="compact" class="py-0">
-                              <template v-slot:prepend>
-                                <v-avatar color="primary" size="35"><span class="text-white">{{ getInitials(item.raw.title) }}</span></v-avatar>
-                              </template>
-                            </v-list-item>
-                          </template>
-                        </v-autocomplete>
-                      </Field>
-                    </v-col>
-
-                    <v-col cols="12" sm="4">
-                      <Field :name="`applications[${index}].submitting_user_uuid`" label="Usuário Avaliador" :rules="{required: app.type !== EvaluationType.SELF}" v-slot="{ field, errorMessage }">
-                        <v-autocomplete
-                          :id="`applications_${index}_submitting_user_uuid`"
-                          v-bind="field"
-                          :model-value="app.submitting_user_uuid"
-                          @update:model-value="(uuidValue: any) => {
-                            const finalValue = uuidValue?.value || uuidValue; 
-                            app.submitting_user_uuid = finalValue;
-                            field.onChange(finalValue);
-                          }"
-                          label="Avaliador"
-                          :items="accountUserStore.accountUsersOptionsTeams"
-                          item-title="title"
-                          item-value="value"
-                          :disabled="app.type === EvaluationType.SELF || !!props.selectedApplication?.uuid"
-                          variant="solo-filled"
-                          :error="!!errorMessage"
-                          :error-messages="errorMessage"
-                          :hide-details="!!props.selectedApplication?.uuid"
-                        >
-                          <template v-slot:selection="{ item }">
-                            <div v-if="item?.raw?.value" class="d-flex align-center w-full">
-                              <v-avatar 
-                                v-if="item?.raw?.avatar" 
-                                :image="item.raw.avatar" 
-                                size="24" 
-                                class="mr-2"
-                              />
-                              <v-avatar 
-                                v-else 
-                                color="primary" 
-                                size="24" 
-                                class="mr-2"
-                              >
-                                <span class="text-white text-caption">{{ getInitials(item.raw.title) }}</span>
-                              </v-avatar>
-                              <span class="text-body-2 font-weight-medium text-truncate">{{ item.raw.title }}</span>
-                            </div>
-                          </template>
-                          <template v-slot:item="{ props, item }">
-                            <v-list-item v-if="item.raw.avatar" v-bind="props" :prepend-avatar="item.raw.avatar" :title="item.raw.title" density="compact"></v-list-item>
-                            <v-list-item v-else v-bind="props" :title="item.raw.title" density="compact" class="py-0">
-                              <template v-slot:prepend>
-                                <v-avatar color="primary" size="35"><span class="text-white">{{ getInitials(item.raw.title) }}</span></v-avatar>
-                              </template>
-                            </v-list-item>
-                        </template>
-                        </v-autocomplete>
-                      </Field>
-                    </v-col>
-                  </v-row>
-                </v-card>
-              </v-col>
-            </v-row>
+            <ManualApplications
+              v-else
+              :applications="evaluationApplicationFormData.applications || []"
+              :selected-application="props.selectedApplication"
+              :evaluation-uuid="evaluationApplicationFormData.evaluation_uuid"
+              :creation-type="creationType"
+              @update:applications="evaluationApplicationFormData.applications = $event"
+            />
 
           </v-container>
         </v-card-text>
