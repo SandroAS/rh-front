@@ -54,13 +54,14 @@ export const useAccountUserStore = defineStore('accountUser', {
 
       return levelsGroupsMapped;
     },
-    accountUsersOptionsTeams(): { value: string, title: string, avatar?: UserAvatar['profile_img_url'], teams: TeamResponse[], disabled?: boolean }[] | [] {
+    accountUsersOptionsTeams(): { value: string, title: string, avatar?: UserAvatar['profile_img_url'], jobPosition?: UserTeam['jobPosition'], teams: TeamResponse[], disabled?: boolean }[] | [] {
       if(!this.all_account_users_teams) return [];
       const levelsGroupsMapped = this.all_account_users_teams.map(account_user_team => {
         return {
           value: account_user_team.uuid,
           title: account_user_team.name,
           avatar: account_user_team.profile_img_url,
+          jobPosition: account_user_team.jobPosition,
           teams: account_user_team.teams,
           disabled: false
         }

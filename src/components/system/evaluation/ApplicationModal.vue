@@ -391,6 +391,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 <GeneratedApplications 
                   :evaluated-uuids="evaluated360UserUuid"
                   :creation-type="creationType"
+                  :evaluation-uuid="evaluationApplicationFormData.evaluation_uuid"
                   @update:applications="evaluationApplicationFormData.applications = $event"
                   @update:applications-grouped="applicationsGrupedByEvaluated = $event"
                 />

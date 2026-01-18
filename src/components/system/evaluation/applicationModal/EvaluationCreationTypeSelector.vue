@@ -57,7 +57,7 @@ const evaluationUuidModel = computed({
         </v-card-title>
         <v-card-text class="pa-0">
           <p class="mb-3 text-caption">Selecione o modelo de avaliação que será usado para criar as aplicações.</p>
-          <Field name="evaluation_uuid" label="Modelo de Avaliação" rules="required" v-slot="{ field, errorMessage }">
+          <Field name="evaluation_uuid" label="Modelo de Avaliação" v-slot="{ field, errorMessage }">
             <v-select
               v-bind="field"
               v-model="evaluationUuidModel"
@@ -69,6 +69,7 @@ const evaluationUuidModel = computed({
               :error="!!errorMessage"
               :error-messages="errorMessage"
               :disabled="creationType === 'AUTOMATIC'"
+              hide-details
             ></v-select>
           </Field>
         </v-card-text>
