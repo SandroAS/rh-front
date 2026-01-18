@@ -93,14 +93,13 @@ const calculatedExpirationDate = computed(() => {
   return expirationDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 });
 
-
 let applicationsGrupedByEvaluated = reactive<CreateEvaluationApplication[][] | []>([]);
 
 /**
  * Converte uma string de data (ISO) ou objeto Date para o formato YYYY-MM-DD.
  * Esta versão corrige o problema de "um dia a menos" ao lidar com strings UTC (Z).
  */
- const formatDateForInput = (dateSource: string | Date | undefined): string => {
+const formatDateForInput = (dateSource: string | Date | undefined): string => {
   if (!dateSource) {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
