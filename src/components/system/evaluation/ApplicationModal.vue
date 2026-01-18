@@ -10,6 +10,7 @@ import { type CreateEvaluationApplication, type EvaluationApplicationPayload } f
 import EvaluationCreationTypeSelector from './applicationModal/EvaluationCreationTypeSelector.vue';
 import EvaluationCreationModeSelector from './applicationModal/EvaluationCreationModeSelector.vue';
 import RecurrencePeriodsDisplay from './applicationModal/RecurrencePeriodsDisplay.vue';
+import GeneratedApplications from './applicationModal/GeneratedApplications.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const accountUserStore = useAccountUserStore();
@@ -250,107 +251,6 @@ const addUniqueApplication = (
   keySet.add(key);
 };
 
-const generate360Applications = (evaluatedUuids: string[] | null) => {
-  if (!evaluatedUuids || evaluatedUuids.length === 0) {
-    evaluationApplicationFormData.applications = [];
-    return;
-  }
-
-  const combinedApplications: EvaluationApplicationPayload['applications'] = [];
-  const uniqueRelations = new Set<string>();
-
-  evaluatedUuids.forEach(evaluatedUserUuid => {
-    const evaluatedUser = accountUserStore.accountUsersOptionsTeams.find(
-      user => user.value === evaluatedUserUuid
-    );
-
-    if (!evaluatedUser) {
-      console.error(`Dados do usuário avaliado ${evaluatedUserUuid} não encontrados no store.`);
-      return;
-    }
-
-    const teams = evaluatedUser.teams;
-
-    if (!teams || teams.length === 0) {
-      console.warn(`Nenhuma relação de time encontrada para ${evaluatedUser.title}.`);
-    }
-
-    // 1. Autoavaliação (Self)
-    addUniqueApplication(
-      combinedApplications,
-      uniqueRelations,
-      evaluatedUserUuid,
-      evaluatedUserUuid,
-      EvaluationType.SELF
-    );
-
-    teams.forEach(team => {
-      const teamMembersUuids = team.teamMembers.map(tm => tm.user.uuid);
-      const leaderUuid = team.leader.uuid;
-      
-      const staffMembersUuids = teamMembersUuids.filter(uuid => uuid !== leaderUuid);
-
-      // --- A. CENÁRIO: O AVALIADO É O LÍDER ---
-      if (evaluatedUserUuid === leaderUuid) {
-        // Se eu sou o líder, todos os membros do time (staff) são meus SUBORDINADOS
-        staffMembersUuids.forEach(subordinateUuid => {
-          addUniqueApplication(
-            combinedApplications,
-            uniqueRelations,
-            subordinateUuid,
-            evaluatedUserUuid,
-            EvaluationType.SUBORDINATE
-          );
-        });
-      } 
-      
-      // --- B. CENÁRIO: O AVALIADO É UM MEMBRO (STAFF) ---
-      else if (staffMembersUuids.includes(evaluatedUserUuid)) {
-        
-        // 1. O líder do time avalia o membro como LÍDER (Downward)
-        addUniqueApplication(
-          combinedApplications,
-          uniqueRelations,
-          leaderUuid,
-          evaluatedUserUuid,
-          EvaluationType.LEADER
-        );
-
-        // 2. Os outros membros do staff avaliam como PAR (Peer)
-        staffMembersUuids.forEach(peerUuid => {
-          // Só adiciona se for outro membro, diferente de mim mesmo
-          if (peerUuid !== evaluatedUserUuid) {
-            addUniqueApplication(
-              combinedApplications,
-              uniqueRelations,
-              peerUuid,
-              evaluatedUserUuid,
-              EvaluationType.PEER
-            );
-          }
-        });
-      }
-    });
-  });
-
-  evaluationApplicationFormData.applications = combinedApplications;
-
-  applicationsGrupedByEvaluated = evaluatedUuids.map(userUuid => {
-    return combinedApplications.filter(app => app.evaluated_user_uuid === userUuid);
-  });
-
-  const usersWithoutTeams = evaluatedUuids.filter(uuid => {
-    const user = accountUserStore.accountUsersOptionsTeams.find(u => u.value === uuid);
-    return user && (!user.teams || user.teams.length === 0);
-  });
-
-  if (usersWithoutTeams.length > 0) {
-    const names = usersWithoutTeams
-      .map(uuid => accountUserStore.accountUsersOptionsTeams.find(u => u.value === uuid)?.title)
-      .join(', ');
-    snackbarStore.show(`Usuário(s) sem time (${names}) não geraram todas as relações 360.`, 'warning');
-  }
-};
 
 watch(() => props.selectedApplication, async (val) => {
   getInitialApplicationState(val ?? null)
@@ -385,11 +285,6 @@ watch(creationMode, (newMode) => {
   evaluated360UserUuid.value = [];
 });
 
-watch(evaluated360UserUuid, (val) => {
-  if(creationMode.value === '360') {
-    generate360Applications(val);
-  }
-}, { deep: true });
 
 async function onSubmit(formValues: Record<string, any>) {
   console.log('formValues', formValues)
@@ -537,20 +432,12 @@ async function onSubmit(formValues: Record<string, any>) {
             <v-divider class="my-4" />
 
             <v-row v-if="creationMode === '360' && !props.selectedApplication?.uuid">
-              <v-col cols="12" v-if="evaluationApplicationFormData?.applications?.length && evaluated360UserUuid.length > 0">
-                <v-card v-for="evaluatedApplications in applicationsGrupedByEvaluated" variant="outlined" class="pa-4 border mb-2">
-                  <p class="font-weight-medium mb-2">Aplicações Geradas para <b>{{ evaluatedApplications[0].evaluated_user?.name }}</b> :</p>
-                  <v-list density="compact" class="bg-transparent">
-                    <v-list-item v-for="(app, index) in evaluatedApplications" :key="index" class="py-1">
-                      <template #prepend>
-                        <v-icon color="primary" size="small">mdi-file-document</v-icon>
-                      </template>
-                      <v-list-item-title class="text-caption">
-                        <span class="font-weight-bold">{{ app.submitting_user?.name }}</span> ({{ applicationTypeOptions.find(opt => opt.value === app.type)?.title }}) avaliando <span class="font-weight-bold">{{ app.evaluated_user?.name }}</span>
-                      </v-list-item-title>
-                    </v-list-item>
-                  </v-list>
-                </v-card>
+              <v-col cols="12" v-if="evaluated360UserUuid.length > 0">
+                <GeneratedApplications 
+                  :evaluated-uuids="evaluated360UserUuid"
+                  @update:applications="evaluationApplicationFormData.applications = $event"
+                  @update:applications-grouped="applicationsGrupedByEvaluated = $event"
+                />
               </v-col>
               <v-col cols="12" v-else-if="evaluated360UserUuid.length === 0 && !props.selectedApplication?.uuid">
                 <v-alert type="info" variant="tonal" density="compact">Selecione um ou mais usuários para gerar automaticamente as aplicações 360.</v-alert>
