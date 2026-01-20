@@ -10,6 +10,7 @@ import type GroupedMetric from '@/types/evaluationMetrics/grouped-metric.type';
 import type EvaluationMetricApplication from '@/types/evaluationMetrics/evaluation-metric-application.type';
 import type EvaluationMetricResponse from '@/types/evaluationMetrics/evaluation-metric-response.type';
 import type EvaluationMetricAnswer from '@/types/evaluationMetrics/evaluation-metric-answer.type';
+import { getInitials } from '@/utils/getInitialsFromName.util';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const evaluationStore = useEvaluationStore();
@@ -126,7 +127,7 @@ async function loadMetricsData(isOnMounted: boolean = false) {
         app.formResponses?.forEach((resp: any) => {
           resp.answers?.forEach((answer: any) => {
             const topic = "Geral"; 
-            
+
             if (answer.question?.type === 'RATE' && answer.number_value !== null) {
               const val = parseFloat(answer.number_value);
 
@@ -210,7 +211,7 @@ onMounted(async () => {
     <!-- Filtros Superior -->
     <v-card class="mb-6 w-100 pa-4" elevation="1">
       <v-row dense>
-        <v-col cols="12" md="4">
+        <v-col cols="12" md="6">
           <v-text-field
             v-model="filters.name"
             label="Buscar por nome da avaliação"
@@ -221,31 +222,7 @@ onMounted(async () => {
             prepend-inner-icon="mdi-magnify"
           ></v-text-field>
         </v-col>
-        <v-col cols="12" md="2">
-          <v-select
-            v-model="filters.type"
-            :items="applicationTypeOptions"
-            label="Tipo"
-            variant="solo-filled"
-            density="compact"
-            hide-details
-            clearable
-          ></v-select>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-autocomplete
-            v-model="filters.evaluated_user_uuid"
-            :items="accountUserStore.accountUsersOptions"
-            item-title="name"
-            item-value="uuid"
-            label="Avaliado"
-            variant="solo-filled"
-            density="compact"
-            hide-details
-            clearable
-          ></v-autocomplete>
-        </v-col>
-        <v-col cols="12" md="3">
+        <v-col cols="12" md="6">
           <v-menu v-model="datePickerMenu" :close-on-content-click="false">
             <template v-slot:activator="{ props }">
               <v-text-field
@@ -265,6 +242,52 @@ onMounted(async () => {
               @update:model-value="datePickerMenu = false"
             ></v-date-picker>
           </v-menu>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-autocomplete
+            v-model="filters.evaluated_user_uuid"
+            label="Avaliado"
+            :items="accountUserStore.accountUsersOptions"
+            color="blue-grey-lighten-2"
+            item-title="title"
+            item-value="value"
+            variant="solo-filled"
+            density="compact"
+            clearable
+            hide-details
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-if="item.raw.avatar"
+                v-bind="props"
+                :prepend-avatar="item.raw.avatar"
+                :title="item.raw.title"
+                density="compact"
+              ></v-list-item>
+              <v-list-item v-else
+                v-bind="props"
+                :title="item.raw.title"
+                density="compact"
+                class="py-0"
+              >
+                <template v-slot:prepend>
+                  <v-avatar color="primary" size="35">
+                    <span class="text-white">{{ getInitials(item.raw.title) }}</span>
+                  </v-avatar>
+                </template>
+              </v-list-item>
+            </template>
+          </v-autocomplete>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-select
+            v-model="filters.type"
+            :items="applicationTypeOptions"
+            label="Tipo"
+            variant="solo-filled"
+            density="compact"
+            hide-details
+            clearable
+          ></v-select>
         </v-col>
       </v-row>
     </v-card>
@@ -297,8 +320,7 @@ onMounted(async () => {
         </v-toolbar>
 
         <v-row class="pa-6">
-          <!-- Coluna de Notas: Se não houver texto, expande para largura total -->
-          <v-col cols="12" :lg="hasTextResponses(group.applications) ? 6 : 12">
+          <v-col cols="12" lg="12">
             <h3 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center">
               <v-icon color="amber-darken-2" class="mr-2">mdi-star</v-icon>
               Desempenho Médio por Pergunta
@@ -308,6 +330,15 @@ onMounted(async () => {
                 <v-expansion-panel-title>
                   <div class="d-flex justify-space-between w-100 pr-4 align-center">
                     <span class="font-weight-medium">{{ tName }}</span>
+                    <v-rating
+                      half-increments
+                      hover
+                      :length="5"
+                      :size="32"
+                      :model-value="(tData.sum / tData.count).toFixed(2)"
+                      active-color="primary"
+                      readonly
+                    />
                     <v-chip size="small" color="success" class="font-weight-bold">
                       {{ (tData.sum / tData.count).toFixed(2) }}
                     </v-chip>
@@ -318,7 +349,19 @@ onMounted(async () => {
                     <v-list-item v-for="(qData, qTitle) in tData.questions" :key="qTitle" class="px-0">
                       <v-list-item-title class="text-body-2 text-wrap pr-4">{{ qTitle }}</v-list-item-title>
                       <template v-slot:append>
-                        <span class="text-body-2 font-weight-bold">{{ (qData.sum / qData.count).toFixed(2) }}</span>
+                        <v-rating
+                          half-increments
+                          hover
+                          :length="5"
+                          :size="32"
+                          :model-value="(qData.sum / qData.count).toFixed(2)"
+                          active-color="primary"
+                          readonly
+                          class="mr-4"
+                        />
+                        <div>
+                          <span class="text-body-2 font-weight-bold">{{ (qData.sum / qData.count).toFixed(2) }}</span>
+                        </div>
                       </template>
                     </v-list-item>
                   </v-list>
@@ -327,8 +370,7 @@ onMounted(async () => {
             </v-expansion-panels>
           </v-col>
 
-          <!-- Coluna de Respostas de Texto Aberto (Condicional) -->
-          <v-col v-if="hasTextResponses(group.applications)" cols="12" lg="6">
+          <v-col v-if="hasTextResponses(group.applications)" cols="12" lg="12">
             <h3 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center">
               <v-icon color="blue" class="mr-2">mdi-message-text-outline</v-icon>
               Respostas de texto aberto
