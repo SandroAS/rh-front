@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, reactive } from 'vue';
+import { ref, onMounted, watch, reactive, computed } from 'vue';
 import { useEvaluationStore } from '@/stores/evaluation.store';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
@@ -11,6 +11,7 @@ import type EvaluationMetricApplication from '@/types/evaluationMetrics/evaluati
 import type EvaluationMetricResponse from '@/types/evaluationMetrics/evaluation-metric-response.type';
 import type EvaluationMetricAnswer from '@/types/evaluationMetrics/evaluation-metric-answer.type';
 import { getInitials } from '@/utils/getInitialsFromName.util';
+import { formatDate } from '@/utils/formatDate.util';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const evaluationStore = useEvaluationStore();
@@ -22,11 +23,17 @@ const expandedCards = ref<Record<string, boolean>>({});
 const today = new Date();
 const twelveMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 12, today.getDate());
 
-const dateRange = ref([
-  twelveMonthsAgo.toISOString().substring(0, 10),
-  today.toISOString().substring(0, 10)
-]);
+const dateRange = ref<Date[]>([twelveMonthsAgo, today]);
 const datePickerMenu = ref(false);
+
+const dateRangeText = computed(() => {
+  if (!dateRange.value || dateRange.value.length === 0) return '';
+  const sorted = [...dateRange.value].sort((a, b) => a.getTime() - b.getTime());
+  const start = formatDate(sorted[0]);
+  if (sorted.length === 1) return start;
+  const end = formatDate(sorted[1]);
+  return `${start} até ${end}`;
+});
 
 const filters = reactive<{
   name: string | null;
@@ -36,12 +43,12 @@ const filters = reactive<{
   start_date: string | null;
   end_date: string | null;
 }>({
-  name: null as string | null,
-  type: null as EvaluationType | null,
-  evaluated_user_uuid: null as string | null,
-  submitted_user_uuid: null as string | null,
-  start_date: twelveMonthsAgo.toISOString().substring(0, 10),
-  end_date: today.toISOString().substring(0, 10),
+  name: null,
+  type: null,
+  evaluated_user_uuid: null,
+  submitted_user_uuid: null,
+  start_date: formatDate(twelveMonthsAgo),
+  end_date: formatDate(today),
 });
 
 const applicationTypeOptions = [
@@ -78,14 +85,14 @@ function getTextAnswers(app: EvaluationMetricApplication) {
 async function loadMetricsData(isOnMounted: boolean = false) {
   loadingData.value = true;
 
-  if (!isOnMounted) {
-    filters.start_date = dateRange.value[0] || null;
-    filters.end_date = dateRange.value[1] || null;
+  if (!isOnMounted && dateRange.value.length > 0) {
+    const sorted = [...dateRange.value].sort((a, b) => a.getTime() - b.getTime());
+    filters.start_date = formatDate(sorted[0]);
+    filters.end_date = formatDate(sorted[1]) || filters.start_date;
   }
 
   try {
     const { name, type, evaluated_user_uuid, submitted_user_uuid, start_date, end_date } = filters;
-
     await evaluationApplicationStore.getEvaluationApplicationsFilterMetrics(
       name, type, evaluated_user_uuid, submitted_user_uuid, start_date, end_date
     );
@@ -127,27 +134,17 @@ async function loadMetricsData(isOnMounted: boolean = false) {
         app.formResponses?.forEach((resp: any) => {
           resp.answers?.forEach((answer: any) => {
             const topic = "Geral"; 
-
             if (answer.question?.type === 'RATE' && answer.number_value !== null) {
               const val = parseFloat(answer.number_value);
-
-              if (!topicAverages[topic]) {
-                topicAverages[topic] = { sum: 0, count: 0, questions: {} };
-              }
+              if (!topicAverages[topic]) topicAverages[topic] = { sum: 0, count: 0, questions: {} };
               topicAverages[topic].sum += val;
               topicAverages[topic].count += 1;
-
               const qTitle = answer.question.title;
-              if (!topicAverages[topic].questions[qTitle]) {
-                topicAverages[topic].questions[qTitle] = { sum: 0, count: 0 };
-              }
+              if (!topicAverages[topic].questions[qTitle]) topicAverages[topic].questions[qTitle] = { sum: 0, count: 0 };
               topicAverages[topic].questions[qTitle].sum += val;
               topicAverages[topic].questions[qTitle].count += 1;
-
               if (timelineMap[monthLabel]) {
-                if (!timelineMap[monthLabel][topic]) {
-                  timelineMap[monthLabel][topic] = { sum: 0, count: 0 };
-                }
+                if (!timelineMap[monthLabel][topic]) timelineMap[monthLabel][topic] = { sum: 0, count: 0 };
                 timelineMap[monthLabel][topic].sum += val;
                 timelineMap[monthLabel][topic].count += 1;
               }
@@ -171,11 +168,7 @@ async function loadMetricsData(isOnMounted: boolean = false) {
         };
       });
 
-      return {
-        ...group,
-        stats: topicAverages,
-        chartData: { labels: months, datasets }
-      };
+      return { ...group, stats: topicAverages, chartData: { labels: months, datasets } };
     });
 
   } catch (error) {
@@ -187,6 +180,41 @@ async function loadMetricsData(isOnMounted: boolean = false) {
 
 const toggleExpand = (id: string) => {
   expandedCards.value[id] = !expandedCards.value[id];
+};
+
+const handleDateRangeUpdate = (val: any) => {
+  if (!val || val.length === 0) {
+    dateRange.value = [];
+    return;
+  }
+
+  const normalizeDate = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  };
+
+  if (val.length === 1) {
+    dateRange.value = [normalizeDate(val[0])];
+    return;
+  }
+
+  const sorted = [...val].sort((a: Date, b: Date) => a.getTime() - b.getTime());
+  
+  // Se há apenas uma data, mantém apenas ela (usuário ainda está selecionando)
+  if (sorted.length === 1) {
+    dateRange.value = [normalizeDate(sorted[0])];
+    return;
+  }
+
+  // Se há duas ou mais datas, pega apenas a primeira e última (início e fim do intervalo)
+  const startDate = normalizeDate(sorted[0]);
+  const endDate = normalizeDate(sorted[sorted.length - 1]);
+  
+  dateRange.value = [startDate, endDate];
+
+  // Só fecha o menu quando tiver um intervalo completo (duas datas distintas)
+  if (dateRange.value.length === 2 && startDate.getTime() !== endDate.getTime()) {
+    datePickerMenu.value = false;
+  }
 };
 
 let debounceTimer: any;
@@ -208,7 +236,6 @@ onMounted(async () => {
 
 <template>
   <v-container fluid class="bg-grey-lighten-4 fill-height align-start">
-    <!-- Filtros Superior -->
     <v-card class="mb-6 w-100 pa-4" elevation="1">
       <v-row dense>
         <v-col cols="12" md="6">
@@ -227,7 +254,7 @@ onMounted(async () => {
             <template v-slot:activator="{ props }">
               <v-text-field
                 v-bind="props"
-                :model-value="dateRange.length > 1 ? `${dateRange[0]} até ${dateRange[1]}` : dateRange[0]"
+                :model-value="dateRangeText"
                 label="Período"
                 prepend-inner-icon="mdi-calendar"
                 readonly
@@ -238,8 +265,9 @@ onMounted(async () => {
             </template>
             <v-date-picker
               v-model="dateRange"
+              control-variant="modal"
               multiple="range"
-              @update:model-value="datePickerMenu = false"
+              @update:model-value="handleDateRangeUpdate"
             ></v-date-picker>
           </v-menu>
         </v-col>
