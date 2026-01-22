@@ -29,9 +29,13 @@ async function getAllJobPositions() {
 
 getAllJobPositions();
 
-const loadDRDs = async () => {
+const loadDRDs = async ({ page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
+  currentPage.value = page;
+  itemsPerPage.value = itemsPerPageParam;
+  sortBy.value = sortByParam;
+
   await loadItems(
-    { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
+    { page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam },
     searchTerm.value,
     DRDStore,
     'getDRDs',
@@ -40,6 +44,12 @@ const loadDRDs = async () => {
 
   currentPage.value = DRDStore.page;
   itemsPerPage.value = DRDStore.limit;
+
+  if (DRDStore.sort_column) {
+    sortBy.value = [{ key: DRDStore.sort_column, order: DRDStore.sort_order || 'asc' }];
+  } else {
+    sortBy.value = [];
+  }
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -48,12 +58,20 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadDRDs();
+    loadDRDs({
+      page: DRDStore.page,
+      itemsPerPage: DRDStore.limit,
+      sortBy: DRDStore.sort_column ? [{ key: DRDStore.sort_column, order: DRDStore.sort_order || 'asc' }] : []
+    });
   }, 300);
 });
 
-onMounted(async () => {
-  loadDRDs();
+onMounted(() => {
+  loadDRDs({
+    page: DRDStore.page,
+    itemsPerPage: DRDStore.limit,
+    sortBy: DRDStore.sort_column ? [{ key: DRDStore.sort_column, order: DRDStore.sort_order || 'asc' }] : []
+  });
 });
 </script>
 
@@ -82,7 +100,7 @@ onMounted(async () => {
       </v-btn>
     </div>
 
-    <v-data-table
+    <v-data-table-server
       :headers="[
         { title: 'Cargo', value: 'jobPosition.title', sortable: true },
         { title: 'Criado por', value: 'createdByUser', sortable: true },
@@ -125,7 +143,7 @@ onMounted(async () => {
           </v-btn> -->
         </div>
       </template>
-    </v-data-table>
+    </v-data-table-server>
 
     <DRDModal v-model="dialog" :selectedDRD="selectedDRD" />
   </v-container>

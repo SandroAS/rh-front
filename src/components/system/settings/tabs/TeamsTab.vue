@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useTeamStore } from '../../../../stores/team.store';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import loadItems from '@/utils/loadItems.util'; 
@@ -29,9 +29,13 @@ async function getAccountUsers() {
 
 getAccountUsers()
 
-const loadTeams = async () => {
+const loadTeams = async ({ page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
+  currentPage.value = page;
+  itemsPerPage.value = itemsPerPageParam;
+  sortBy.value = sortByParam;
+
   await loadItems(
-    { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
+    { page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam },
     searchTerm.value,
     teamStore,
     'getTeams',
@@ -40,6 +44,12 @@ const loadTeams = async () => {
 
   currentPage.value = teamStore.page;
   itemsPerPage.value = teamStore.limit;
+
+  if (teamStore.sort_column) {
+    sortBy.value = [{ key: teamStore.sort_column, order: teamStore.sort_order || 'asc' }];
+  } else {
+    sortBy.value = [];
+  }
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -48,8 +58,20 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadTeams();
+    loadTeams({
+      page: teamStore.page,
+      itemsPerPage: teamStore.limit,
+      sortBy: teamStore.sort_column ? [{ key: teamStore.sort_column, order: teamStore.sort_order || 'asc' }] : []
+    });
   }, 300);
+});
+
+onMounted(() => {
+  loadTeams({
+    page: teamStore.page,
+    itemsPerPage: teamStore.limit,
+    sortBy: teamStore.sort_column ? [{ key: teamStore.sort_column, order: teamStore.sort_order || 'asc' }] : []
+  });
 });
 </script>
 
@@ -74,7 +96,7 @@ watch(searchTerm, (newVal) => {
       </v-btn>
     </div>
 
-    <v-data-table
+    <v-data-table-server
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
         { title: 'Líder', value: 'leader', align: 'start' },
@@ -141,7 +163,7 @@ watch(searchTerm, (newVal) => {
           </v-btn> -->
         </div>
       </template>
-    </v-data-table>
+    </v-data-table-server>
 
     <TeamModal v-model="dialog" :selectedTeam="selectedTeam" />
   </div>

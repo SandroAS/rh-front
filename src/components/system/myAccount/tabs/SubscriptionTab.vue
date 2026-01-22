@@ -163,7 +163,7 @@ pagamentos.value = pagamentos.value.map((p) => {
 
       <v-card class="mt-4">
         <v-card-title>Histórico de Pagamentos</v-card-title>
-        <v-data-table
+        <v-data-table-server
           :headers="headers"
           :items="pagamentos"
           class="elevation-1"
@@ -194,7 +194,7 @@ pagamentos.value = pagamentos.value.map((p) => {
             </v-btn>
             <span v-else>—</span>
           </template>
-        </v-data-table>
+        </v-data-table-server>
       </v-card>
 
     </div>

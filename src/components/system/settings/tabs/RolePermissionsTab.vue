@@ -25,7 +25,7 @@ async function getPermissions() {
 
 getPermissions();
 
-async function loadItems({ page, itemsPerPage, sortBy }: { page: number, itemsPerPage: number, sortBy: any[] }) {
+async function loadItems({ page, itemsPerPage: itemsPerPageParam, sortBy }: { page: number, itemsPerPage: number, sortBy: any[] }) {
   const sortColumn = sortBy.length > 0 ? sortBy[0].key : undefined;
   const sortOrder = sortBy.length > 0 ? sortBy[0].order : undefined;
   const currentSearchTerm = searchTerm.value;
@@ -37,8 +37,8 @@ async function loadItems({ page, itemsPerPage, sortBy }: { page: number, itemsPe
     shouldFetch = true;
   }
 
-  if (itemsPerPage !== roleStore.limit) {
-    roleStore.limit = itemsPerPage;
+  if (itemsPerPageParam !== roleStore.limit) {
+    roleStore.limit = itemsPerPageParam;
     roleStore.page = 1;
     shouldFetch = true;
   }
@@ -63,6 +63,10 @@ async function loadItems({ page, itemsPerPage, sortBy }: { page: number, itemsPe
   if (!roleStore.roles && !roleStore.loading) {
     await roleStore.getRolesPermissions({ page: roleStore.page, limit: roleStore.limit, sort_column: roleStore.sort_column, sort_order: roleStore.sort_order, search_term: roleStore.search_term });
   }
+
+  // Sincroniza os valores locais com a store após o carregamento
+  currentPage.value = roleStore.page;
+  itemsPerPage.value = roleStore.limit;
 }
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -105,7 +109,7 @@ onMounted(() => {
       ></v-text-field>
     </div>
 
-    <v-data-table
+    <v-data-table-server
       :headers="[
         { title: 'Grupo', value: 'name', sortable: true },
         { title: 'Data de Cadastro', value: 'created_at', sortable: true },
@@ -133,7 +137,7 @@ onMounted(() => {
           <v-icon>mdi-eye</v-icon>
         </v-btn>
       </template>
-    </v-data-table>
+    </v-data-table-server>
 
     <RolePermissionsModal v-model="dialog" :selectedRole="selectedRole" />
   </div>

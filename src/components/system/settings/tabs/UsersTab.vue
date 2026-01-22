@@ -73,6 +73,7 @@ async function loadItems({ page, itemsPerPage, sortBy }: { page: number, itemsPe
 }
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
+
 watch(searchTerm, (newVal, oldVal) => {
   if (newVal === oldVal) return;
 

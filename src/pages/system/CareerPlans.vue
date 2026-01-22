@@ -84,7 +84,7 @@ onMounted(async () => {
       </v-btn>
     </div>
 
-    <v-data-table
+    <v-data-table-server
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
@@ -106,7 +106,7 @@ onMounted(async () => {
           <v-timeline-item v-for="jobPositionInCareer in item.jobPositionsInCareer" :key="jobPositionInCareer.uuid" size="small">
             <div>
               <p>
-                {{ jobPositionInCareer.jobPosition.name }}
+                {{ jobPositionInCareer.jobPosition.title }}
               </p>
             </div>
             <template v-slot:opposite>
@@ -145,7 +145,7 @@ onMounted(async () => {
           </v-btn> -->
         </div>
       </template>
-    </v-data-table>
+    </v-data-table-server>
 
     <CareerPlanModal v-model="dialog" :selectedCareerPlan="selectedCareerPlan" />
   </v-container>

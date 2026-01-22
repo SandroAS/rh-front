@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useJobPositionsLevelsGroupStore } from '../../../../stores/job-positions-levels-group.store';
 import loadItems from '@/utils/loadItems.util';
 import type JobPositionsLevelsGroup from '@/types/jobPositionsLevelsGroup/job-positions-levels-group.type';
@@ -22,9 +22,13 @@ const openDialog = (item?: JobPositionsLevelsGroup) => {
   dialog.value = true;
 }
 
-const loadLevelsGrupos = async () => {
+const loadLevelsGrupos = async ({ page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
+  currentPage.value = page;
+  itemsPerPage.value = itemsPerPageParam;
+  sortBy.value = sortByParam;
+
   await loadItems(
-    { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
+    { page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam },
     searchTerm.value,
     levelsGroupStore,
     'getLevelsGroupsPagination',
@@ -33,6 +37,12 @@ const loadLevelsGrupos = async () => {
 
   currentPage.value = levelsGroupStore.page;
   itemsPerPage.value = levelsGroupStore.limit;
+
+  if (levelsGroupStore.sort_column) {
+    sortBy.value = [{ key: levelsGroupStore.sort_column, order: levelsGroupStore.sort_order || 'asc' }];
+  } else {
+    sortBy.value = [];
+  }
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -41,8 +51,20 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadLevelsGrupos();
+    loadLevelsGrupos({
+      page: levelsGroupStore.page,
+      itemsPerPage: levelsGroupStore.limit,
+      sortBy: levelsGroupStore.sort_column ? [{ key: levelsGroupStore.sort_column, order: levelsGroupStore.sort_order || 'asc' }] : []
+    });
   }, 300);
+});
+
+onMounted(() => {
+  loadLevelsGrupos({
+    page: levelsGroupStore.page,
+    itemsPerPage: levelsGroupStore.limit,
+    sortBy: levelsGroupStore.sort_column ? [{ key: levelsGroupStore.sort_column, order: levelsGroupStore.sort_order || 'asc' }] : []
+  });
 });
 </script>
 
@@ -67,7 +89,7 @@ watch(searchTerm, (newVal) => {
       </v-btn>
     </div>
 
-    <v-data-table
+    <v-data-table-server
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
         { title: 'Criado por', value: 'created_by_user', align: 'start' },
@@ -135,7 +157,7 @@ watch(searchTerm, (newVal) => {
           </v-btn> -->
         </div>
       </template>
-    </v-data-table>
+    </v-data-table-server>
 
     <LevelsGroupModal v-model="dialog" :selectedLevelsGroup="selectedLevelsGroup" />
   </div>

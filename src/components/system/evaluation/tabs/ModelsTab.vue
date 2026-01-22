@@ -29,9 +29,13 @@ async function getAllDRDs() {
 
 getAllDRDs();
 
-const loadEvaluations = async () => {
+const loadEvaluations = async ({ page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
+  currentPage.value = page;
+  itemsPerPage.value = itemsPerPageParam;
+  sortBy.value = sortByParam;
+
   await loadItems(
-    { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
+    { page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam },
     searchTerm.value,
     evaluationStore,
     'getEvaluations',
@@ -40,6 +44,12 @@ const loadEvaluations = async () => {
 
   currentPage.value = evaluationStore.page;
   itemsPerPage.value = evaluationStore.limit;
+
+  if (evaluationStore.sort_column) {
+    sortBy.value = [{ key: evaluationStore.sort_column, order: evaluationStore.sort_order || 'asc' }];
+  } else {
+    sortBy.value = [];
+  }
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -48,12 +58,20 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadEvaluations();
+    loadEvaluations({
+      page: evaluationStore.page,
+      itemsPerPage: evaluationStore.limit,
+      sortBy: evaluationStore.sort_column ? [{ key: evaluationStore.sort_column, order: evaluationStore.sort_order || 'asc' }] : []
+    });
   }, 300);
 });
 
-onMounted(async () => {
-  loadEvaluations();
+onMounted(() => {
+  loadEvaluations({
+    page: evaluationStore.page,
+    itemsPerPage: evaluationStore.limit,
+    sortBy: evaluationStore.sort_column ? [{ key: evaluationStore.sort_column, order: evaluationStore.sort_order || 'asc' }] : []
+  });
 });
 </script>
 
@@ -78,7 +96,7 @@ onMounted(async () => {
       </v-btn>
     </div>
 
-    <v-data-table
+    <v-data-table-server
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
         { title: 'Criado por', value: 'createdBy', sortable: true },
@@ -124,7 +142,7 @@ onMounted(async () => {
           </v-btn> -->
         </div>
       </template>
-    </v-data-table>
+    </v-data-table-server>
 
     <EvaluationModal v-model="dialog" :selectedEvaluation="selectedEvaluation" />
   </v-container>

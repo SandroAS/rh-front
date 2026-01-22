@@ -29,9 +29,13 @@ async function getLevelsGroups() {
 
 getLevelsGroups()
 
-const loadJobPositions = async () => {
+const loadJobPositions = async ({ page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
+  currentPage.value = page;
+  itemsPerPage.value = itemsPerPageParam;
+  sortBy.value = sortByParam;
+
   await loadItems(
-    { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
+    { page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam },
     searchTerm.value,
     jobPositionStore,
     'getJobPositions',
@@ -40,6 +44,12 @@ const loadJobPositions = async () => {
 
   currentPage.value = jobPositionStore.page;
   itemsPerPage.value = jobPositionStore.limit;
+
+  if (jobPositionStore.sort_column) {
+    sortBy.value = [{ key: jobPositionStore.sort_column, order: jobPositionStore.sort_order || 'asc' }];
+  } else {
+    sortBy.value = [];
+  }
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -48,8 +58,20 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadJobPositions();
+    loadJobPositions({
+      page: jobPositionStore.page,
+      itemsPerPage: jobPositionStore.limit,
+      sortBy: jobPositionStore.sort_column ? [{ key: jobPositionStore.sort_column, order: jobPositionStore.sort_order || 'asc' }] : []
+    });
   }, 300);
+});
+
+onMounted(() => {
+  loadJobPositions({
+    page: jobPositionStore.page,
+    itemsPerPage: jobPositionStore.limit,
+    sortBy: jobPositionStore.sort_column ? [{ key: jobPositionStore.sort_column, order: jobPositionStore.sort_order || 'asc' }] : []
+  });
 });
 </script>
 
@@ -74,7 +96,7 @@ watch(searchTerm, (newVal) => {
       </v-btn>
     </div>
 
-    <v-data-table
+    <v-data-table-server
       :headers="[
         { title: 'Título', value: 'title', sortable: true },
         { title: 'Descrição', value: 'description', sortable: true },
@@ -105,7 +127,7 @@ watch(searchTerm, (newVal) => {
           </v-btn> -->
         </div>
       </template>
-    </v-data-table>
+    </v-data-table-server>
 
     <JobPositionModal v-model="dialog" :selectedJobPosition="selectedJobPosition" />
   </div>

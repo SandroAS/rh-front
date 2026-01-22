@@ -43,9 +43,13 @@ const openDialogSend = (item?: EvaluationApplication) => {
   dialogSend.value = true;
 };
 
-const loadEvaluationApplications = async () => {
+const loadEvaluationApplications = async ({ page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
+  currentPage.value = page;
+  itemsPerPage.value = itemsPerPageParam;
+  sortBy.value = sortByParam;
+
   await loadItems(
-    { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
+    { page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam },
     searchTerm.value,
     evaluationApplicationStore,
     'getEvaluationApplications',
@@ -54,6 +58,12 @@ const loadEvaluationApplications = async () => {
 
   currentPage.value = evaluationApplicationStore.page;
   itemsPerPage.value = evaluationApplicationStore.limit;
+
+  if (evaluationApplicationStore.sort_column) {
+    sortBy.value = [{ key: evaluationApplicationStore.sort_column, order: evaluationApplicationStore.sort_order || 'asc' }];
+  } else {
+    sortBy.value = [];
+  }
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
@@ -62,13 +72,22 @@ watch(searchTerm, (newVal) => {
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadEvaluationApplications();
+    loadEvaluationApplications({
+      page: evaluationApplicationStore.page,
+      itemsPerPage: evaluationApplicationStore.limit,
+      sortBy: evaluationApplicationStore.sort_column ? [{ key: evaluationApplicationStore.sort_column, order: evaluationApplicationStore.sort_order || 'asc' }] : []
+    });
   }, 300);
 });
 
 onMounted(async () => {
   await accountUserStore.getAllAccountUsersWithTeams();
   await evaluationStore.getAllEvaluations();
+  loadEvaluationApplications({
+    page: evaluationApplicationStore.page,
+    itemsPerPage: evaluationApplicationStore.limit,
+    sortBy: evaluationApplicationStore.sort_column ? [{ key: evaluationApplicationStore.sort_column, order: evaluationApplicationStore.sort_order || 'asc' }] : []
+  });
 });
 
 const getApplicationStatusDisplayName = (status: EvaluationApplicationStatus) => {
@@ -119,7 +138,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
       </v-btn>
     </div>
 
-    <v-data-table
+    <v-data-table-server
       :headers="[
         { title: 'Modelo', value: 'evaluation_uuid', sortable: true },
         { title: 'Tipo', value: 'type', sortable: true },
@@ -233,7 +252,7 @@ const getStatusColor = (status: EvaluationApplicationStatus) => {
           </v-btn> -->
         </div>
       </template>
-    </v-data-table>
+    </v-data-table-server>
 
     <ApplicationModal v-model="dialog" :selectedApplication="selectedApplication" />
     <ApplicationModalCancel v-model="dialogCancel" :selectedApplication="selectedApplicationCancel" />
