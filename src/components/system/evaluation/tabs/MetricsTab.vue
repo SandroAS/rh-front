@@ -35,6 +35,13 @@ const dateRangeText = computed(() => {
   return `${start} até ${end}`;
 });
 
+// Converte Date para ISO 8601 (formato esperado pela API)
+function dateToISO8601(date: Date): string {
+  // Garante que a data está normalizada (sem hora, minutos, segundos)
+  const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return normalizedDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
+}
+
 const filters = reactive<{
   name: string | null;
   type: EvaluationType | null;
@@ -47,8 +54,8 @@ const filters = reactive<{
   type: null,
   evaluated_user_uuid: null,
   submitted_user_uuid: null,
-  start_date: formatDate(twelveMonthsAgo),
-  end_date: formatDate(today),
+  start_date: dateToISO8601(twelveMonthsAgo),
+  end_date: dateToISO8601(today),
 });
 
 const applicationTypeOptions = [
@@ -87,8 +94,15 @@ async function loadMetricsData(isOnMounted: boolean = false) {
 
   if (!isOnMounted && dateRange.value.length > 0) {
     const sorted = [...dateRange.value].sort((a, b) => a.getTime() - b.getTime());
-    filters.start_date = formatDate(sorted[0]);
-    filters.end_date = formatDate(sorted[1]) || filters.start_date;
+    // Converte as datas para ISO 8601 antes de enviar para a API
+    filters.start_date = dateToISO8601(sorted[0]);
+    filters.end_date = sorted[1] ? dateToISO8601(sorted[1]) : filters.start_date;
+  }
+
+  // Se start_date e end_date forem iguais, não chama a API
+  if (filters.start_date && filters.end_date && filters.start_date === filters.end_date) {
+    loadingData.value = false;
+    return;
   }
 
   try {
@@ -265,7 +279,6 @@ onMounted(async () => {
             </template>
             <v-date-picker
               v-model="dateRange"
-              control-variant="modal"
               multiple="range"
               @update:model-value="handleDateRangeUpdate"
             ></v-date-picker>
