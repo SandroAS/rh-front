@@ -12,6 +12,7 @@ import type EvaluationMetricResponse from '@/types/evaluationMetrics/evaluation-
 import type EvaluationMetricAnswer from '@/types/evaluationMetrics/evaluation-metric-answer.type';
 import { getInitials } from '@/utils/getInitialsFromName.util';
 import { formatDate } from '@/utils/formatDate.util';
+import FormResponsesModal from '@/components/system/evaluation/FormResponsesModal.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const evaluationStore = useEvaluationStore();
@@ -19,6 +20,10 @@ const accountUserStore = useAccountUserStore();
 
 const loadingData = ref(false);
 const expandedCards = ref<Record<string, boolean>>({});
+const dialogFormResponses = ref(false);
+const selectedGroupResponses = ref<EvaluationMetricResponse[]>([]);
+const selectedEvaluatedUserName = ref<string>('');
+const selectedSubmittingUserName = ref<string>('');
 
 const today = new Date();
 const twelveMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 12, today.getDate());
@@ -196,6 +201,22 @@ const toggleExpand = (id: string) => {
   expandedCards.value[id] = !expandedCards.value[id];
 };
 
+const openFormResponsesModal = (group: GroupedMetric) => {
+  // Coleta todas as respostas de todas as aplicações do grupo
+  const allResponses: EvaluationMetricResponse[] = [];
+  group.applications.forEach((app: EvaluationMetricApplication) => {
+    if (app.formResponses && app.formResponses.length > 0) {
+      allResponses.push(...app.formResponses);
+    }
+  });
+  
+  selectedGroupResponses.value = allResponses;
+  // Pega o nome do primeiro avaliado como referência (pode ajustar depois)
+  selectedEvaluatedUserName.value = group.applications[0]?.evaluated_user?.name || '';
+  selectedSubmittingUserName.value = group.applications[0]?.submitting_user?.name || '';
+  dialogFormResponses.value = true;
+};
+
 const handleDateRangeUpdate = (val: any) => {
   if (!val || val.length === 0) {
     dateRange.value = [];
@@ -355,9 +376,20 @@ onMounted(async () => {
         <v-toolbar color="secondary" dark>
           <v-toolbar-title class="text-h6">{{ group.name }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-chip color="white" size="small" class="mr-4 text-white" variant="outlined">
-            {{ group.applications.length }} Respostas
-          </v-chip>
+          <div class="d-flex align-center mr-4">
+            <v-chip color="white" size="small" class="mr-2 text-white" variant="outlined">
+              {{ group.applications.reduce((total, app) => total + (app.formResponses?.length || 0), 0) }} Respostas
+            </v-chip>
+            <v-btn
+              icon
+              size="small"
+              variant="text"
+              color="white"
+              @click="openFormResponsesModal(group)"
+            >
+              <v-icon>mdi-eye</v-icon>
+            </v-btn>
+          </div>
         </v-toolbar>
 
         <v-row class="pa-6">
@@ -467,5 +499,12 @@ onMounted(async () => {
         </v-row>
       </v-card>
     </div>
+
+    <FormResponsesModal
+      v-model="dialogFormResponses"
+      :form-responses="selectedGroupResponses"
+      :evaluated-user-name="selectedEvaluatedUserName"
+      :submitting-user-name="selectedSubmittingUserName"
+    />
   </v-container>
 </template>

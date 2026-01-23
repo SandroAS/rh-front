@@ -5,6 +5,7 @@ export default interface EvaluationMetricAnswer {
   question: {
     uuid: string;
     title: string;
+    description: string;
     type: 'RATE' | 'TEXT' | 'MULTIPLE_CHOICE';
     order: number;
   };
