@@ -13,13 +13,13 @@ import type EvaluationMetricAnswer from '@/types/evaluationMetrics/evaluation-me
 import { getInitials } from '@/utils/getInitialsFromName.util';
 import { formatDate } from '@/utils/formatDate.util';
 import FormResponsesModal from '@/components/system/evaluation/FormResponsesModal.vue';
+import TextResponsesSection from '@/components/system/evaluation/TextResponsesSection.vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const evaluationStore = useEvaluationStore();
 const accountUserStore = useAccountUserStore();
 
 const loadingData = ref(false);
-const expandedCards = ref<Record<string, boolean>>({});
 const dialogFormResponses = ref(false);
 const selectedGroupResponses = ref<EvaluationMetricResponse[]>([]);
 const selectedEvaluatedUserName = ref<string>('');
@@ -72,27 +72,6 @@ const applicationTypeOptions = [
 
 const groupedMetrics = ref<GroupedMetric[]>([]);
 
-function hasTextResponses(applications: EvaluationMetricApplication[]) {
-  return applications.some(app => 
-    app.formResponses?.some((resp: any) => 
-      resp.answers?.some((ans: any) => 
-        ['SHORT_TEXT', 'LONG_TEXT'].includes(ans.question?.type) && ans.text_value
-      )
-    )
-  );
-}
-
-function getTextAnswers(app: EvaluationMetricApplication) {
-  const answers: EvaluationMetricAnswer[] = [];
-  app.formResponses?.forEach((resp: EvaluationMetricResponse) => {
-    resp.answers?.forEach((answer: EvaluationMetricAnswer) => {
-      if (['SHORT_TEXT', 'LONG_TEXT'].includes(answer.question?.type)) {
-        answers.push(answer);
-      }
-    });
-  });
-  return answers;
-}
 
 async function loadMetricsData(isOnMounted: boolean = false) {
   loadingData.value = true;
@@ -196,10 +175,6 @@ async function loadMetricsData(isOnMounted: boolean = false) {
     loadingData.value = false;
   }
 }
-
-const toggleExpand = (id: string) => {
-  expandedCards.value[id] = !expandedCards.value[id];
-};
 
 const openFormResponsesModal = (group: GroupedMetric) => {
   // Coleta todas as respostas de todas as aplicações do grupo
@@ -443,47 +418,7 @@ onMounted(async () => {
             </v-expansion-panels>
           </v-col>
 
-          <v-col v-if="hasTextResponses(group.applications)" cols="12" lg="12">
-            <h3 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center">
-              <v-icon color="blue" class="mr-2">mdi-message-text-outline</v-icon>
-              Respostas de texto aberto
-            </h3>
-            <v-list lines="three" style="max-height: 400px; overflow-y: auto;" class="rounded border">
-              <template v-for="(app, aIdx) in group.applications" :key="aIdx">
-                <!-- Só exibe o item na lista se a aplicação em questão tiver alguma resposta de texto -->
-                <template v-if="getTextAnswers(app).length > 0">
-                  <v-list-item>
-                    <v-list-item-title class="font-weight-bold text-primary">
-                      {{ app.evaluated_user?.name }}
-                    </v-list-item-title>
-                    <v-list-item-subtitle class="text-caption">
-                      Tipo: {{ getApplicationTypeName(app.type) }} | De: {{ app.submitting_user?.name }}
-                    </v-list-item-subtitle>
-                    <template v-slot:append>
-                      <v-btn 
-                        :icon="expandedCards[`${idx}-${aIdx}`] ? 'mdi-chevron-up' : 'mdi-chevron-down'" 
-                        variant="text" 
-                        size="small"
-                        @click="toggleExpand(`${idx}-${aIdx}`)"
-                      ></v-btn>
-                    </template>
-                  </v-list-item>
-
-                  <v-expand-transition>
-                    <div v-if="expandedCards[`${idx}-${aIdx}`]" class="pa-4 bg-grey-lighten-4 rounded mx-4 mb-2">
-                      <div v-for="ans in getTextAnswers(app)" :key="ans.uuid" class="mb-3">
-                        <div class="text-caption font-weight-bold text-grey-darken-2">{{ ans.question.title }}</div>
-                        <div class="text-body-2 bg-white pa-2 rounded border-s-lg border-primary">
-                          {{ ans.text_value }}
-                        </div>
-                      </div>
-                    </div>
-                  </v-expand-transition>
-                  <v-divider v-if="aIdx < group.applications.length - 1"></v-divider>
-                </template>
-              </template>
-            </v-list>
-          </v-col>
+          <TextResponsesSection :applications="group.applications" />
 
           <!-- Gráfico de Evolução -->
           <v-col cols="12" class="mt-6">
