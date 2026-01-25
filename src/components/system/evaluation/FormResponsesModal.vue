@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import type EvaluationMetricResponse from '@/types/evaluationMetrics/evaluation-metric-response.type';
+import type EvaluationMetricApplication from '@/types/evaluationMetrics/evaluation-metric-application.type';
 import { formatDate } from '@/utils/formatDate.util';
+import { getInitials } from '@/utils/getInitialsFromName.util';
+import { getQuestionTypeLabel, getQuestionTypeIcon } from '@/utils/questionType.util';
 
 const props = defineProps<{
   modelValue: boolean;
-  formResponses: EvaluationMetricResponse[];
-  evaluatedUserName?: string;
-  submittingUserName?: string;
+  applications: EvaluationMetricApplication[];
 }>();
 
 const emit = defineEmits(['update:modelValue']);
@@ -25,31 +25,39 @@ const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const searchTerm = ref('');
 
-// Transforma formResponses em uma lista plana de respostas individuais
+// Transforma as aplicações em uma lista plana de respostas individuais
 interface ResponseRow {
   responseUuid: string;
   submittedAt: string;
-  isCompleted: boolean;
   questionTitle: string;
   questionDescription?: string;
   questionType: string;
   answerValue: string | number | null;
   answerUuid: string;
+  evaluatedUserName: string;
+  evaluatedUserEmail: string;
+  submittingUserName: string;
+  submittingUserEmail: string;
 }
 
 const allResponseRows = computed((): ResponseRow[] => {
   const rows: ResponseRow[] = [];
-  props.formResponses.forEach(response => {
-    response.answers?.forEach(answer => {
-      rows.push({
-        responseUuid: response.uuid,
-        submittedAt: response.submitted_at,
-        isCompleted: response.is_completed,
-        questionTitle: answer.question?.title || 'Sem título',
-        questionDescription: answer.question?.description,
-        questionType: answer.question?.type || '',
-        answerValue: answer.text_value || answer.number_value,
-        answerUuid: answer.uuid
+  props.applications.forEach(application => {
+    application.formResponses?.forEach(response => {
+      response.answers?.forEach(answer => {
+        rows.push({
+          responseUuid: response.uuid,
+          submittedAt: response.submitted_at,
+          questionTitle: answer.question?.title || 'Sem título',
+          questionDescription: answer.question?.description,
+          questionType: answer.question?.type || '',
+          answerValue: answer.text_value || answer.number_value,
+          answerUuid: answer.uuid,
+          evaluatedUserName: application.evaluated_user?.name || '-',
+          evaluatedUserEmail: application.evaluated_user?.email || '',
+          submittingUserName: application.submitting_user?.name || '-',
+          submittingUserEmail: application.submitting_user?.email || ''
+        });
       });
     });
   });
@@ -67,7 +75,11 @@ const filteredResponses = computed(() => {
         formatDate(row.submittedAt).toLowerCase().includes(search) ||
         row.questionTitle.toLowerCase().includes(search) ||
         row.questionDescription?.toLowerCase().includes(search) ||
-        String(row.answerValue || '').toLowerCase().includes(search)
+        String(row.answerValue || '').toLowerCase().includes(search) ||
+        row.evaluatedUserName.toLowerCase().includes(search) ||
+        row.evaluatedUserEmail.toLowerCase().includes(search) ||
+        row.submittingUserName.toLowerCase().includes(search) ||
+        row.submittingUserEmail.toLowerCase().includes(search)
       );
     });
   }
@@ -98,20 +110,10 @@ watch(() => props.modelValue, (isOpen) => {
   }
 });
 
-const getQuestionTypeLabel = (type: string): string => {
-  const types: Record<string, string> = {
-    'RATE': 'Nota',
-    'SHORT_TEXT': 'Texto Curto',
-    'LONG_TEXT': 'Texto Longo',
-    'MULTI_CHOICE': 'Múltipla Escolha',
-    'SINGLE_CHOICE': 'Escolha Única'
-  };
-  return types[type] || type;
-};
 </script>
 
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="modalValueChanged" max-width="1200px" scrollable>
+  <v-dialog :model-value="modelValue" @update:model-value="modalValueChanged" max-width="1400px" scrollable>
     <v-card>
       <v-card-title class="d-flex align-center">
         <span class="text-h6">Respostas da Avaliação</span>
@@ -122,17 +124,6 @@ const getQuestionTypeLabel = (type: string): string => {
       </v-card-title>
 
       <v-card-text>
-        <div v-if="props.evaluatedUserName || props.submittingUserName" class="mb-4">
-          <v-chip v-if="props.evaluatedUserName" class="mr-2" color="primary" size="small">
-            <v-icon start size="small">mdi-account</v-icon>
-            Avaliado: {{ props.evaluatedUserName }}
-          </v-chip>
-          <v-chip v-if="props.submittingUserName" color="secondary" size="small">
-            <v-icon start size="small">mdi-account-check</v-icon>
-            Avaliador: {{ props.submittingUserName }}
-          </v-chip>
-        </div>
-
         <div class="flex-column flex-md-row d-flex justify-space-between mb-4 align-center">
           <v-text-field
             v-model="searchTerm"
@@ -154,7 +145,8 @@ const getQuestionTypeLabel = (type: string): string => {
         <v-data-table-server
           :headers="[
             { title: 'Data de Submissão', key: 'submittedAt', sortable: true },
-            { title: 'Status', key: 'isCompleted', sortable: true },
+            { title: 'Avaliado', key: 'evaluatedUserName', sortable: true },
+            { title: 'Avaliador', key: 'submittingUserName', sortable: true },
             { title: 'Pergunta', key: 'questionTitle', sortable: false },
             { title: 'Resposta', key: 'answerValue', sortable: false },
             { title: 'Tipo', key: 'questionType', sortable: false }
@@ -173,18 +165,31 @@ const getQuestionTypeLabel = (type: string): string => {
           }"
         >
           <template #item.submittedAt="{ item }">
-            <div class="d-flex align-center">
-              <v-icon size="small" class="mr-2" :color="item.isCompleted ? 'success' : 'warning'">
-                {{ item.isCompleted ? 'mdi-check-circle' : 'mdi-clock-outline' }}
-              </v-icon>
-              {{ formatDate(item.submittedAt) }}
+            {{ formatDate(item.submittedAt) }}
+          </template>
+
+          <template #item.evaluatedUserName="{ item }">
+            <div class="d-flex align-center gap-3 flex-row-reverse flex-md-row">
+              <v-avatar color="primary" size="36" class="mr-2 ml-sm-2 mr-sm-0">
+                {{ getInitials(item.evaluatedUserName) }}
+              </v-avatar>
+              <div class="text-md-left text-right text-left">
+                <div class="font-weight-medium">{{ item.evaluatedUserName }}</div>
+                <div v-if="item.evaluatedUserEmail" class="text-caption text-medium-emphasis">{{ item.evaluatedUserEmail }}</div>
+              </div>
             </div>
           </template>
 
-          <template #item.isCompleted="{ item }">
-            <v-chip :color="item.isCompleted ? 'success' : 'warning'" size="small">
-              {{ item.isCompleted ? 'Completo' : 'Pendente' }}
-            </v-chip>
+          <template #item.submittingUserName="{ item }">
+            <div class="d-flex align-center gap-3 flex-row-reverse flex-md-row">
+              <v-avatar color="secondary" size="36" class="mr-2 ml-sm-2 mr-sm-0">
+                {{ getInitials(item.submittingUserName) }}
+              </v-avatar>
+              <div class="text-md-left text-right text-left">
+                <div class="font-weight-medium">{{ item.submittingUserName }}</div>
+                <div v-if="item.submittingUserEmail" class="text-caption text-medium-emphasis">{{ item.submittingUserEmail }}</div>
+              </div>
+            </div>
           </template>
 
           <template #item.questionTitle="{ item }">
@@ -207,7 +212,8 @@ const getQuestionTypeLabel = (type: string): string => {
           </template>
 
           <template #item.questionType="{ item }">
-            <v-chip size="small" variant="outlined">
+            <v-chip size="small" variant="outlined" class="d-flex align-center" style="width: fit-content;">
+              <v-icon :icon="getQuestionTypeIcon(item.questionType)" size="small" class="mr-1"></v-icon>
               {{ getQuestionTypeLabel(item.questionType) }}
             </v-chip>
           </template>

@@ -5,11 +5,8 @@ import { useAccountUserStore } from '@/stores/account-user.store';
 import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
 import EvaluationLineChart from '@/components/system/evaluation/EvaluationLineChart.vue';
 import { EvaluationType } from '@/types/evaluationApplication/evaluation-application.type';
-import getApplicationTypeName from '@/utils/getApplicationTypeName.util';
 import type GroupedMetric from '@/types/evaluationMetrics/grouped-metric.type';
 import type EvaluationMetricApplication from '@/types/evaluationMetrics/evaluation-metric-application.type';
-import type EvaluationMetricResponse from '@/types/evaluationMetrics/evaluation-metric-response.type';
-import type EvaluationMetricAnswer from '@/types/evaluationMetrics/evaluation-metric-answer.type';
 import { getInitials } from '@/utils/getInitialsFromName.util';
 import { formatDate } from '@/utils/formatDate.util';
 import FormResponsesModal from '@/components/system/evaluation/FormResponsesModal.vue';
@@ -21,9 +18,7 @@ const accountUserStore = useAccountUserStore();
 
 const loadingData = ref(false);
 const dialogFormResponses = ref(false);
-const selectedGroupResponses = ref<EvaluationMetricResponse[]>([]);
-const selectedEvaluatedUserName = ref<string>('');
-const selectedSubmittingUserName = ref<string>('');
+const selectedApplications = ref<EvaluationMetricApplication[]>([]);
 
 const today = new Date();
 const twelveMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 12, today.getDate());
@@ -177,18 +172,8 @@ async function loadMetricsData(isOnMounted: boolean = false) {
 }
 
 const openFormResponsesModal = (group: GroupedMetric) => {
-  // Coleta todas as respostas de todas as aplicações do grupo
-  const allResponses: EvaluationMetricResponse[] = [];
-  group.applications.forEach((app: EvaluationMetricApplication) => {
-    if (app.formResponses && app.formResponses.length > 0) {
-      allResponses.push(...app.formResponses);
-    }
-  });
-  
-  selectedGroupResponses.value = allResponses;
-  // Pega o nome do primeiro avaliado como referência (pode ajustar depois)
-  selectedEvaluatedUserName.value = group.applications[0]?.evaluated_user?.name || '';
-  selectedSubmittingUserName.value = group.applications[0]?.submitting_user?.name || '';
+  // Passa todas as aplicações do grupo para o modal
+  selectedApplications.value = group.applications;
   dialogFormResponses.value = true;
 };
 
@@ -437,9 +422,7 @@ onMounted(async () => {
 
     <FormResponsesModal
       v-model="dialogFormResponses"
-      :form-responses="selectedGroupResponses"
-      :evaluated-user-name="selectedEvaluatedUserName"
-      :submitting-user-name="selectedSubmittingUserName"
+      :applications="selectedApplications"
     />
   </v-container>
 </template>

@@ -10,6 +10,7 @@ import type EvaluationPayload from '@/types/evaluation/evaluation-payload.type';
 import { QuestionType, type EvaluationQuestion } from '@/types/evaluation/evaluation-question.type';
 import type EvaluationTopic from '@/types/evaluation/evaluation-topic.type';
 import type EvaluationSimple from '@/types/evaluation/evaluation-simple.type';
+import { questionTypesOptions } from '@/utils/questionType.util';
 
 const evaluationStore = useEvaluationStore();
 const snackbarStore = useSnackbarStore();
@@ -56,15 +57,6 @@ const evaluationFormData = reactive<EvaluationPayload>({
     }]
   }
 });
-
-const frontendQuestionTypes = [
-  { value: QuestionType.RATE, text: 'Classificação', icon: 'mdi-star-outline' },
-  { value: QuestionType.SHORT_TEXT, text: 'Resposta curta', icon: 'mdi-text-short' },
-  { value: QuestionType.LONG_TEXT, text: 'Parágrafo', icon: 'mdi-text' },
-  { value: QuestionType.SINGLE_CHOICE, text: 'Múltipla escolha', icon: 'mdi-radiobox-marked' },
-  { value: QuestionType.MULTI_CHOICE, text: 'Caixas de seleção', icon: 'mdi-checkbox-marked-outline' },
-  { value: QuestionType.DROPDOWN, text: 'Lista suspensa', icon: 'mdi-arrow-down-drop-circle-outline' },
-]
 
 const evaluationMode = ref('fromDRD');
 
@@ -666,7 +658,7 @@ function handleDrdChange(newValue: any) {
                                   :id="`topics_${topicIndex}_questions_${questionIndex}_type`"
                                   v-bind="field"
                                   v-model="question.type"
-                                  :items="frontendQuestionTypes"
+                                  :items="questionTypesOptions"
                                   item-title="text"
                                   item-value="value"
                                   label="Tipo da Questão"
