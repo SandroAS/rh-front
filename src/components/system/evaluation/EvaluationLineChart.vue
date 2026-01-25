@@ -10,21 +10,14 @@ const props = defineProps<{
       data: (number | null)[];
     }[];
   };
+  legendPosition?: 'top' | 'bottom';
 }>();
 
 const chartOptions = computed(() => ({
   chart: {
     type: 'line',
     toolbar: {
-      show: true,
-      tools: {
-        download: true,
-        selection: false,
-        zoom: true,
-        zoomin: true,
-        zoomout: true,
-        pan: false,
-      }
+      show: false
     },
     dropShadow: {
       enabled: true,
@@ -68,7 +61,7 @@ const chartOptions = computed(() => ({
   xaxis: {
     categories: props.chartData.labels,
     title: {
-      text: 'Meses'
+      show: false
     }
   },
   yaxis: {
@@ -82,11 +75,11 @@ const chartOptions = computed(() => ({
     }
   },
   legend: {
-    position: 'top',
-    horizontalAlign: 'right',
-    floating: true,
-    offsetY: -25,
-    offsetX: -5
+    position: props.legendPosition || 'top',
+    horizontalAlign: props.legendPosition === 'bottom' ? 'center' : 'right',
+    floating: props.legendPosition === 'top',
+    offsetY: props.legendPosition === 'bottom' ? 0 : -25,
+    offsetX: props.legendPosition === 'bottom' ? 0 : -5
   },
   tooltip: {
     shared: true,

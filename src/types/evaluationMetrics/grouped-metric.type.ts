@@ -16,4 +16,15 @@ export default interface GroupedMetric {
       tension: number;
     }[];
   };
+  topicsChartData: {
+    labels: string[];
+    datasets: {
+      label: string;
+      borderColor: string;
+      backgroundColor: string;
+      data: (number | null)[];
+      fill: boolean;
+      tension: number;
+    }[];
+  };
 }

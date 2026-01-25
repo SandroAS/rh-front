@@ -109,6 +109,11 @@ async function loadMetricsData(isOnMounted: boolean = false) {
     groupedMetrics.value = Object.values(groups).map(group => {
       const topicAverages: Record<string, { sum: number, count: number, questions: any }> = {};
       const timelineMap: Record<string, Record<string, { sum: number, count: number }>> = {};
+      
+      // Mapa para o gráfico de tópicos
+      const topicsTimelineMap: Record<string, Record<string, { sum: number, count: number }>> = {};
+      const topicsMap: Record<string, string> = {}; // base_form_topic_uuid -> topic title
+      
       const months: string[] = [];
 
       let current = new Date(filters.start_date || twelveMonthsAgo);
@@ -117,6 +122,7 @@ async function loadMetricsData(isOnMounted: boolean = false) {
         const label = current.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
         if (!months.includes(label)) months.push(label);
         timelineMap[label] = {};
+        topicsTimelineMap[label] = {};
         current.setMonth(current.getMonth() + 1);
       }
 
@@ -129,6 +135,8 @@ async function loadMetricsData(isOnMounted: boolean = false) {
             const topic = "Geral"; 
             if (answer.question?.type === 'RATE' && answer.number_value !== null) {
               const val = parseFloat(answer.number_value);
+              
+              // Processamento para o gráfico geral (mantém como está)
               if (!topicAverages[topic]) topicAverages[topic] = { sum: 0, count: 0, questions: {} };
               topicAverages[topic].sum += val;
               topicAverages[topic].count += 1;
@@ -141,11 +149,32 @@ async function loadMetricsData(isOnMounted: boolean = false) {
                 timelineMap[monthLabel][topic].sum += val;
                 timelineMap[monthLabel][topic].count += 1;
               }
+
+              // Processamento para o gráfico de tópicos (novo)
+              const baseTopicUuid = answer.question?.applicationTopic?.base_form_topic_uuid;
+              const topicTitle = answer.question?.applicationTopic?.title;
+              
+              if (baseTopicUuid && topicTitle) {
+                // Armazena o título do tópico
+                if (!topicsMap[baseTopicUuid]) {
+                  topicsMap[baseTopicUuid] = topicTitle;
+                }
+                
+                // Processa os dados por tópico
+                if (topicsTimelineMap[monthLabel]) {
+                  if (!topicsTimelineMap[monthLabel][baseTopicUuid]) {
+                    topicsTimelineMap[monthLabel][baseTopicUuid] = { sum: 0, count: 0 };
+                  }
+                  topicsTimelineMap[monthLabel][baseTopicUuid].sum += val;
+                  topicsTimelineMap[monthLabel][baseTopicUuid].count += 1;
+                }
+              }
             }
           });
         });
       });
 
+      // Dataset para o gráfico geral
       const datasets = Object.keys(topicAverages).map((topic, index) => {
         const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
         return {
@@ -161,7 +190,28 @@ async function loadMetricsData(isOnMounted: boolean = false) {
         };
       });
 
-      return { ...group, stats: topicAverages, chartData: { labels: months, datasets } };
+      // Dataset para o gráfico de tópicos
+      const topicsDatasets = Object.keys(topicsMap).map((baseTopicUuid, index) => {
+        const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+        return {
+          label: topicsMap[baseTopicUuid],
+          borderColor: colors[index % colors.length],
+          backgroundColor: colors[index % colors.length],
+          data: months.map(m => {
+            const data = topicsTimelineMap[m] ? topicsTimelineMap[m][baseTopicUuid] : null;
+            return data && data.count > 0 ? parseFloat((data.sum / data.count).toFixed(2)) : null;
+          }),
+          fill: false,
+          tension: 0.3
+        };
+      });
+
+      return { 
+        ...group, 
+        stats: topicAverages, 
+        chartData: { labels: months, datasets },
+        topicsChartData: { labels: months, datasets: topicsDatasets }
+      };
     });
 
   } catch (error) {
@@ -405,7 +455,7 @@ onMounted(async () => {
 
           <TextResponsesSection :applications="group.applications" />
 
-          <!-- Gráfico de Evolução -->
+          <!-- Gráfico de Evolução Geral -->
           <v-col cols="12" class="mt-6">
             <v-divider class="mb-6"></v-divider>
             <h3 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center">
@@ -414,6 +464,18 @@ onMounted(async () => {
             </h3>
             <div style="height: 350px;">
               <EvaluationLineChart :chart-data="group.chartData" />
+            </div>
+          </v-col>
+
+          <!-- Gráfico de Evolução por Tópico -->
+          <v-col cols="12" class="mt-6" v-if="group.topicsChartData?.datasets?.length > 0">
+            <v-divider class="mb-6"></v-divider>
+            <h3 class="text-subtitle-1 font-weight-bold mb-4 d-flex align-center">
+              <v-icon color="grey-darken-3" class="mr-2">mdi-chart-line-variant</v-icon>
+              Evolução Temporal por Tópico
+            </h3>
+            <div style="height: 350px;">
+              <EvaluationLineChart :chart-data="group.topicsChartData" legend-position="bottom" />
             </div>
           </v-col>
         </v-row>
