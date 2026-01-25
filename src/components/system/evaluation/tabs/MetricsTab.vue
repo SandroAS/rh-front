@@ -107,7 +107,7 @@ async function loadMetricsData(isOnMounted: boolean = false) {
     });
 
     groupedMetrics.value = Object.values(groups).map(group => {
-      const topicAverages: Record<string, { sum: number, count: number, questions: any }> = {};
+      const topicAverages: Record<string, { sum: number, count: number, questions: Record<string, { sum: number, count: number, topicUuid?: string, topicTitle?: string }> }> = {};
       const timelineMap: Record<string, Record<string, { sum: number, count: number }>> = {};
       
       // Mapa para o gráfico de tópicos
@@ -132,28 +132,44 @@ async function loadMetricsData(isOnMounted: boolean = false) {
 
         app.formResponses?.forEach((resp: any) => {
           resp.answers?.forEach((answer: any) => {
-            const topic = "Geral"; 
             if (answer.question?.type === 'RATE' && answer.number_value !== null) {
               const val = parseFloat(answer.number_value);
               
-              // Processamento para o gráfico geral (mantém como está)
-              if (!topicAverages[topic]) topicAverages[topic] = { sum: 0, count: 0, questions: {} };
+              // Processamento para stats (mantém "Geral" como chave única)
+              const topic = "Geral";
+              if (!topicAverages[topic]) {
+                topicAverages[topic] = { 
+                  sum: 0, 
+                  count: 0, 
+                  questions: {}
+                };
+              }
               topicAverages[topic].sum += val;
               topicAverages[topic].count += 1;
+              
               const qTitle = answer.question.title;
-              if (!topicAverages[topic].questions[qTitle]) topicAverages[topic].questions[qTitle] = { sum: 0, count: 0 };
+              const baseTopicUuid = answer.question?.applicationTopic?.base_form_topic_uuid;
+              const topicTitle = answer.question?.applicationTopic?.title;
+              
+              if (!topicAverages[topic].questions[qTitle]) {
+                topicAverages[topic].questions[qTitle] = { 
+                  sum: 0, 
+                  count: 0,
+                  topicUuid: baseTopicUuid,
+                  topicTitle: topicTitle
+                };
+              }
               topicAverages[topic].questions[qTitle].sum += val;
               topicAverages[topic].questions[qTitle].count += 1;
+              
+              // Processamento para o gráfico geral (mantém "Geral" para compatibilidade)
               if (timelineMap[monthLabel]) {
                 if (!timelineMap[monthLabel][topic]) timelineMap[monthLabel][topic] = { sum: 0, count: 0 };
                 timelineMap[monthLabel][topic].sum += val;
                 timelineMap[monthLabel][topic].count += 1;
               }
 
-              // Processamento para o gráfico de tópicos (novo)
-              const baseTopicUuid = answer.question?.applicationTopic?.base_form_topic_uuid;
-              const topicTitle = answer.question?.applicationTopic?.title;
-              
+              // Processamento para o gráfico de tópicos
               if (baseTopicUuid && topicTitle) {
                 // Armazena o título do tópico
                 if (!topicsMap[baseTopicUuid]) {
@@ -225,6 +241,18 @@ const openFormResponsesModal = (group: GroupedMetric) => {
   // Passa todas as aplicações do grupo para o modal
   selectedApplications.value = group.applications;
   dialogFormResponses.value = true;
+};
+
+const groupQuestionsByTopic = (questions: Record<string, any>) => {
+  const grouped: Record<string, Array<{title: string, data: any}>> = {};
+  Object.entries(questions).forEach(([qTitle, qData]: [string, any]) => {
+    const key = qData.topicUuid || 'sem-topico';
+    if (!grouped[key]) {
+      grouped[key] = [];
+    }
+    grouped[key].push({ title: qTitle, data: qData });
+  });
+  return grouped;
 };
 
 const handleDateRangeUpdate = (val: any) => {
@@ -409,10 +437,10 @@ onMounted(async () => {
               Desempenho Médio por Pergunta
             </h3>
             <v-expansion-panels variant="accordion">
-              <v-expansion-panel v-for="(tData, tName) in group.stats" :key="tName">
+              <v-expansion-panel v-for="(tData, tKey) in group.stats" :key="tKey">
                 <v-expansion-panel-title>
                   <div class="d-flex justify-space-between w-100 pr-4 align-center">
-                    <span class="font-weight-medium">{{ tName }}</span>
+                    <span class="font-weight-medium">{{ tKey }}</span>
                     <v-rating
                       half-increments
                       hover
@@ -429,24 +457,29 @@ onMounted(async () => {
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
                   <v-list density="compact">
-                    <v-list-item v-for="(qData, qTitle) in tData.questions" :key="qTitle" class="px-0">
-                      <v-list-item-title class="text-body-2 text-wrap pr-4">{{ qTitle }}</v-list-item-title>
-                      <template v-slot:append>
-                        <v-rating
-                          half-increments
-                          hover
-                          :length="5"
-                          :size="32"
-                          :model-value="(qData.sum / qData.count).toFixed(2)"
-                          active-color="primary"
-                          readonly
-                          class="mr-4"
-                        />
-                        <div>
-                          <span class="text-body-2 font-weight-bold">{{ (qData.sum / qData.count).toFixed(2) }}</span>
-                        </div>
-                      </template>
-                    </v-list-item>
+                    <template v-for="(topicGroup, topicUuid) in groupQuestionsByTopic(tData.questions)" :key="topicUuid">
+                      <v-list-subheader v-if="topicGroup[0]?.data?.topicTitle" class="text-caption text-medium-emphasis" style="font-size: 0.7rem; height: auto; padding-left: 0 !important;">
+                        {{ topicGroup[0].data.topicTitle }}
+                      </v-list-subheader>
+                      <v-list-item v-for="(item, idx) in topicGroup" :key="`${topicUuid}-${idx}`" class="pr-0">
+                        <v-list-item-title class="text-body-2 text-wrap pr-4">{{ item.title }}</v-list-item-title>
+                        <template v-slot:append>
+                          <v-rating
+                            half-increments
+                            hover
+                            :length="5"
+                            :size="32"
+                            :model-value="(item.data.sum / item.data.count).toFixed(2)"
+                            active-color="primary"
+                            readonly
+                            class="mr-4"
+                          />
+                          <div>
+                            <span class="text-body-2 font-weight-bold">{{ (item.data.sum / item.data.count).toFixed(2) }}</span>
+                          </div>
+                        </template>
+                      </v-list-item>
+                    </template>
                   </v-list>
                 </v-expansion-panel-text>
               </v-expansion-panel>
