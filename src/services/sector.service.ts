@@ -16,8 +16,10 @@ export const getSectors = async (page: number = 1, limit: number = 10, sortColum
   return response.data;
 };
 
+import type Sector from '@/types/sector/sector.type';
+
 export const saveSector = async (sector: SectorPayload, uuid?: string) => {
-  const response: AxiosResponse<{ uuid: string }> = uuid 
+  const response: AxiosResponse<Sector> = uuid 
     ? await api.put(`/sectors/${uuid}`, sector)
     : await api.post('/sectors', sector);
   return response.data;

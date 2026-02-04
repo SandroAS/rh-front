@@ -53,11 +53,13 @@ export const useSectorStore = defineStore('sector', {
       this.error = null;
 
       try {
-        const res: { uuid: string } = await saveSector(sector, uuid);
+        const res: Sector = await saveSector(sector, uuid);
         if(!this.sectors) this.sectors = [];
-        const sectorSaved = {
+        const sectorSaved: Sector = {
           uuid: res.uuid,
-          name: sector.name
+          name: res.name,
+          createdBy: res.createdBy,
+          users: res.users
         }
         if(uuid) {
           const index = this.sectors.findIndex(x => x.uuid === uuid);
@@ -68,6 +70,7 @@ export const useSectorStore = defineStore('sector', {
           }
         } else {
           this.sectors.unshift(sectorSaved);
+          this.total += 1;
         }
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar atualizar serviço.';

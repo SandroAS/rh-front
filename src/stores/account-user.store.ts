@@ -8,6 +8,7 @@ import { getAllAccountUsers, getAllAccountUsersWithTeams } from '@/services/user
 import type { UserAvatar } from '@/types/user/user-avatar.type';
 import type { UserTeam } from '@/types/user/user-team.type';
 import type TeamResponse from '@/types/team/team-response.type';
+import type Sector from '@/types/sector/sector.type';
 
 interface AccountUserStoreState {
   account_users: AccountUser[] | null;
@@ -101,6 +102,10 @@ export const useAccountUserStore = defineStore('accountUser', {
             base_salary: undefined,
             levelsGroup: undefined,
             drd_uuid: undefined
+          } : undefined,
+          sector: accountUser.sector_uuid ? {
+            uuid: accountUser.sector_uuid,
+            name: ''
           } : undefined
         }
         if(uuid) {

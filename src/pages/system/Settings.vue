@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import JobPositionsTab from '@/components/system/settings/tabs/JobPositionsTab.vue'
 import LevelsGroupsTab from '@/components/system/settings/tabs/LevelsGroupsTab.vue'
 import TeamsTab from '../../components/system/settings/tabs/TeamsTab.vue'
+import SectorsTab from '../../components/system/settings/tabs/SectorsTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,7 +16,8 @@ const tabs = [
   { name: 'Permissões', value: 'permissoes' },
   { name: 'Cargos', value: 'job-positions' },
   { name: 'Níves de Cargos', value: 'levels-groups' },
-  { name: 'Times', value: 'teams' }
+  { name: 'Times', value: 'teams' },
+  { name: 'Setores', value: 'sectors' }
 ];
 
 const selectedTab = ref(route.query.tab || 'usuarios');
@@ -60,6 +62,10 @@ watch(selectedTab, (newTab) => {
 
         <v-tabs-window-item value="teams">
           <TeamsTab />
+        </v-tabs-window-item>
+
+        <v-tabs-window-item value="sectors">
+          <SectorsTab />
         </v-tabs-window-item>
       </v-tabs-window>
     </v-container>

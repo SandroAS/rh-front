@@ -9,4 +9,5 @@ export default interface AccountUserPayload {
   confirmPassword: string;
   role: RoleType;
   job_position_uuid?: string;
+  sector_uuid?: string;
 }

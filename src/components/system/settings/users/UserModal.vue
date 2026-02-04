@@ -6,12 +6,14 @@ import type AccountUser from '@/types/account/account-user.type';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { useJobPositionStore } from '@/stores/job-position.store';
+import { useSectorStore } from '@/stores/sector.store';
 import { RoleType } from '@/types/user/user-role.type';
 import { checkPasswordStrength, passwordScore } from '@/utils/checkPasswordStrength.util';
 
 const accountUserStore = useAccountUserStore();
 const snackbarStore = useSnackbarStore();
 const jobPositionStore = useJobPositionStore();
+const sectorStore = useSectorStore();
 
 const props = defineProps<{
   modelValue: boolean,
@@ -29,6 +31,8 @@ function modalValueChanged(value: boolean) {
   if (!value) {
     currentJobPosition.value = '';
     userAccount.job_position_uuid = undefined;
+    currentSector.value = '';
+    userAccount.sector_uuid = undefined;
   }
 }
 
@@ -37,6 +41,7 @@ const showConfirmPassword = ref(false);
 const passwordField = ref('');
 
 const currentJobPosition = ref(props.selectedAccountUser?.jobPosition?.uuid || '');
+const currentSector = ref(props.selectedAccountUser?.sector?.uuid || '');
 
 const userTypes = [
   {
@@ -67,7 +72,8 @@ let userAccount = reactive<AccountUserPayload>({
   password: props.selectedAccountUser?.password || '',
   confirmPassword: '',
   role: props.selectedAccountUser?.role?.name || RoleType.MEMBER,
-  job_position_uuid: props.selectedAccountUser?.jobPosition?.uuid || undefined
+  job_position_uuid: props.selectedAccountUser?.jobPosition?.uuid || undefined,
+  sector_uuid: props.selectedAccountUser?.sector?.uuid || undefined
 })
 
 watch(() => props.selectedAccountUser, (val) => {
@@ -79,20 +85,29 @@ watch(() => props.selectedAccountUser, (val) => {
     password: '', 
     confirmPassword: '',
     role: val?.role?.name || RoleType.MEMBER,
-    job_position_uuid: val?.jobPosition?.uuid || undefined
+    job_position_uuid: val?.jobPosition?.uuid || undefined,
+    sector_uuid: val?.sector?.uuid || undefined
   });
   currentJobPosition.value = val?.jobPosition?.uuid || '';
+  currentSector.value = val?.sector?.uuid || '';
   passwordField.value = '';
 }, { immediate: true });
 
 watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {
     await getAllJobPositions();
+    await getAllSectors();
   }
 });
 
 async function getAllJobPositions() {
   await jobPositionStore.getAllJobPositions();
+}
+
+async function getAllSectors() {
+  if (!sectorStore.sectors || sectorStore.sectors.length === 0) {
+    await sectorStore.getSectors({ page: 1, limit: 100 });
+  }
 }
 
 const passwordStrengthScore = computed(() => {
@@ -111,6 +126,16 @@ function setJobPositionFromItem(item: any): string {
 }
 
 function jobPositionOnBlur(field: any) {
+  field.onBlur();
+}
+
+function setSectorFromItem(item: any): string {
+  const uuidValue = item?.value ?? (typeof item === 'string' ? item : '');
+  currentSector.value = uuidValue;
+  return uuidValue;
+}
+
+function sectorOnBlur(field: any) {
   field.onBlur();
 }
 
@@ -268,6 +293,36 @@ async function onSubmit(formValues: Record<string, any>) {
               @blur="jobPositionOnBlur(field)"
               label="Cargo"
               :items="jobPositionStore.jobPositionsOptions"
+              item-title="title"
+              item-value="value"
+              variant="solo-filled"
+              density="compact"
+              clearable
+              :error="!!errorMessage"
+              :error-messages="errorMessage"
+              class="mb-3"
+            >
+              <template v-slot:item="{ props, item }">
+                <v-list-item 
+                  v-bind="props"
+                  :title="item.raw.title"
+                  :disabled="item.raw.disabled"
+                  density="compact"
+                />
+              </template>
+            </v-autocomplete>
+          </Field>
+
+          <Field name="sector_uuid" label="Setor" v-slot="{ field, errorMessage }">
+            <v-autocomplete
+              :model-value="currentSector"
+              @update:model-value="(item: any) => {
+                const uuidValue = setSectorFromItem(item);
+                field.onChange(uuidValue);
+              }"
+              @blur="sectorOnBlur(field)"
+              label="Setor (Opcional)"
+              :items="sectorStore.sectorsOptions"
               item-title="title"
               item-value="value"
               variant="solo-filled"

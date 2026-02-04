@@ -1,5 +1,6 @@
 import type { Role } from '../role/role.type';
 import type JobPosition from '../jobPosition/job-position.type';
+import type Sector from '../sector/sector.type';
 
 export default interface AccountUser {
   uuid?: string;
@@ -12,4 +13,5 @@ export default interface AccountUser {
   password?: string | null;
   role: Role;
   jobPosition?: JobPosition;
+  sector?: Sector;
 }
