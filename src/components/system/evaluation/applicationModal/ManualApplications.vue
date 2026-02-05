@@ -4,10 +4,12 @@ import { EvaluationType, type EvaluationApplication } from '@/types/evaluationAp
 import { type CreateEvaluationApplication } from '@/types/evaluationApplication/evaluation-application-payload.type';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import { useEvaluationStore } from '@/stores/evaluation.store';
+import { useSnackbarStore } from '@/stores/snackbar.store';
 import { getInitials } from '@/utils/getInitialsFromName.util';
 
 const accountUserStore = useAccountUserStore();
 const evaluationStore = useEvaluationStore();
+const snackbarStore = useSnackbarStore();
 
 const props = defineProps<{
   applications: CreateEvaluationApplication[];
@@ -109,6 +111,19 @@ const handleEvaluatedUserChange = (index: number, uuidValue: any, field: any) =>
     const foundEvaluationUuid = findEvaluationForUser(finalValue);
     if (foundEvaluationUuid) {
       evaluationUuid = foundEvaluationUuid;
+    } else {
+      // Se não encontrou avaliação e o usuário tem cargo, exibir warning
+      if (evaluatedUser?.jobPosition?.title) {
+        snackbarStore.show(
+          `Não existe um modelo de avaliação vinculado ao cargo "${evaluatedUser.jobPosition.title}". Por favor, cadastre um modelo de avaliação para este cargo antes de criar a aplicação.`,
+          'warning'
+        );
+      } else if (evaluatedUser) {
+        snackbarStore.show(
+          `Não foi possível encontrar um modelo de avaliação para o usuário "${evaluatedUser.title}". Verifique se o usuário possui um cargo cadastrado e se existe um modelo de avaliação vinculado a esse cargo.`,
+          'warning'
+        );
+      }
     }
   } else if (props.creationType === 'SELECTED_EVALUATION') {
     evaluationUuid = props.evaluationUuid;
@@ -164,9 +179,22 @@ const handleSubmittingUserChange = (index: number, uuidValue: any, field: any) =
  * Busca o nome da avaliação baseado no evaluation_uuid
  */
 const getEvaluationName = (evaluationUuid?: string): string => {
-  if (!evaluationUuid) return '';
+  if (!evaluationUuid || evaluationUuid.trim() === '') {
+    return 'Não encontrado';
+  }
   const foundEvaluation = evaluationStore.evaluations_simple?.find(evaluation => evaluation.uuid === evaluationUuid);
-  return foundEvaluation?.name || '';
+  return foundEvaluation?.name || 'Não encontrado';
+};
+
+/**
+ * Verifica se deve exibir mensagem de modelo não encontrado
+ */
+const shouldShowNotFoundMessage = (app: CreateEvaluationApplication): boolean => {
+  if (!app.evaluation_uuid || app.evaluation_uuid.trim() === '') {
+    return true;
+  }
+  const foundEvaluation = evaluationStore.evaluations_simple?.find(evaluation => evaluation.uuid === app.evaluation_uuid);
+  return !foundEvaluation;
 };
 </script>
 
@@ -184,8 +212,15 @@ const getEvaluationName = (evaluationUuid?: string): string => {
         <div v-if="!selectedApplication?.uuid" class="d-flex justify-space-between align-center mb-4">
           <div class="text-subtitle-1">
             Aplicação #{{ index + 1 }}
-            <span v-if="app.evaluation_uuid">
-              - Modelo: <b>{{ getEvaluationName(app.evaluation_uuid) }}</b>
+            <span v-if="app.evaluated_user_uuid">
+              - Modelo: 
+              <b v-if="!shouldShowNotFoundMessage(app)">{{ getEvaluationName(app.evaluation_uuid) }}</b>
+              <span v-else class="text-warning">
+                <b>{{ getEvaluationName(app.evaluation_uuid) }}</b>
+                <span class="text-caption d-block text-medium-emphasis mt-1">
+                  Cadastre um modelo de avaliação para o cargo desde colaborador ou selecione a opção "Criar aplicações com base no modelo de avaliação selecionado"
+                </span>
+              </span>
             </span>
           </div>
           <v-btn 

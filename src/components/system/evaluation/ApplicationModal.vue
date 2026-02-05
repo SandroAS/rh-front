@@ -86,6 +86,20 @@ const calculatedExpirationDate = computed(() => {
   return expirationDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 });
 
+/**
+ * Verifica se todas as aplicações têm evaluation_uuid preenchido
+ */
+const isAllApplicationsValid = computed(() => {
+  const applications = evaluationApplicationFormData.applications || [];
+  
+  if (applications.length === 0) {
+    return false;
+  }
+  
+  // Verifica se todas as aplicações têm evaluation_uuid preenchido
+  return applications.every(app => app.evaluation_uuid && app.evaluation_uuid.trim() !== '');
+});
+
 let applicationsGrupedByEvaluated = reactive<CreateEvaluationApplication[][] | []>([]);
 
 /**
@@ -236,7 +250,7 @@ async function onSubmit(formValues: Record<string, any>) {
     status: evaluationApplicationFormData.status,
     applications: applicationsToSave.map(app => ({
       uuid: app.uuid,
-      evaluation_uuid: evaluationApplicationFormData.evaluation_uuid || app.evaluation_uuid,
+      evaluation_uuid: app.evaluation_uuid || evaluationApplicationFormData.evaluation_uuid,
       started_date: evaluationApplicationFormData.started_date,
       expiration_date: expirationDate,
       status: evaluationApplicationFormData.status,
@@ -389,7 +403,7 @@ async function onSubmit(formValues: Record<string, any>) {
         <v-card-actions>
           <v-spacer />
           <v-btn text @click="close">Cancelar</v-btn>
-          <v-btn color="primary" type="submit" :disabled="!evaluationApplicationFormData?.applications?.length">
+          <v-btn color="primary" type="submit" :disabled="!isAllApplicationsValid">
             <template v-if="!props.selectedApplication?.uuid">
               Salvar Aplicações ({{ evaluationApplicationFormData?.applications?.length }})
             </template>

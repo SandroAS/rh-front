@@ -2,10 +2,14 @@
 import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store';
 import { EvaluationApplicationStatus, type EvaluationApplication } from '@/types/evaluationApplication/evaluation-application.type';
 import { useSnackbarStore } from '@/stores/snackbar.store';
+import { useUserStore } from '@/stores/auth.store';
+import { useNotificationStore } from '@/stores/notification.store';
 import { ref } from 'vue';
 
 const evaluationApplicationStore = useEvaluationApplicationStore();
 const snackbarStore = useSnackbarStore();
+const userStore = useUserStore();
+const notificationStore = useNotificationStore();
 
 const props = defineProps<{
   modelValue: boolean;
@@ -24,6 +28,18 @@ async function sendApplication() {
   if(!props.selectedApplication?.uuid) return;
   try {
     await evaluationApplicationStore.sendEvaluationApplication(props.selectedApplication.uuid, forEmail.value, forSystem.value);
+    
+    // Se o avaliador for o usuário logado, atualizar notificações automaticamente
+    if (props.selectedApplication?.submitting_user_uuid === userStore.user?.uuid) {
+      await notificationStore.getNotifications({ 
+        page: 1, 
+        limit: 20, 
+        sort_column: 'created_at', 
+        sort_order: 'desc', 
+        search_term: '' 
+      });
+    }
+    
     snackbarStore.show('Aplicação de avaliação enviada com sucesso.', 'success');
     close();
   } catch (error) {
