@@ -252,7 +252,7 @@ watch([() => props.evaluatedUuids, () => props.creationType, () => props.evaluat
   if (usersWithoutEvaluation.length > 0) {
     usersWithoutEvaluation.forEach(({ name, jobPositionTitle }) => {
       snackbarStore.show(
-        `Não existe um modelo de avaliação com DRD do cargo "${jobPositionTitle}" para o usuário ${name}. As aplicações não foram geradas.`,
+        `Não existe um modelo de avaliação com Descritivo de Cargo do cargo "${jobPositionTitle}" para o usuário ${name}. As aplicações não foram geradas.`,
         'warning'
       );
     });

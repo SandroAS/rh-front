@@ -190,7 +190,7 @@ async function submitEvaluation() {
         <header class="mb-8">
           <h1 class="text-h4 font-weight-bold mb-2">
             {{ evaluationApplication.evaluation?.name }} 
-            {{ evaluationApplication.evaluation?.drd ? (' - DRD: ' + evaluationApplication.evaluation?.drd?.jobPosition?.title) : '' }}
+            {{ evaluationApplication.evaluation?.drd ? (' - Descritivo de Cargo: ' + evaluationApplication.evaluation?.drd?.jobPosition?.title) : '' }}
           </h1>
 
           <p v-if="form.description" class="text-body-1 text-medium-emphasis mb-6">

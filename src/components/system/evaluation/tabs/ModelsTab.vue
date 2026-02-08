@@ -100,7 +100,7 @@ onMounted(() => {
       :headers="[
         { title: 'Nome', value: 'name', sortable: true },
         { title: 'Criado por', value: 'createdBy', sortable: true },
-        { title: 'DRD', value: 'drd', sortable: true },
+        { title: 'Descritivo de Cargos', value: 'drd', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' }
       ]"
       :items="evaluationStore.evaluations || []"

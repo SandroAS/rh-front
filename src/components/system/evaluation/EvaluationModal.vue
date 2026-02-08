@@ -204,7 +204,7 @@ watch(() => evaluationFormData.drd_uuid, async (newDrdUuid) => {
         }, 50)
       }
     } catch (error) {
-      console.error('Erro ao buscar DRD:', error);
+      console.error('Erro ao buscar Descritivo de Cargo:', error);
       if (!isEditing.value) {
         evaluationFormData.form.topics = defaultTopics;
         evaluationFormData.rate = 5;
@@ -508,15 +508,15 @@ function handleDrdChange(newValue: any) {
                       class="pa-4 w-100 border-blue-custom"
                     >
                       <v-card-title class="pa-0 mb-2 text-subtitle-1 d-flex justify-space-between">
-                        <div>Criar avaliação a partir de um DRD</div>
+                        <div>Criar avaliação a partir de um Descritivo de Cargo</div>
                         <div>
                           <v-radio value="fromDRD"></v-radio>
                         </div>
                       </v-card-title>
                       <v-card-text class="pa-0">
-                        <p class="mb-3 text-caption">Vincular a um DRD preexistente preencherá automaticamente os tópicos, as questões e a escala de rate do formulário, garantindo alinhamento com os cargos da empresa.</p>
+                        <p class="mb-3 text-caption">Vincular a um Descritivo de Cargo preexistente preencherá automaticamente os tópicos, as questões e a escala de rate do formulário, garantindo alinhamento com os cargos da empresa.</p>
   
-                        <Field name="drd_uuid" label="DRD Base (Opcional)" v-slot="{ field, errorMessage }">
+                        <Field name="drd_uuid" label="Descritivo de Cargo Base (Opcional)" v-slot="{ field, errorMessage }">
                           <v-select
                             id="evaluation_drd_uuid"
                             v-bind="field"
@@ -524,7 +524,7 @@ function handleDrdChange(newValue: any) {
                             :items="drdStore.drdOptions"
                             item-title="title"
                             item-value="value"
-                            label="Escolha um DRD"
+                            label="Escolha um Descritivo de Cargo"
                             variant="solo-filled"
                             density="compact"
                             clearable
@@ -672,7 +672,7 @@ function handleDrdChange(newValue: any) {
                                   @update:model-value="onChangeQuestionType(question)"
                                 >
                                   <template v-slot:append-inner>
-                                    <v-tooltip text="Recomendamos o tipo 'Classificação' para métricas objetivas de DRD.">
+                                    <v-tooltip text="Recomendamos o tipo 'Classificação' para métricas objetivas de Descritivo de Cargo.">
                                       <v-icon icon="mdi-information-outline"></v-icon>
                                     </v-tooltip>
                                   </template>

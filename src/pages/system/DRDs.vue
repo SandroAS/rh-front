@@ -77,14 +77,14 @@ onMounted(() => {
 
 <template>
   <v-container fluid>
-    <h2 class="mb-6">Descritivo de Resultado e Desempenho</h2>
+    <h2 class="mb-6">Descritivo de Cargo</h2>
 
-    <p class="text-caption mb-6">O DRD (Descritivo de Resultados e Desempenho) é um documento que detalha de forma clara e objetiva as responsabilidades, entregas esperadas e indicadores de desempenho de um cargo dentro da organização. Diferente de uma simples descrição de funções, o DRD tem foco em resultados mensuráveis e competências comportamentais e técnicas necessárias para o bom desempenho do profissional. Ele serve como base para a avaliação de performance, o planejamento de metas individuais, e o alinhamento entre expectativas da empresa e contribuições do colaborador, promovendo maior transparência e assertividade na gestão de pessoas.</p>
+    <p class="text-caption mb-6">O Descritivo de Cargo é um documento que detalha de forma clara e objetiva as responsabilidades, entregas esperadas e indicadores de desempenho de um cargo dentro da organização. Diferente de uma simples descrição de funções, o Descritivo de Cargo tem foco em resultados mensuráveis e competências comportamentais e técnicas necessárias para o bom desempenho do profissional. Ele serve como base para a avaliação de performance, o planejamento de metas individuais, e o alinhamento entre expectativas da empresa e contribuições do colaborador, promovendo maior transparência e assertividade na gestão de pessoas.</p>
     
     <div class="flex-column flex-md-row d-flex justify-space-between mb-4 mt-2 align-center">
       <v-text-field
         v-model="searchTerm"
-        label="Buscar DRD"
+        label="Buscar Descritivo de Cargo"
         prepend-inner-icon="mdi-magnify"
         variant="solo-filled"
         density="compact"
