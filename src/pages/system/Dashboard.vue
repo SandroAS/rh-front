@@ -212,7 +212,7 @@ onMounted(async () => {
               </span>
               <span 
                 v-else
-                :class="completedEvaluations === 0 ? 'text-success' : 'text-warning'"
+                :class="completedEvaluations === 0 ? 'text-warning' : 'text-success'"
                 class="text-caption font-weight-medium"
               >
                 {{ completedEvaluations === 0 ? 'Nenhuma' : completedEvaluations }}
