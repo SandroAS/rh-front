@@ -3,6 +3,7 @@ import api from './api.service';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
 import { type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
 import { EvaluationType, type EvaluationApplication, type EvaluationApplicationForm } from '@/types/evaluationApplication/evaluation-application.type';
+import type EvaluationsApplicationsTotals from '@/types/dashboard/evaluations-applications-totals.type';
 
 export async function getEvaluationApplications(
   page: number = 1,
@@ -70,4 +71,9 @@ export async function getEvaluationApplicationsFilterMetrics(
 
 export async function deleteEvaluationApplication(uuid: string): Promise<void> {
   await api.delete(`/evaluation-applications/${uuid}`);
+}
+
+export async function getTotalEvaluationsApplications(): Promise<EvaluationsApplicationsTotals> {
+  const response: AxiosResponse<EvaluationsApplicationsTotals> = await api.get('/evaluation-applications/totals');
+  return response.data;
 }
