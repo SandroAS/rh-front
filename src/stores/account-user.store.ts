@@ -1,19 +1,20 @@
-import { getAccountUsers, saveAccountUser, updateAccountUserIsActive } from '@/services/account-user.service';
+import { getAccountUsers, saveAccountUser, updateAccountUserIsActive, getTotalAccountUsers } from '@/services/account-user.service';
 import type AccountUserPayload from '@/types/account/account-user-payload.type';
 import type AccountUser from '@/types/account/account-user.type';
 import type AccountUsersResponsePaginationDto from '@/types/account/account-users-response-pagination-dto';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
+import type AccountUsersTotals from '@/types/dashboard/account-users-totals.type';
 import { defineStore } from 'pinia';
 import { getAllAccountUsers, getAllAccountUsersWithTeams } from '@/services/user.service';
 import type { UserAvatar } from '@/types/user/user-avatar.type';
 import type { UserTeam } from '@/types/user/user-team.type';
 import type TeamResponse from '@/types/team/team-response.type';
-import type Sector from '@/types/sector/sector.type';
 
 interface AccountUserStoreState {
   account_users: AccountUser[] | null;
   all_account_users: UserAvatar[] | null;
   all_account_users_teams: UserTeam[] | null;
+  account_users_totals: AccountUsersTotals | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -30,6 +31,7 @@ export const useAccountUserStore = defineStore('accountUser', {
     account_users: null,
     all_account_users: null,
     all_account_users_teams: null,
+    account_users_totals: null,
     loading: false,
     error: null,
     total: 0,
@@ -202,6 +204,21 @@ export const useAccountUserStore = defineStore('accountUser', {
       this.limit = limit;
       this.page = 1;
       await this.getAccountUsers({ page: this.page, limit: this.limit });
+    },
+
+    async getAccountUsersTotals() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: AccountUsersTotals = await getTotalAccountUsers();
+        this.account_users_totals = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar totais de colaboradores.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
     }
   }
 });
