@@ -1,5 +1,6 @@
-import { getTeams, saveTeam } from '../services/teams.service';
+import { getTeams, saveTeam, getTotalTeams } from '../services/teams.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
+import type TeamsTotals from '@/types/dashboard/teams-totals.type';
 import { defineStore } from 'pinia';
 import type Team from '@/types/team/team.type';
 import type TeamPayload from '@/types/team/team-payload.type';
@@ -9,6 +10,7 @@ import type Sector from '@/types/sector/sector.type';
 
 interface TeamStoreState {
   teams: Team[] | null;
+  teams_totals: TeamsTotals | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -23,6 +25,7 @@ interface TeamStoreState {
 export const useTeamStore = defineStore('team', {
   state: (): TeamStoreState => ({
     teams: null,
+    teams_totals: null,
     loading: false,
     error: null,
     total: 0,
@@ -113,6 +116,21 @@ export const useTeamStore = defineStore('team', {
       this.limit = limit;
       this.page = 1;
       await this.getTeams({ page: this.page, limit: this.limit });
+    },
+
+    async getTeamsTotals() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: TeamsTotals = await getTotalTeams();
+        this.teams_totals = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar totais de times.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
     }
   }
 });
