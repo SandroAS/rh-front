@@ -16,7 +16,7 @@ export const getAccountUsers = async (page: number = 1, limit: number = 10, sort
 };
 
 export const getTotalAccountUsers = async (): Promise<AccountUsersTotals> => {
-  const response: AxiosResponse<AccountUsersTotals> = await api.get('/account/users/total');
+  const response: AxiosResponse<AccountUsersTotals> = await api.get('/account/users/totals');
   return response.data;
 };
 
