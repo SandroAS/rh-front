@@ -46,7 +46,7 @@ function onFileSelected(event: Event) {
   }
 }
 
-const currentJobPosition = ref(userStore?.user?.jobPosition?.uuid || userStore?.user?.job_position_uuid || '');
+const currentJobPosition = ref(userStore?.user?.jobPosition?.uuid || userStore?.user?.job_position_uuid || null);
 
 const personalInformationDefault = reactive<ProfilePersonalInformation>({
   name: userStore?.user?.name || '',
