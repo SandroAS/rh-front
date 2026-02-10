@@ -4,6 +4,7 @@ import type EvaluationApplicationResponsePagination from '@/types/evaluationAppl
 import { type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
 import { EvaluationType, type EvaluationApplication, type EvaluationApplicationForm } from '@/types/evaluationApplication/evaluation-application.type';
 import type EvaluationsApplicationsTotals from '@/types/dashboard/evaluations-applications-totals.type';
+import type EvaluationApplicationsChartData from '@/types/dashboard/evaluation-applications-chart-data.type';
 
 export async function getEvaluationApplications(
   page: number = 1,
@@ -75,5 +76,10 @@ export async function deleteEvaluationApplication(uuid: string): Promise<void> {
 
 export async function getTotalEvaluationsApplications(): Promise<EvaluationsApplicationsTotals> {
   const response: AxiosResponse<EvaluationsApplicationsTotals> = await api.get('/evaluation-applications/totals');
+  return response.data;
+}
+
+export async function getEvaluationApplicationsChartData(): Promise<EvaluationApplicationsChartData[]> {
+  const response: AxiosResponse<EvaluationApplicationsChartData[]> = await api.get('/evaluation-applications/chart');
   return response.data;
 }

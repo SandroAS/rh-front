@@ -1,14 +1,16 @@
 import { defineStore } from 'pinia';
-import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication, cancelEvaluationApplication, sendEvaluationApplication, getEvaluationApplicationsFilterMetrics, getTotalEvaluationsApplications } from '@/services/evaluation-application.service'; // Importar os serviços
+import { getEvaluationApplications, deleteEvaluationApplication, getEvaluationApplication, createEvaluationApplication, updateEvaluationApplication, cancelEvaluationApplication, sendEvaluationApplication, getEvaluationApplicationsFilterMetrics, getTotalEvaluationsApplications, getEvaluationApplicationsChartData } from '@/services/evaluation-application.service'; // Importar os serviços
 import { EvaluationApplicationStatus, EvaluationType, type EvaluationApplication }from '@/types/evaluationApplication/evaluation-application.type';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type EvaluationApplicationResponsePagination from '@/types/evaluationApplication/evaluation-application-response-pagination.type';
 import { type EvaluationApplicationPayload } from '@/types/evaluationApplication/evaluation-application-payload.type';
 import type EvaluationsApplicationsTotals from '@/types/dashboard/evaluations-applications-totals.type';
+import type EvaluationApplicationsChartData from '@/types/dashboard/evaluation-applications-chart-data.type';
 
 interface EvaluationApplicationStoreState {
   evaluation_applications: EvaluationApplication[] | null;
   evaluations_applications_totals: EvaluationsApplicationsTotals | null;
+  evaluations_applications_chart_data: EvaluationApplicationsChartData[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -24,6 +26,7 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
   state: (): EvaluationApplicationStoreState => ({
     evaluation_applications: null,
     evaluations_applications_totals: null,
+    evaluations_applications_chart_data: null,
     loading: false,
     error: null,
     total: 0,
@@ -267,6 +270,21 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
         this.evaluations_applications_totals = res;
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar totais de aplicações de avaliação.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getEvaluationsApplicationsChartData() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: EvaluationApplicationsChartData[] = await getEvaluationApplicationsChartData();
+        this.evaluations_applications_chart_data = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar dados do gráfico de aplicações de avaliação.';
         throw err;
       } finally {
         this.loading = false;

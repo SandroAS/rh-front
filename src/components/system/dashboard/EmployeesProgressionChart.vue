@@ -1,74 +1,59 @@
 <script setup lang="ts">
+import { onMounted, computed } from 'vue'
 import ApexChart from 'vue3-apexcharts'
+import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store'
 
-// --- ESTRUTURA DE DADOS ESPERADA DA API ---
-// A API deve retornar um array de objetos com a seguinte estrutura:
-// [
-//   {
-//     month: "2024-01", // Formato YYYY-MM
-//     completed_evaluations_count: 45, // Quantidade de avaliações respondidas no mês
-//     average_rate_percentage: 78.5 // Porcentagem média do rate das avaliações (0-100)
-//   },
-//   {
-//     month: "2024-02",
-//     completed_evaluations_count: 52,
-//     average_rate_percentage: 82.3
-//   },
-//   // ... mais meses
-// ]
+const evaluationApplicationStore = useEvaluationApplicationStore()
 
-// --- DADOS MOCKADOS ---
-const today = new Date()
-// Vamos considerar os últimos 12 meses para uma visão mais ampla
-const numMonths = 12; // Exibe os últimos 12 meses
-const labels = Array.from({ length: numMonths }, (_, i) => {
-  const date = new Date(today.getFullYear(), today.getMonth() - (numMonths - 1 - i), 1)
-  // Formato "MMM/AA"
-  const month = date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''); // Ex: "ago", "set"
-  const year = date.toLocaleDateString('pt-BR', { year: '2-digit' }); // Ex: "24", "25"
-  return `${month.replace(month[0], month[0].toUpperCase())}/${year}`;
+// Processa os dados da API para formatar labels e extrair valores
+const labels = computed(() => {
+  const data = evaluationApplicationStore.evaluations_applications_chart_data
+  if (!data || !Array.isArray(data) || data.length === 0) return []
+  
+  return data.map(item => {
+    // Converte "YYYY-MM" para "MMM/AA"
+    const [year, month] = item.month.split('-')
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1)
+    const monthShort = date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')
+    const yearShort = date.toLocaleDateString('pt-BR', { year: '2-digit' })
+    return `${monthShort.replace(monthShort[0], monthShort[0].toUpperCase())}/${yearShort}`
+  })
 })
 
-// Dados para Quantidade de Avaliações Respondidas (Barras)
-const completedEvaluationsCount = Array.from({ length: numMonths }, (_, i) => {
-  const baseCount = 30 + (i * 2); // Tendência de crescimento gradual
-  const randomFactor = Math.floor(Math.random() * 15) - 5; // Variação de -5 a +9
-  let count = baseCount + randomFactor;
-  count = Math.max(0, count); // Não pode ser negativo
-  return Math.floor(count);
-});
+const completedEvaluationsCount = computed(() => {
+  const data = evaluationApplicationStore.evaluations_applications_chart_data
+  if (!data || !Array.isArray(data) || data.length === 0) return []
+  return data.map(item => item.completed_evaluations_count)
+})
 
-// Dados para Porcentagem Média do Rate (Linha)
-const averageRatePercentage = Array.from({ length: numMonths }, (_, i) => {
-  const basePercentage = 65 + (i * 1.5); // Tendência de crescimento gradual
-  const randomFactor = Math.random() * 8 - 4; // Variação de -4 a +4
-  let percentage = basePercentage + randomFactor;
-  percentage = Math.max(0, Math.min(100, percentage)); // Entre 0 e 100
-  return parseFloat(percentage.toFixed(1));
-});
+const averageRatePercentage = computed(() => {
+  const data = evaluationApplicationStore.evaluations_applications_chart_data
+  if (!data || !Array.isArray(data) || data.length === 0) return []
+  return data.map(item => item.average_rate_percentage)
+})
 
 
-const series = [
+const series = computed(() => [
   {
     name: 'Avaliações Respondidas',
     type: 'bar',
-    data: completedEvaluationsCount,
+    data: completedEvaluationsCount.value,
   },
   {
-    name: 'Média das Respóstass (%)',
+    name: 'Média das Respostas (%)',
     type: 'line',
-    data: averageRatePercentage,
+    data: averageRatePercentage.value,
   },
-]
+])
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   chart: {
     type: 'line',
     stacked: false,
     toolbar: { show: false },
   },
   xaxis: {
-    categories: labels,
+    categories: labels.value,
   },
   yaxis: [
     {
@@ -89,12 +74,12 @@ const chartOptions = {
       },
     },
     {
-      seriesName: 'Média das Respóstass (%)',
+      seriesName: 'Média das Respostas (%)',
       opposite: true,
       min: 0,
       max: 100,
       title: {
-        text: 'Média das Respóstass (%)',
+        text: 'Média das Respostas (%)',
         style: {
           color: '#1976d2',
         }
@@ -165,15 +150,20 @@ const chartOptions = {
       size: 7,
     }
   },
-}
+}))
+
+onMounted(async () => {
+  await evaluationApplicationStore.getEvaluationsApplicationsChartData()
+})
 </script>
 
 <template>
   <v-row>
     <v-col cols="12">
       <v-card elevation="2" class="pa-4">
-        <h3 class="mb-4">Avaliações Respondidas vs. Média das Respóstas</h3>
+        <h3 class="mb-4">Avaliações Respondidas vs. Média das Respostas</h3>
         <ApexChart
+          v-if="evaluationApplicationStore.evaluations_applications_chart_data"
           width="100%"
           height="350"
           :options="chartOptions"
