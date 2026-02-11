@@ -282,6 +282,7 @@ export const useEvaluationApplicationStore = defineStore('evaluationApplication'
 
       try {
         const res: EvaluationApplicationsChartData[] = await getEvaluationApplicationsChartData();
+        console.log(res);
         this.evaluations_applications_chart_data = res;
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar dados do gráfico de aplicações de avaliação.';

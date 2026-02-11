@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import ApexChart from 'vue3-apexcharts'
 import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store'
 
 const evaluationApplicationStore = useEvaluationApplicationStore()
+const isMounted = ref(false)
 
 // Processa os dados da API para formatar labels e extrair valores
 const labels = computed(() => {
@@ -153,6 +154,7 @@ const chartOptions = computed(() => ({
 }))
 
 onMounted(async () => {
+  isMounted.value = true
   await evaluationApplicationStore.getEvaluationsApplicationsChartData()
 })
 </script>
@@ -162,8 +164,11 @@ onMounted(async () => {
     <v-col cols="12">
       <v-card elevation="2" class="pa-4">
         <h3 class="mb-4">Avaliações Respondidas vs. Média das Respostas</h3>
+        <div v-if="evaluationApplicationStore.loading || !isMounted" class="text-center pa-4">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+        </div>
         <ApexChart
-          v-if="evaluationApplicationStore.evaluations_applications_chart_data"
+          v-else-if="isMounted"
           width="100%"
           height="350"
           :options="chartOptions"

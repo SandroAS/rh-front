@@ -80,6 +80,6 @@ export async function getTotalEvaluationsApplications(): Promise<EvaluationsAppl
 }
 
 export async function getEvaluationApplicationsChartData(): Promise<EvaluationApplicationsChartData[]> {
-  const response: AxiosResponse<EvaluationApplicationsChartData[]> = await api.get('/evaluation-applications/chart');
-  return response.data;
+  const response: AxiosResponse<{ data: EvaluationApplicationsChartData[] }> = await api.get('/evaluation-applications/chart');
+  return response.data.data;
 }
