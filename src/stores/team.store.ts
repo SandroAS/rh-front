@@ -1,4 +1,4 @@
-import { getTeams, saveTeam, getTotalTeams } from '../services/teams.service';
+import { getTeams, saveTeam, getTotalTeams, getTeamMembersFromUserLogged } from '../services/teams.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type TeamsTotals from '@/types/dashboard/teams-totals.type';
 import { defineStore } from 'pinia';
@@ -11,6 +11,7 @@ import type Sector from '@/types/sector/sector.type';
 interface TeamStoreState {
   teams: Team[] | null;
   teams_totals: TeamsTotals | null;
+  user_logged_team: Team | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -26,6 +27,7 @@ export const useTeamStore = defineStore('team', {
   state: (): TeamStoreState => ({
     teams: null,
     teams_totals: null,
+    user_logged_team: null,
     loading: false,
     error: null,
     total: 0,
@@ -127,6 +129,21 @@ export const useTeamStore = defineStore('team', {
         this.teams_totals = res;
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar totais de times.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getUserLoggedTeam() {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res: Team = await getTeamMembersFromUserLogged();
+        this.user_logged_team = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar time do usuário logado.';
         throw err;
       } finally {
         this.loading = false;
