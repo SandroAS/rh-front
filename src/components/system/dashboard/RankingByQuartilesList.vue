@@ -64,7 +64,7 @@ onMounted(loadRanking)
       <v-progress-circular indeterminate color="primary" size="32" />
     </div>
 
-    <div v-else-if="error" class="text-center py-4 text-error text-body-2">
+    <div v-else-if="error" class="text-center text-body-2 mt-4">
       {{ error }}
     </div>
 
