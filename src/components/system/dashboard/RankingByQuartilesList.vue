@@ -30,6 +30,15 @@ function getQuartileColor(quartile: QuartileLabel): string {
   return quartileColorMap[quartile] ?? 'grey'
 }
 
+const isTopQuartile = (quartile: QuartileLabel) => quartile === 'top_25'
+
+/** Medal/position for first 3 in top 25%: 1-based index → emoji. */
+function getPositionEmoji(quartile: QuartileLabel, index: number): string | null {
+  if (quartile !== 'top_25' || index > 2) return null
+  const medals = ['🥇', '🥈', '🥉']
+  return medals[index] ?? null
+}
+
 async function loadRanking() {
   loading.value = true
   error.value = null
@@ -64,22 +73,28 @@ onMounted(loadRanking)
         v-for="group in quartiles"
         :key="group.quartile"
         class="mb-4"
+        :class="{ 'top-quartile-block': isTopQuartile(group.quartile) }"
       >
         <div
-          class="d-flex align-center mb-2 py-1 px-2 rounded"
-          :class="`bg-${getQuartileColor(group.quartile)}`"
+          class="d-flex align-center mb-2 py-1 px-2 rounded quartile-header"
+          :class="[`bg-${getQuartileColor(group.quartile)}`, { 'top-quartile-header': isTopQuartile(group.quartile) }]"
         >
+          <span v-if="isTopQuartile(group.quartile)" class="trophy-icon mr-2" aria-hidden="true">🏆</span>
           <span class="text-subtitle-2 font-weight-medium text-white">
             {{ getQuartileLabel(group.quartile) }}
           </span>
         </div>
         <v-list density="compact" class="py-0">
           <v-list-item
-            v-for="item in group.users"
+            v-for="(item, index) in group.users"
             :key="item.user.uuid"
             class="px-0"
+            :class="{ 'top-quartile-item': isTopQuartile(group.quartile) }"
           >
             <template #prepend>
+              <span v-if="getPositionEmoji(group.quartile, index)" class="position-emoji mr-2">
+                {{ getPositionEmoji(group.quartile, index) }}
+              </span>
               <v-avatar size="32" color="primary" class="mr-2">
                 <span class="text-caption font-weight-bold text-white">
                   {{ getInitials(item.user.name) }}
@@ -109,3 +124,32 @@ onMounted(loadRanking)
     </template>
   </v-card>
 </template>
+
+<style scoped>
+.trophy-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.position-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.top-quartile-block {
+  background: linear-gradient(135deg, rgba(var(--v-theme-success), 0.08) 0%, transparent 50%);
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid rgba(var(--v-theme-success), 0.2);
+}
+
+.top-quartile-header {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.top-quartile-item {
+  border-radius: 6px;
+}
+</style>
