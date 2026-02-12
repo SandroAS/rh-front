@@ -1,363 +1,136 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { onMounted, computed } from 'vue'
+import { useEvaluationApplicationStore } from '@/stores/evaluation-application.store'
+import { getInitials } from '@/utils/getInitialsFromName.util'
 
-interface AvaliacaoPendente {
-  idAvaliacao: number;
-  tipoAvaliacao: string;
-  dataVencimento: string;
-  status: 'Pendente';
+const evaluationApplicationStore = useEvaluationApplicationStore()
+
+const pendingByEvaluator = computed(() => {
+  const data = evaluationApplicationStore.pending_by_evaluator
+  if (!data || !Array.isArray(data)) return []
+  return data.filter(item => item.pending_applications?.length > 0)
+})
+
+function formatExpirationDate(value: string | null): string {
+  if (!value) return '—'
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return value
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-interface ColaboradorComAvaliacoes {
-  id: number;
-  nome: string;
-  sobrenome: string;
-  telefone: string;
-  email: string;
-  avaliacoesPendentes: AvaliacaoPendente[];
+function getFormLink(uuid: string): string {
+  const base = typeof window !== 'undefined' ? `${window.location.origin}` : ''
+  return `${base}/forms/avaliacao/${uuid}`
 }
 
-const todosColaboradoresComAvaliacoes = ref<ColaboradorComAvaliacoes[]>([
-  {
-    id: 101,
-    nome: 'Beatriz', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Costa',
-    telefone: '(11) 93333-3333',
-    email: 'beatriz.c@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 4, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-09-01', status: 'Pendente' },
-      { idAvaliacao: 5, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-09-10', status: 'Pendente' },
-      { idAvaliacao: 6, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-10-05', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 102,
-    nome: 'Maria', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Oliveira',
-    telefone: '(11) 91111-1111',
-    email: 'maria.o@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 1, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-07-31', status: 'Pendente' },
-      { idAvaliacao: 2, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-08-15', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 103,
-    nome: 'João', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Silva',
-    telefone: '(11) 92222-2222',
-    email: 'joao.s@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 3, tipoAvaliacao: 'Desenvolvimento', dataVencimento: '2025-07-20', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 104,
-    nome: 'Pedro',
-    sobrenome: 'Souza',
-    telefone: '(11) 94444-4444',
-    email: 'pedro.s@empresa.com',
-    avaliacoesPendentes: [], // Sem avaliações pendentes
-  },
-  {
-    id: 102,
-    nome: 'Maria', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Oliveira',
-    telefone: '(11) 91111-1111',
-    email: 'maria.o@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 1, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-07-31', status: 'Pendente' },
-      { idAvaliacao: 2, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-08-15', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 103,
-    nome: 'João', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Silva',
-    telefone: '(11) 92222-2222',
-    email: 'joao.s@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 3, tipoAvaliacao: 'Desenvolvimento', dataVencimento: '2025-07-20', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 104,
-    nome: 'Pedro',
-    sobrenome: 'Souza',
-    telefone: '(11) 94444-4444',
-    email: 'pedro.s@empresa.com',
-    avaliacoesPendentes: [], // Sem avaliações pendentes
-  },
-  {
-    id: 102,
-    nome: 'Maria', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Oliveira',
-    telefone: '(11) 91111-1111',
-    email: 'maria.o@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 1, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-07-31', status: 'Pendente' },
-      { idAvaliacao: 2, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-08-15', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 103,
-    nome: 'João', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Silva',
-    telefone: '(11) 92222-2222',
-    email: 'joao.s@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 3, tipoAvaliacao: 'Desenvolvimento', dataVencimento: '2025-07-20', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 104,
-    nome: 'Pedro',
-    sobrenome: 'Souza',
-    telefone: '(11) 94444-4444',
-    email: 'pedro.s@empresa.com',
-    avaliacoesPendentes: [], // Sem avaliações pendentes
-  },
-  {
-    id: 102,
-    nome: 'Maria', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Oliveira',
-    telefone: '(11) 91111-1111',
-    email: 'maria.o@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 1, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-07-31', status: 'Pendente' },
-      { idAvaliacao: 2, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-08-15', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 103,
-    nome: 'João', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Silva',
-    telefone: '(11) 92222-2222',
-    email: 'joao.s@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 3, tipoAvaliacao: 'Desenvolvimento', dataVencimento: '2025-07-20', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 104,
-    nome: 'Pedro',
-    sobrenome: 'Souza',
-    telefone: '(11) 94444-4444',
-    email: 'pedro.s@empresa.com',
-    avaliacoesPendentes: [], // Sem avaliações pendentes
-  },
-  {
-    id: 102,
-    nome: 'Maria', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Oliveira',
-    telefone: '(11) 91111-1111',
-    email: 'maria.o@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 1, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-07-31', status: 'Pendente' },
-      { idAvaliacao: 2, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-08-15', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 103,
-    nome: 'João', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Silva',
-    telefone: '(11) 92222-2222',
-    email: 'joao.s@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 3, tipoAvaliacao: 'Desenvolvimento', dataVencimento: '2025-07-20', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 104,
-    nome: 'Pedro',
-    sobrenome: 'Souza',
-    telefone: '(11) 94444-4444',
-    email: 'pedro.s@empresa.com',
-    avaliacoesPendentes: [], // Sem avaliações pendentes
-  },
-  {
-    id: 102,
-    nome: 'Maria', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Oliveira',
-    telefone: '(11) 91111-1111',
-    email: 'maria.o@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 1, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-07-31', status: 'Pendente' },
-      { idAvaliacao: 2, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-08-15', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 103,
-    nome: 'João', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Silva',
-    telefone: '(11) 92222-2222',
-    email: 'joao.s@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 3, tipoAvaliacao: 'Desenvolvimento', dataVencimento: '2025-07-20', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 104,
-    nome: 'Pedro',
-    sobrenome: 'Souza',
-    telefone: '(11) 94444-4444',
-    email: 'pedro.s@empresa.com',
-    avaliacoesPendentes: [], // Sem avaliações pendentes
-  },
-  {
-    id: 102,
-    nome: 'Maria', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Oliveira',
-    telefone: '(11) 91111-1111',
-    email: 'maria.o@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 1, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-07-31', status: 'Pendente' },
-      { idAvaliacao: 2, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-08-15', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 103,
-    nome: 'João', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Silva',
-    telefone: '(11) 92222-2222',
-    email: 'joao.s@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 3, tipoAvaliacao: 'Desenvolvimento', dataVencimento: '2025-07-20', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 104,
-    nome: 'Pedro',
-    sobrenome: 'Souza',
-    telefone: '(11) 94444-4444',
-    email: 'pedro.s@empresa.com',
-    avaliacoesPendentes: [], // Sem avaliações pendentes
-  },
-  {
-    id: 102,
-    nome: 'Maria', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Oliveira',
-    telefone: '(11) 91111-1111',
-    email: 'maria.o@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 1, tipoAvaliacao: 'Performance Anual', dataVencimento: '2025-07-31', status: 'Pendente' },
-      { idAvaliacao: 2, tipoAvaliacao: 'Feedback 360', dataVencimento: '2025-08-15', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 103,
-    nome: 'João', // Reordenado para ficar mais próximo do print
-    sobrenome: 'Silva',
-    telefone: '(11) 92222-2222',
-    email: 'joao.s@empresa.com',
-    avaliacoesPendentes: [
-      { idAvaliacao: 3, tipoAvaliacao: 'Desenvolvimento', dataVencimento: '2025-07-20', status: 'Pendente' },
-    ],
-  },
-  {
-    id: 104,
-    nome: 'Pedro',
-    sobrenome: 'Souza',
-    telefone: '(11) 94444-4444',
-    email: 'pedro.s@empresa.com',
-    avaliacoesPendentes: [], // Sem avaliações pendentes
-  },
-]);
-
-const colaboradoresComPendenciasAgrupadas = computed(() => {
-  const listaAgrupada: {
-    colaborador: ColaboradorComAvaliacoes;
-    quantidadePendentes: number;
-  }[] = [];
-
-  todosColaboradoresComAvaliacoes.value.forEach(colaborador => {
-    const pendentes = colaborador.avaliacoesPendentes.filter(av => av.status === 'Pendente');
-    if (pendentes.length > 0) {
-      listaAgrupada.push({
-        colaborador: colaborador,
-        quantidadePendentes: pendentes.length,
-      });
-    }
-  });
-  
-  // Opcional: ordenar por quantidade de pendências (maior para menor)
-  listaAgrupada.sort((a, b) => b.quantidadePendentes - a.quantidadePendentes);
-
-  return listaAgrupada;
-});
-
-function getIniciais(nome: string, sobrenome: string) {
-  return `${nome.charAt(0)}${sobrenome.charAt(0)}`.toUpperCase()
+async function copyFormLink(uuid: string) {
+  const url = getFormLink(uuid)
+  try {
+    await navigator.clipboard.writeText(url)
+    // opcional: snackbar de sucesso
+  } catch {
+    // fallback
+    const input = document.createElement('input')
+    input.value = url
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+  }
 }
 
-function redirectToAvaliacoes(colaboradorId: number) {
-  console.log(`Redirecionando para a tela de avaliações do colaborador ID: ${colaboradorId}`);
-  // Implemente sua lógica de roteamento real aqui (ex: router.push(...))
-  alert(`Redirecionando para as avaliações de: ${colaboradorId}`);
-}
+onMounted(async () => {
+  if (!evaluationApplicationStore.pending_by_evaluator) {
+    await evaluationApplicationStore.getPendingByEvaluator()
+  }
+})
 </script>
 
 <template>
   <v-card class="pa-4 mb-6" elevation="2" max-height="565" style="overflow: auto;">
     <v-card-title class="text-h6 font-weight-bold">Avaliações Pendentes</v-card-title>
     <v-divider class="mb-2" />
-    <v-list density="comfortable"> <v-list-item
-        v-for="item in colaboradoresComPendenciasAgrupadas"
-        :key="item.colaborador.id"
-        class="py-0" >
-        <template #prepend>
-          <v-avatar color="primary" size="40">
-            <span class="text-white text-subtitle-2">
-              {{ getIniciais(item.colaborador.nome, item.colaborador.sobrenome) }}
-            </span>
-          </v-avatar>
-        </template>
 
-        <v-list-item-title class="font-weight-medium">
-          {{ item.colaborador.nome }} {{ item.colaborador.sobrenome }}
-        </v-list-item-title>
-        <div class="colaborador-detalhes text-caption">
-          <div>{{ item.colaborador.email }}</div>
-        </div>
-
-        <template #append>
-          <div class="d-flex flex-column align-center">
-            <v-chip
-              color="warning"
-              variant="tonal"
-              size="x-small"
-              class="pr-0"
-            >
-              {{ item.quantidadePendentes }} pendente<span v-if="item.quantidadePendentes > 1">s</span>
-              <v-btn
-                title="Ver Avaliações"
-                icon="mdi-arrow-top-right"
-                color="primary"
+    <v-expansion-panels variant="accordion">
+      <v-expansion-panel
+        v-for="item in pendingByEvaluator"
+        :key="item.evaluator.uuid"
+        class="py-0"
+      >
+        <v-expansion-panel-title class="py-2">
+          <template #default="{ expanded }">
+            <div class="d-flex align-center flex-grow-1">
+              <v-avatar color="primary" size="40" class="mr-3">
+                <span class="text-white text-subtitle-2">
+                  {{ getInitials(item.evaluator.name) }}
+                </span>
+              </v-avatar>
+              <div class="flex-grow-1 min-width-0">
+                <div class="font-weight-medium text-body-2">
+                  {{ item.evaluator.name }}
+                </div>
+                <div class="text-caption text-medium-emphasis truncate">
+                  {{ item.evaluator.email }}
+                </div>
+              </div>
+              <v-chip
+                color="warning"
+                variant="tonal"
                 size="small"
-                density="compact"
-                class="ml-1"
-                @click="redirectToAvaliacoes(item.colaborador.id)"
-              ></v-btn>
-            </v-chip>
-            
-          </div>
-        </template>
-      </v-list-item>
-    </v-list>
+                class="ml-2"
+              >
+                {{ item.pending_applications.length }} pendente<span v-if="item.pending_applications.length > 1">s</span>
+              </v-chip>
+            </div>
+          </template>
+        </v-expansion-panel-title>
+        <v-expansion-panel-text>
+          <v-list density="compact" class="pt-0">
+            <v-list-item
+              v-for="app in item.pending_applications"
+              :key="app.uuid"
+              class="px-0 pb-2"
+            >
+              <v-list-item-title class="text-body-2 font-weight-medium">
+                {{ app.name }}
+              </v-list-item-title>
+              <div class="d-flex justify-space-between align-center">
+                <v-list-item-subtitle class="text-caption">
+                  Avaliado: {{ app.evaluated_user?.name ?? '—' }}
+                  <span v-if="app.expiration_date" class="ml-2">
+                    · Data limite: {{ formatExpirationDate(app.expiration_date) }}
+                  </span>
+                </v-list-item-subtitle>
+                <v-btn
+                  size="x-small"
+                  variant="tonal"
+                  color="primary"
+                  density="default"
+                  @click="copyFormLink(app.uuid)"
+                >
+                  <v-icon size="small" class="mr-1">mdi-content-copy</v-icon>
+                  Copiar link
+                </v-btn>
+              </div>
+            </v-list-item>
+          </v-list>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
 
-    <div v-if="colaboradoresComPendenciasAgrupadas.length === 0" class="text-center text-body-2 mt-4">
+    <div v-if="pendingByEvaluator.length === 0 && !evaluationApplicationStore.loading" class="text-center text-body-2 mt-4">
       Nenhum colaborador com avaliações pendentes.
+    </div>
+    <div v-if="evaluationApplicationStore.loading" class="text-center py-4">
+      <v-progress-circular indeterminate color="primary" size="32" />
     </div>
   </v-card>
 </template>
 
 <style scoped>
-.colaborador-detalhes {
-  font-size: 0.85rem;
-  color: rgba(0, 0, 0, 0.6);
-  line-height: 1.4;
-  margin-top: 2px;
-  white-space: normal;
-  overflow: visible;
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

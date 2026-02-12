@@ -33,7 +33,7 @@ import EvaluationsCard from '@/components/system/dashboard/EvaluationsCard.vue'
       <!-- <v-col cols="12" lg="4" md="6">
         <TopFiveProgressionsList />
       </v-col> -->
-      <v-col cols="12" lg="4" md="6">
+      <v-col cols="12" lg="6" md="12">
         <PendingEvaluationsList />
       </v-col>
     </v-row>

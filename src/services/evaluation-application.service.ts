@@ -5,6 +5,7 @@ import { type EvaluationApplicationPayload } from '@/types/evaluationApplication
 import { EvaluationType, type EvaluationApplication, type EvaluationApplicationForm } from '@/types/evaluationApplication/evaluation-application.type';
 import type EvaluationsApplicationsTotals from '@/types/dashboard/evaluations-applications-totals.type';
 import type EvaluationApplicationsChartData from '@/types/dashboard/evaluation-applications-chart-data.type';
+import type PendingByEvaluatorResponse from '@/types/evaluationApplication/pending-by-evaluator-response.type';
 
 export async function getEvaluationApplications(
   page: number = 1,
@@ -82,4 +83,10 @@ export async function getTotalEvaluationsApplications(): Promise<EvaluationsAppl
 export async function getEvaluationApplicationsChartData(): Promise<EvaluationApplicationsChartData[]> {
   const response: AxiosResponse<{ data: EvaluationApplicationsChartData[] }> = await api.get('/evaluation-applications/chart');
   return response.data.data;
+}
+
+export async function getPendingByEvaluator(): Promise<PendingByEvaluatorResponse[]> {
+  const response: AxiosResponse<PendingByEvaluatorResponse[] | { data: PendingByEvaluatorResponse[] }> = await api.get('/evaluation-applications/pending-by-evaluator');
+  const data = response.data;
+  return Array.isArray(data) ? data : data.data;
 }
