@@ -60,7 +60,7 @@ onMounted(async () => {
         <v-expansion-panel-title class="py-2">
           <template #default="{ expanded }">
             <div class="d-flex align-center flex-grow-1">
-              <v-avatar color="primary" size="40" class="mr-3">
+              <v-avatar color="primary" size="34" class="mr-3">
                 <span class="text-white text-subtitle-2">
                   {{ getInitials(item.evaluator.name) }}
                 </span>
