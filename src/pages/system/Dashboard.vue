@@ -4,6 +4,7 @@ import EmployeesProgressionChart from '@/components/system/dashboard/EmployeesPr
 import TeamsProgressionsList from '@/components/system/dashboard/TeamsProgressionsList.vue'
 import TopFiveProgressionsList from '@/components/system/dashboard/TopFiveProgressionsList.vue'
 import PendingEvaluationsList from '@/components/system/dashboard/PendingEvaluationsList.vue'
+import RankingByQuartilesList from '@/components/system/dashboard/RankingByQuartilesList.vue'
 import EmployeesCard from '@/components/system/dashboard/EmployeesCard.vue'
 import TeamsCard from '@/components/system/dashboard/TeamsCard.vue'
 import EvaluationsCard from '@/components/system/dashboard/EvaluationsCard.vue'
@@ -35,6 +36,9 @@ import EvaluationsCard from '@/components/system/dashboard/EvaluationsCard.vue'
       </v-col> -->
       <v-col cols="12" lg="6" md="12">
         <PendingEvaluationsList />
+      </v-col>
+      <v-col cols="12" lg="6" md="12">
+        <RankingByQuartilesList />
       </v-col>
     </v-row>
   </v-container>

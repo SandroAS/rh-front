@@ -6,6 +6,7 @@ import { EvaluationType, type EvaluationApplication, type EvaluationApplicationF
 import type EvaluationsApplicationsTotals from '@/types/dashboard/evaluations-applications-totals.type';
 import type EvaluationApplicationsChartData from '@/types/dashboard/evaluation-applications-chart-data.type';
 import type PendingByEvaluatorResponse from '@/types/evaluationApplication/pending-by-evaluator-response.type';
+import type { RankingByQuartilesResponse, RankingQuartileGroup } from '@/types/evaluationApplication/ranking-by-quartiles.type';
 
 export async function getEvaluationApplications(
   page: number = 1,
@@ -89,4 +90,11 @@ export async function getPendingByEvaluator(): Promise<PendingByEvaluatorRespons
   const response: AxiosResponse<PendingByEvaluatorResponse[] | { data: PendingByEvaluatorResponse[] }> = await api.get('/evaluation-applications/pending-by-evaluator');
   const data = response.data;
   return Array.isArray(data) ? data : data.data;
+}
+
+/** Ranking por quartis com base na conta do usuário autenticado (sem parâmetros). */
+export async function getRankingByQuartiles(): Promise<RankingQuartileGroup[]> {
+  const response: AxiosResponse<RankingByQuartilesResponse> = await api.get('/evaluation-applications/ranking-by-quartiles');
+  const body = response.data;
+  return body?.data ?? [];
 }
