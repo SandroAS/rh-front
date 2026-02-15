@@ -13,5 +13,5 @@ export default interface AccountUser {
   password?: string | null;
   role: Role;
   jobPosition?: JobPosition;
-  sector?: Sector;
+  sectors?: Sector[];
 }

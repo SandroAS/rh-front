@@ -41,7 +41,7 @@ const showConfirmPassword = ref(false);
 const passwordField = ref('');
 
 const currentJobPosition = ref(props.selectedAccountUser?.jobPosition?.uuid || '');
-const currentSector = ref(props.selectedAccountUser?.sector?.uuid || '');
+const currentSector = ref(props.selectedAccountUser?.sectors?.[0]?.uuid || '');
 
 const userTypes = [
   {
@@ -73,7 +73,7 @@ let userAccount = reactive<AccountUserPayload>({
   confirmPassword: '',
   role: props.selectedAccountUser?.role?.name || RoleType.MEMBER,
   job_position_uuid: props.selectedAccountUser?.jobPosition?.uuid || undefined,
-  sector_uuid: props.selectedAccountUser?.sector?.uuid || undefined
+  sector_uuid: props.selectedAccountUser?.sectors?.[0]?.uuid || undefined
 })
 
 watch(() => props.selectedAccountUser, (val) => {
@@ -86,10 +86,10 @@ watch(() => props.selectedAccountUser, (val) => {
     confirmPassword: '',
     role: val?.role?.name || RoleType.MEMBER,
     job_position_uuid: val?.jobPosition?.uuid || undefined,
-    sector_uuid: val?.sector?.uuid || undefined
+    sector_uuid: val?.sectors?.[0]?.uuid || undefined
   });
   currentJobPosition.value = val?.jobPosition?.uuid || '';
-  currentSector.value = val?.sector?.uuid || '';
+  currentSector.value = val?.sectors?.[0]?.uuid || '';
   passwordField.value = '';
 }, { immediate: true });
 
@@ -314,7 +314,7 @@ async function onSubmit(formValues: Record<string, any>) {
             </v-autocomplete>
           </Field>
 
-          <Field name="sector_uuid" label="Setor" v-slot="{ field, errorMessage }">
+          <!-- <Field name="sector_uuid" label="Setor" v-slot="{ field, errorMessage }">
             <v-autocomplete
               :model-value="currentSector"
               @update:model-value="(item: any) => {
@@ -341,7 +341,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 />
               </template>
             </v-autocomplete>
-          </Field>
+          </Field> -->
         </v-card-text>
         <v-card-actions>
           <v-spacer />
