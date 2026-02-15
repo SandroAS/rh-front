@@ -123,6 +123,7 @@ onMounted(() => {
         { title: 'Nome', key: 'name', sortable: true },
         { title: 'Telefone', key: 'cellphone', align: 'end', sortable: true },
         { title: 'Permissão', key: 'role.name', align: 'end', sortable: true },
+        { title: 'Cargo', key: 'jobPosition.title', align: 'end', sortable: true },
         { title: 'Setor', key: 'sectors[0].name', align: 'end', sortable: true },
         { title: 'Status', key: 'is_active', align: 'end', sortable: true },
         { title: 'Editar', key: 'actions', sortable: false, align: 'end' }
