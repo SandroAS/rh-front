@@ -1,80 +1,66 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import type { User } from '@/types/teamPanel/project-mocks.type';
+import type { UserPanel } from '@/types/user/user-panel.type';
 
 const props = defineProps<{
-  user: User;
+  user: UserPanel;
 }>();
 
-const formattedAdmissionDate = computed(() => {
-  return props.user.admissionDate ? format(parseISO(props.user.admissionDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
+const avatarSrc = computed(() => props.user.profile_img_url ?? null);
+
+const avatarInitial = computed(() => {
+  const name = props.user.name?.trim() || '';
+  const parts = name.split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase() || '?';
 });
 
-const formattedLastFeedbackDate = computed(() => {
-  return props.user.lastFeedbackDate ? format(parseISO(props.user.lastFeedbackDate), 'dd/MM/yyyy', { locale: ptBR }) : '-';
-});
+const jobTitle = computed(() => props.user.jobPosition?.title ?? '-');
 
-const getEngagementColor = (engagement: string) => {
-  switch (engagement) {
-    case 'Alto Engajamento': return 'green-darken-2';
-    case 'Engajamento Moderado': return 'orange-darken-2';
-    case 'Baixo Engajamento': return 'red-darken-2';
-    default: return 'grey';
-  }
-};
-const getEngagementIcon = (engagement: string) => {
-  switch (engagement) {
-    case 'Alto Engajamento': return 'mdi-trending-up';
-    case 'Engajamento Moderado': return 'mdi-trending-flat';
-    case 'Baixo Engajamento': return 'mdi-trending-down';
-    default: return 'mdi-information-outline';
-  }
-};
+const levelsGroupName = computed(() => props.user.jobPosition?.levelsGroup?.name ?? null);
 </script>
 
 <template>
-  <v-card elevation="2" class="pa-4 user-profile-card">
+  <v-card elevation="2" class="pa-4 user-profile-card" style="height: fit-content;">
     <div class="d-flex flex-column align-center mb-4">
-      <v-avatar size="100" class="mb-3">
-        <v-img :src="user.profilePicture" :alt="user.name"></v-img>
+      <v-avatar size="100" class="mb-3" color="primary">
+        <v-img v-if="avatarSrc" :src="avatarSrc" :alt="user.name" cover />
+        <span v-else class="text-h4 text-white">{{ avatarInitial }}</span>
       </v-avatar>
       <div class="text-h5 font-weight-bold">{{ user.name }}</div>
-      <div class="text-subtitle-1 text-medium-emphasis">{{ user.role }}</div>
+      <div class="text-subtitle-1 text-medium-emphasis">{{ jobTitle }}</div>
       <v-chip
-        :color="getEngagementColor(user.engagement)"
+        v-if="levelsGroupName"
+        color="primary"
+        variant="tonal"
         density="compact"
         class="mt-2"
         label
       >
-        <v-icon start :icon="getEngagementIcon(user.engagement)"></v-icon>
-        {{ user.engagement }}
+        {{ levelsGroupName }}
       </v-chip>
     </div>
 
     <v-divider class="mb-4"></v-divider>
 
-    <div class="d-flex align-center mb-2">
-      <v-icon start icon="mdi-email-outline"></v-icon>
-      <div class="text-body-2">{{ user.email }}</div>
+    <div v-if="user.jobPosition?.drd" class="d-flex align-center mb-2">
+      <v-icon start icon="mdi-star-outline"></v-icon>
+      <div class="text-body-2">Escala de avaliação: {{ user.jobPosition.drd.rate }}</div>
     </div>
-    <div class="d-flex align-center mb-2">
-      <v-icon start icon="mdi-calendar-range"></v-icon>
-      <div class="text-body-2">Admissão: {{ formattedAdmissionDate }}</div>
-    </div>
-    <div class="d-flex align-center">
-      <v-icon start icon="mdi-message-text-outline"></v-icon>
-      <div class="text-body-2">Último feedback: {{ formattedLastFeedbackDate }}</div>
+    <div v-if="user.evaluationsReceived?.length !== undefined" class="d-flex align-center">
+      <v-icon start icon="mdi-clipboard-list-outline"></v-icon>
+      <div class="text-body-2">{{ user.evaluationsReceived.length }} avaliação(ões) recebida(s)</div>
     </div>
   </v-card>
 </template>
 
 <style scoped>
 .user-profile-card {
-  height: 100%; /* Garante que o card ocupe todo o espaço disponível na coluna */
+  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Centraliza o conteúdo verticalmente */
+  justify-content: center;
 }
 </style>
