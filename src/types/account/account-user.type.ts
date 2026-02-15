@@ -1,6 +1,7 @@
 import type { Role } from '../role/role.type';
 import type JobPosition from '../jobPosition/job-position.type';
 import type Sector from '../sector/sector.type';
+import type JobPositionsLevel from '../jobPositionsLevel/job-positions-level.type';
 
 export default interface AccountUser {
   uuid?: string;
@@ -13,6 +14,8 @@ export default interface AccountUser {
   password?: string | null;
   role: Role;
   jobPosition?: JobPosition;
-  job_position_level_uuid?: string;
+  job_position_level?: JobPositionsLevel;
+  jobPositionCurrentLevel?: JobPositionsLevel;
+  job_position_current_level_uuid?: string;
   sectors?: Sector[];
 }

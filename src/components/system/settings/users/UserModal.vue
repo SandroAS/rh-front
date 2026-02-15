@@ -26,24 +26,12 @@ const close = () => {
   emit('update:modelValue', false);
 }
 
-function modalValueChanged(value: boolean) {
-  emit('update:modelValue', value);
-  if (!value) {
-    currentJobPosition.value = '';
-    userAccount.job_position_uuid = undefined;
-    currentJobLevel.value = '';
-    userAccount.job_position_level_uuid = undefined;
-    currentSectors.value = [];
-    userAccount.sector_uuids = [];
-  }
-}
-
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 const passwordField = ref('');
 
 const currentJobPosition = ref(props.selectedAccountUser?.jobPosition?.uuid || '');
-const currentJobLevel = ref(props.selectedAccountUser?.job_position_level_uuid ?? '');
+const currentJobLevel = ref(props.selectedAccountUser?.job_position_current_level_uuid ?? '');
 const currentSectors = ref<string[]>(props.selectedAccountUser?.sectors?.map(s => s.uuid) ?? []);
 
 const userTypes = [
@@ -76,9 +64,21 @@ let userAccount = reactive<AccountUserPayload>({
   confirmPassword: '',
   role: props.selectedAccountUser?.role?.name || RoleType.MEMBER,
   job_position_uuid: props.selectedAccountUser?.jobPosition?.uuid || undefined,
-  job_position_level_uuid: props.selectedAccountUser?.job_position_level_uuid ?? undefined,
+  job_position_current_level_uuid: props.selectedAccountUser?.jobPositionCurrentLevel?.uuid ?? undefined,
   sector_uuids: props.selectedAccountUser?.sectors?.map(s => s.uuid) ?? []
 })
+
+function modalValueChanged(value: boolean) {
+  emit('update:modelValue', value);
+  if (!value) {
+    currentJobPosition.value = '';
+    userAccount.job_position_uuid = undefined;
+    currentJobLevel.value = '';
+    userAccount.job_position_current_level_uuid = undefined;
+    currentSectors.value = [];
+    userAccount.sector_uuids = [];
+  }
+}
 
 watch(() => props.selectedAccountUser, (val) => {
   Object.assign(userAccount, {
@@ -90,11 +90,11 @@ watch(() => props.selectedAccountUser, (val) => {
     confirmPassword: '',
     role: val?.role?.name || RoleType.MEMBER,
     job_position_uuid: val?.jobPosition?.uuid || undefined,
-    job_position_level_uuid: val?.job_position_level_uuid ?? undefined,
+    job_position_current_level_uuid: val?.jobPositionCurrentLevel?.uuid ?? undefined,
     sector_uuids: val?.sectors?.map(s => s.uuid) ?? []
   });
   currentJobPosition.value = val?.jobPosition?.uuid || '';
-  currentJobLevel.value = val?.job_position_level_uuid ?? '';
+  currentJobLevel.value = val?.job_position_current_level_uuid ?? '';
   currentSectors.value = val?.sectors?.map(s => s.uuid) ?? [];
   passwordField.value = '';
 }, { immediate: true });
@@ -109,7 +109,7 @@ watch(() => props.modelValue, async (isOpen) => {
 watch(currentJobPosition, (jobUuid) => {
   if (!jobUuid || !isJobLevelFieldEnabled.value) {
     currentJobLevel.value = '';
-    userAccount.job_position_level_uuid = undefined;
+    userAccount.job_position_current_level_uuid = undefined;
   }
 });
 
@@ -348,8 +348,8 @@ async function onSubmit(formValues: Record<string, any>) {
               </template>
             </v-autocomplete>
           </Field>
-
-          <Field name="job_position_level_uuid" label="Nível do cargo" v-slot="{ field, errorMessage }">
+{{ currentJobLevel }} uai {{ selectedAccountUser?.jobPositionCurrentLevel }}
+          <Field name="job_position_current_level_uuid" label="Nível do cargo" v-slot="{ field, errorMessage }">
             <v-select
               v-bind="field"
               :model-value="currentJobLevel"
