@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { watch } from 'vue';
 import { useUserStore } from '@/stores/auth.store';
+import { useTrialStore } from '@/stores/trial.store';
 import { useRouter } from 'vue-router';
 
 const props = defineProps<{
@@ -8,9 +10,28 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['update:modelValue']);
-const close = () => emit('update:modelValue', false)
+const close = () => emit('update:modelValue', false);
 
 const router = useRouter();
+const userStore = useUserStore();
+const trialStore = useTrialStore();
+
+watch(
+  () => props.modelValue,
+  async (isOpen) => {
+    if (!isOpen) return;
+    try {
+      await trialStore.fetchMyTrial();
+      if (trialStore.isTrialActive) {
+        await userStore.fetchUser();
+        close();
+      }
+    } catch (err: any) {
+      console.error(`Erro ao carregar dados do trial: ${err}`);
+    }
+  },
+  { immediate: true }
+);
 
 // Dados dos planos que você forneceu
 const plans = [
@@ -76,7 +97,6 @@ const goToContactSales = () => {
   router.push('/contato-vendas'); // Ou para um formulário de contato
   emit('update:modelValue', false);
 };
-const currentUser = useUserStore().user;
 </script>
 
 <template>
