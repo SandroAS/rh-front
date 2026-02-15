@@ -264,7 +264,7 @@ async function onSubmit(formValues: Record<string, any>) {
           <Field name="role" rules="required" v-slot="{ field, errorMessage }">
             <v-select
               v-bind="field"
-              label="Tipo"
+              label="Permissão"
               :items="userTypes"
               item-value="value"
               item-title="title"
@@ -276,6 +276,7 @@ async function onSubmit(formValues: Record<string, any>) {
               :error="!!errorMessage"
               :error-messages="errorMessage"
               class="mb-3"
+              :disabled="props.selectedAccountUser?.role?.name === RoleType.ADMIN"
             >
               <template v-slot:item="{ item, props: itemProps }">
                 <v-list-item v-bind="itemProps" :title="item.title" :subtitle="item.raw.subtitle" :disabled="item.raw.disabled" />

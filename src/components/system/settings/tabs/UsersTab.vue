@@ -122,7 +122,8 @@ onMounted(() => {
       :headers="[
         { title: 'Nome', key: 'name', sortable: true },
         { title: 'Telefone', key: 'cellphone', align: 'end', sortable: true },
-        { title: 'Tipo', key: 'role.name', align: 'end', sortable: true },
+        { title: 'Permissão', key: 'role.name', align: 'end', sortable: true },
+        { title: 'Setor', key: 'sectors[0].name', align: 'end', sortable: true },
         { title: 'Status', key: 'is_active', align: 'end', sortable: true },
         { title: 'Editar', key: 'actions', sortable: false, align: 'end' }
       ]"
@@ -176,7 +177,7 @@ onMounted(() => {
       </template>
 
       <template #item.actions="{ item }">
-        <div v-if="item.role.name !== 'ADMIN'" class="d-flex justify-end"> <v-btn icon @click="openDialog(item)">
+        <div class="d-flex justify-end"> <v-btn icon @click="openDialog(item)">
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
         </div>
