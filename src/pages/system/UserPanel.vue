@@ -6,7 +6,6 @@ import UserTimelineCard from '../../components/system/userPanel/UserTimelineCard
 import UserCareerPlanCard from '../../components/system/userPanel/UserCareerPlanCard.vue';
 import UserCareerPathTimeline from '../../components/system/userPanel/UserCareerPathTimeline.vue'; // Importe o novo componente
 import { getUserById, type User } from '@/types/teamPanel/project-mocks.type';
-import CareerPlanTeste from '../../components/system/userPanel/CareerPlanTeste.vue';
 
 const route = useRoute();
 const userUuid = ref<string | string[] | null>(null);
@@ -80,13 +79,13 @@ function clickProgressBar(step: any) {
       </v-row>
     </Transition>
 
-    <v-row>
+    <!-- <v-row>
       <v-col cols="12">
         <v-card>
           <CareerPlanTeste />
         </v-card>
       </v-col>
-    </v-row>
+    </v-row> -->
   </v-container>
 </template>
 
