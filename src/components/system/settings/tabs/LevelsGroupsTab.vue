@@ -113,7 +113,7 @@ onMounted(() => {
             size="small"
             class="mt-1 pl-0"
           >
-            <v-avatar v-if="item?.createdBy?.profile_img_url" start>
+            <v-avatar v-if="item?.createdBy?.profile_img_url" class="mr-2">
               <v-img :src="item.createdBy.profile_img_url"></v-img>
             </v-avatar>
             <v-avatar v-else size="26" class="mr-2" color="primary">
