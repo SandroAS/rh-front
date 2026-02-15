@@ -79,14 +79,6 @@ function clickProgressBar(step: any) {
         </v-col>
       </v-row>
     </Transition>
-
-    <!-- <v-row>
-      <v-col cols="12">
-        <v-card>
-          <CareerPlanTeste />
-        </v-card>
-      </v-col>
-    </v-row> -->
   </v-container>
 </template>
 
@@ -106,7 +98,7 @@ function clickProgressBar(step: any) {
 
 .expand-enter-to,
 .expand-leave-from {
-  max-height: 500px; /* Um valor alto o suficiente para o card */
+  max-height: 500px;
   opacity: 1;
 }
 </style>

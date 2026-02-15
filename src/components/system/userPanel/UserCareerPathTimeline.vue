@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import type { User } from '@/types/teamPanel/project-mocks.type';
+import type { UserPanel } from '@/types/user/user-panel.type';
 
 const props = defineProps<{
-  user: User;
+  user: UserPanel;
 }>();
 
 const emit = defineEmits(['progressbar']);
@@ -52,7 +52,7 @@ onMounted(() => {
   <v-card class="">
     <v-card-title class="text-h6 d-flex align-center">
       <v-icon class="mr-2" color="primary">mdi-chart-line</v-icon>
-      Jornada de Carreira - {{ user.name }}
+      Jornada de Carreira
     </v-card-title>
     <v-divider class="my-4"></v-divider>
 

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import type { User } from '@/types/teamPanel/project-mocks.type';
 import VueApexCharts from "vue3-apexcharts";
+import type { UserPanel } from '@/types/user/user-panel.type';
 
 const props = defineProps<{
-  user: User;
+  user: UserPanel;
 }>();
 
 // Dados mockados para simular o progresso do plano de carreira
