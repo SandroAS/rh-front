@@ -8,6 +8,10 @@ const props = defineProps<{
 
 const emit = defineEmits(['progressbar']);
 
+const userLevels = computed(() => {
+  return props.user.jobPosition.drd.levels.sort((a, b) => b.order - a.order);
+});
+
 // Dados mockados para simular um plano de carreira
 const careerPlan = ref({
   currentJobTitle: 'Desenvolvedor',
@@ -65,39 +69,42 @@ onMounted(() => {
           >
             <div class="d-flex align-end step-line-container">
               <div>
-                <div class="d-flex align-center" style="margin-right: -50px;">
-                  <v-avatar
-                    size="20"
-                    :color="'grey-lighten-2'"
-                    class="ma-2 ml-3"
-                  >
-                    <!-- <v-icon v-if="step.date" size="15" color="white">mdi-check</v-icon> -->
-                  </v-avatar>
-                  <div class="font-weight-bold">Nível III</div>
-                </div>
-                <template v-if="false">
-                  <div class="vertical-progress-container">
-                    <v-progress-linear
-                      class="vertical-progress-bar"
-                      :model-value="careerPlan.progressToNext"
-                      :color="progressBarColor"
-                      rounded
-                    ></v-progress-linear>
-                    <div class="text-caption text-center font-weight-bold vertical-percentage mr-6" :class="`text-${progressBarColor}`">
-                      {{ careerPlan.progressToNext }}%
+                <div v-for="userLevel in userLevels">
+                  <div class="d-flex align-center" style="margin-right: -50px;">
+                    <v-avatar
+                      size="20"
+                      :color="'grey-lighten-2'"
+                      class="ma-2 ml-3"
+                    >
+                      <!-- <v-icon v-if="step.date" size="15" color="white">mdi-check</v-icon> -->
+                    </v-avatar>
+                    <div class="text-caption font-weight-bold">{{ userLevel.name }}</div>
+                  </div>
+                  <template v-if="false">
+                    <div class="vertical-progress-container">
+                      <v-progress-linear
+                        class="vertical-progress-bar"
+                        :model-value="careerPlan.progressToNext"
+                        :color="progressBarColor"
+                        rounded
+                      ></v-progress-linear>
+                      <div class="text-caption text-center font-weight-bold vertical-percentage mr-6" :class="`text-${progressBarColor}`">
+                        {{ careerPlan.progressToNext }}%
+                      </div>
                     </div>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="vertical-progress-container">
-                    <v-progress-linear
-                      class="vertical-progress-bar"
-                      :model-value="100"
-                      color="blue-grey-lighten-4"
-                      rounded
-                    ></v-progress-linear>
-                  </div>
-                </template>
+                  </template>
+                  <template v-else>
+                    <div class="vertical-progress-container">
+                      <v-progress-linear
+                        class="vertical-progress-bar"
+                        :model-value="100"
+                        color="blue-grey-lighten-4"
+                        rounded
+                      ></v-progress-linear>
+                    </div>
+                  </template>
+                </div>
+
                 <div class="d-flex align-center" style="margin-right: -50px;">
                   <v-avatar
                     size="20"
@@ -106,7 +113,7 @@ onMounted(() => {
                   >
                     <!-- <v-icon v-if="step.date" size="15" color="white">mdi-check</v-icon> -->
                   </v-avatar>
-                  <div class="font-weight-bold">Nível II</div>
+                  <div class="text-caption font-weight-bold">Nível II</div>
                 </div>
                 <template v-if="isCurrentJob(step.title)">
                   <div class="vertical-progress-container teste" @click.prevent="emit('progressbar', step)">
@@ -131,6 +138,7 @@ onMounted(() => {
                     ></v-progress-linear>
                   </div>
                 </template>
+
                 <v-avatar
                   size="28"
                   :color="step.date ? 'success' : isCurrentJob(step.title) ? 'primary' : 'grey-lighten-2'"
@@ -166,7 +174,9 @@ onMounted(() => {
             </div>
 
             <div class="d-flex flex-column step-container">
-              <div class="text-subtitle-1 font-weight-bold" style="white-space: nowrap;">{{ step.title }}</div>
+              <div class="text-caption font-weight-bold" style="white-space: nowrap;">
+                {{ step.title }}
+              </div>
               <span v-if="step.date" class="text-caption text-medium-emphasis">
                 Início: {{ formatDate(step.date) }}
               </span>
@@ -188,7 +198,7 @@ onMounted(() => {
 }
 
 .teste2:hover {
-  transform: scale(1.3);
+  transform: scale(1.1);
 }
 
 .teste {
@@ -197,17 +207,17 @@ onMounted(() => {
 }
 
 .teste:hover {
-  transform: rotate(90deg) translateX(0) scale(1.3);
+  transform: rotate(180deg) scale(1.1);
 }
 
 .career-path-container {
   overflow: auto;
-  max-height: 260px;
+  max-height: 340px;
   padding: 20px;
 }
 
 .step-container {
-  min-width: 180px; /* Garante que os títulos não fiquem espremidos */
+  min-width: 150px; /* Garante que os títulos não fiquem espremidos */
   padding: 0 8px;
 }
 
@@ -233,10 +243,10 @@ onMounted(() => {
 
 .vertical-progress-container {
   transform: rotate(180deg);
-  margin-top: 45px;
-  margin-bottom: 48px;
-  margin-right: -28px;
-  margin-left: -28px;
+  margin-top: 29px;
+  margin-bottom: 34px;
+  margin-right: -13px;
+  margin-left: -14px;
 }
 
 .vertical-progress-bar {
