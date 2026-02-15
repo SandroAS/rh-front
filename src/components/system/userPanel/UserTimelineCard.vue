@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { UserPanel } from '@/types/user/user-panel.type';
 import type { UserPanelEvaluationReceived } from '@/types/user/user-panel.type';
+import { EvaluationApplicationStatus } from '@/types/evaluationApplication/evaluation-application.type';
 
 const props = defineProps<{
   user: UserPanel;
@@ -59,17 +60,26 @@ const getTimelineIcon = (type: string) => {
   }
 };
 
-const getStatusLabel = (status: string) => {
-  const labels: Record<string, string> = {
-    CREATED: 'Criada',
-    SENDED: 'Enviada',
-    ACCESSED: 'Acessada',
-    IN_PROGRESS: 'Em progresso',
-    FINISHED: 'Finalizada',
-    CANCELED: 'Cancelada',
-    EXPIRED: 'Expirada',
-  };
-  return labels[status] ?? status;
+const STATUS_LABELS: Record<EvaluationApplicationStatus, string> = {
+  [EvaluationApplicationStatus.CREATED]: 'Criada',
+  [EvaluationApplicationStatus.SENDED]: 'Enviada',
+  [EvaluationApplicationStatus.ACCESSED]: 'Acessada',
+  [EvaluationApplicationStatus.IN_PROGRESS]: 'Em progresso',
+  [EvaluationApplicationStatus.FINISHED]: 'Finalizada',
+  [EvaluationApplicationStatus.CANCELED]: 'Cancelada',
+  [EvaluationApplicationStatus.EXPIRED]: 'Expirada',
+};
+
+const getStatusLabel = (status: string) => STATUS_LABELS[status as EvaluationApplicationStatus] ?? status;
+
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case EvaluationApplicationStatus.FINISHED: return 'success';
+    case EvaluationApplicationStatus.SENDED: return 'warning';
+    case EvaluationApplicationStatus.EXPIRED: return 'error';
+    case EvaluationApplicationStatus.CANCELED: return 'grey';
+    default: return 'primary';
+  }
 };
 
 const getTypeLabel = (type: string) => {
@@ -104,7 +114,7 @@ const getTypeLabel = (type: string) => {
             <div v-if="event.description" class="text-caption text-medium-emphasis">{{ event.description }}</div>
             <div class="text-caption text-medium-emphasis mt-1">
               <v-chip size="x-small" variant="tonal" class="mr-1">{{ getTypeLabel(event.type) }}</v-chip>
-              <v-chip size="x-small" variant="outlined">{{ getStatusLabel(event.status) }}</v-chip>
+              <v-chip size="x-small" :color="getStatusColor(event.status)" variant="tonal">{{ getStatusLabel(event.status) }}</v-chip>
               <span v-if="event.submittedBy" class="ml-1"> · {{ event.submittedBy }}</span>
             </div>
           </div>
