@@ -31,7 +31,7 @@ const showConfirmPassword = ref(false);
 const passwordField = ref('');
 
 const currentJobPosition = ref(props.selectedAccountUser?.jobPosition?.uuid || '');
-const currentJobLevel = ref(props.selectedAccountUser?.job_position_current_level_uuid ?? '');
+const currentJobLevel = ref(props.selectedAccountUser?.jobPositionCurrentLevel?.uuid ?? '');
 const currentSectors = ref<string[]>(props.selectedAccountUser?.sectors?.map(s => s.uuid) ?? []);
 
 const userTypes = [
@@ -94,7 +94,7 @@ watch(() => props.selectedAccountUser, (val) => {
     sector_uuids: val?.sectors?.map(s => s.uuid) ?? []
   });
   currentJobPosition.value = val?.jobPosition?.uuid || '';
-  currentJobLevel.value = val?.job_position_current_level_uuid ?? '';
+  currentJobLevel.value = val?.jobPositionCurrentLevel?.uuid ?? '';
   currentSectors.value = val?.sectors?.map(s => s.uuid) ?? [];
   passwordField.value = '';
 }, { immediate: true });
@@ -149,12 +149,19 @@ const selectedJobPositionOption = computed(() => {
 
 const jobLevelOptions = computed(() => {
   const levels = selectedJobPositionOption.value?.levelsGroup?.jobPositionsLevels ?? [];
-  return levels.filter(l => l.uuid).map(l => ({ value: l.uuid!, title: l.name }));
+  const options = levels.filter(l => l.uuid).map(l => ({ value: l.uuid!, title: l.name }));
+  const currentLevel = props.selectedAccountUser?.jobPositionCurrentLevel;
+  if (currentLevel?.uuid && !options.some(o => o.value === currentLevel.uuid)) {
+    options.unshift({ value: currentLevel.uuid, title: currentLevel.name });
+  }
+  return options;
 });
 
 const isJobLevelFieldEnabled = computed(() => {
   const opt = selectedJobPositionOption.value;
-  return Boolean(currentJobPosition.value && opt?.levelsGroup?.jobPositionsLevels?.length);
+  const hasLevelsInJob = Boolean(opt?.levelsGroup?.jobPositionsLevels?.length);
+  const hasCurrentLevelFromUser = Boolean(props.selectedAccountUser?.jobPositionCurrentLevel?.uuid);
+  return Boolean(currentJobPosition.value && (hasLevelsInJob || hasCurrentLevelFromUser));
 });
 
 function setSectorsFromItems(items: any): string[] {
@@ -348,7 +355,7 @@ async function onSubmit(formValues: Record<string, any>) {
               </template>
             </v-autocomplete>
           </Field>
-{{ currentJobLevel }} uai {{ selectedAccountUser?.jobPositionCurrentLevel }}
+
           <Field name="job_position_current_level_uuid" label="Nível do cargo" v-slot="{ field, errorMessage }">
             <v-select
               v-bind="field"
