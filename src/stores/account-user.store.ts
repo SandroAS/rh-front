@@ -105,10 +105,12 @@ export const useAccountUserStore = defineStore('accountUser', {
             levelsGroup: undefined,
             drd_uuid: undefined
           } : undefined,
-          sector: accountUser.sector_uuid ? {
-            uuid: accountUser.sector_uuid,
-            name: ''
-          } : undefined
+          sectors: (accountUser.sector_uuids?.length
+            ? accountUser.sector_uuids
+            : accountUser.sector_uuid
+              ? [accountUser.sector_uuid]
+              : []
+          ).map(uuid => ({ uuid, name: '' }))
         }
         if(uuid) {
           const accountUserFind = this.account_users.find(x => x.uuid === uuid);

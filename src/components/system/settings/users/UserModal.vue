@@ -31,8 +31,10 @@ function modalValueChanged(value: boolean) {
   if (!value) {
     currentJobPosition.value = '';
     userAccount.job_position_uuid = undefined;
-    currentSector.value = '';
-    userAccount.sector_uuid = undefined;
+    currentJobLevel.value = '';
+    userAccount.job_position_level_uuid = undefined;
+    currentSectors.value = [];
+    userAccount.sector_uuids = [];
   }
 }
 
@@ -41,7 +43,8 @@ const showConfirmPassword = ref(false);
 const passwordField = ref('');
 
 const currentJobPosition = ref(props.selectedAccountUser?.jobPosition?.uuid || '');
-const currentSector = ref(props.selectedAccountUser?.sectors?.[0]?.uuid || '');
+const currentJobLevel = ref(props.selectedAccountUser?.job_position_level_uuid ?? '');
+const currentSectors = ref<string[]>(props.selectedAccountUser?.sectors?.map(s => s.uuid) ?? []);
 
 const userTypes = [
   {
@@ -73,7 +76,8 @@ let userAccount = reactive<AccountUserPayload>({
   confirmPassword: '',
   role: props.selectedAccountUser?.role?.name || RoleType.MEMBER,
   job_position_uuid: props.selectedAccountUser?.jobPosition?.uuid || undefined,
-  sector_uuid: props.selectedAccountUser?.sectors?.[0]?.uuid || undefined
+  job_position_level_uuid: props.selectedAccountUser?.job_position_level_uuid ?? undefined,
+  sector_uuids: props.selectedAccountUser?.sectors?.map(s => s.uuid) ?? []
 })
 
 watch(() => props.selectedAccountUser, (val) => {
@@ -82,14 +86,16 @@ watch(() => props.selectedAccountUser, (val) => {
     email: val?.email || '',
     cellphone: val?.cellphone || '',
     cpf: val?.cpf || '',
-    password: '', 
+    password: '',
     confirmPassword: '',
     role: val?.role?.name || RoleType.MEMBER,
     job_position_uuid: val?.jobPosition?.uuid || undefined,
-    sector_uuid: val?.sectors?.[0]?.uuid || undefined
+    job_position_level_uuid: val?.job_position_level_uuid ?? undefined,
+    sector_uuids: val?.sectors?.map(s => s.uuid) ?? []
   });
   currentJobPosition.value = val?.jobPosition?.uuid || '';
-  currentSector.value = val?.sectors?.[0]?.uuid || '';
+  currentJobLevel.value = val?.job_position_level_uuid ?? '';
+  currentSectors.value = val?.sectors?.map(s => s.uuid) ?? [];
   passwordField.value = '';
 }, { immediate: true });
 
@@ -97,6 +103,13 @@ watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {
     await getAllJobPositions();
     await getAllSectors();
+  }
+});
+
+watch(currentJobPosition, (jobUuid) => {
+  if (!jobUuid || !isJobLevelFieldEnabled.value) {
+    currentJobLevel.value = '';
+    userAccount.job_position_level_uuid = undefined;
   }
 });
 
@@ -129,14 +142,36 @@ function jobPositionOnBlur(field: any) {
   field.onBlur();
 }
 
-function setSectorFromItem(item: any): string {
-  const uuidValue = item?.value ?? (typeof item === 'string' ? item : '');
-  currentSector.value = uuidValue;
-  return uuidValue;
+const selectedJobPositionOption = computed(() => {
+  if (!currentJobPosition.value) return null;
+  return jobPositionStore.jobPositionsOptions.find(opt => opt.value === currentJobPosition.value) as { value: string; title: string; levelsGroup?: { jobPositionsLevels: { uuid?: string; name: string }[] } } | undefined;
+});
+
+const jobLevelOptions = computed(() => {
+  const levels = selectedJobPositionOption.value?.levelsGroup?.jobPositionsLevels ?? [];
+  return levels.filter(l => l.uuid).map(l => ({ value: l.uuid!, title: l.name }));
+});
+
+const isJobLevelFieldEnabled = computed(() => {
+  const opt = selectedJobPositionOption.value;
+  return Boolean(currentJobPosition.value && opt?.levelsGroup?.jobPositionsLevels?.length);
+});
+
+function setSectorsFromItems(items: any): string[] {
+  const uuids = Array.isArray(items)
+    ? items.map((item: any) => item?.value ?? (typeof item === 'string' ? item : '')).filter(Boolean)
+    : [];
+  currentSectors.value = uuids;
+  return uuids;
 }
 
-function sectorOnBlur(field: any) {
+function sectorsOnBlur(field: any) {
   field.onBlur();
+}
+
+function onJobLevelChange(value: string, field: { onChange: (v: string | undefined) => void }) {
+  currentJobLevel.value = value;
+  field.onChange(value || undefined);
 }
 
 async function onSubmit(formValues: Record<string, any>) {
@@ -314,21 +349,43 @@ async function onSubmit(formValues: Record<string, any>) {
             </v-autocomplete>
           </Field>
 
-          <!-- <Field name="sector_uuid" label="Setor" v-slot="{ field, errorMessage }">
+          <Field name="job_position_level_uuid" label="Nível do cargo" v-slot="{ field, errorMessage }">
+            <v-select
+              v-bind="field"
+              :model-value="currentJobLevel"
+              @update:model-value="(v: string) => onJobLevelChange(v, field)"
+              label="Nível do cargo (Opcional)"
+              :items="jobLevelOptions"
+              item-title="title"
+              item-value="value"
+              variant="solo-filled"
+              density="compact"
+              clearable
+              :disabled="!isJobLevelFieldEnabled"
+              :error="!!errorMessage"
+              :error-messages="errorMessage"
+              class="mb-3"
+            />
+          </Field>
+
+          <Field name="sector_uuids" label="Setores" v-slot="{ field, errorMessage }">
             <v-autocomplete
-              :model-value="currentSector"
-              @update:model-value="(item: any) => {
-                const uuidValue = setSectorFromItem(item);
-                field.onChange(uuidValue);
+              :model-value="currentSectors"
+              @update:model-value="(items: any) => {
+                const uuids = setSectorsFromItems(items);
+                field.onChange(uuids);
               }"
-              @blur="sectorOnBlur(field)"
-              label="Setor (Opcional)"
+              @blur="sectorsOnBlur(field)"
+              label="Setores (Opcional)"
               :items="sectorStore.sectorsOptions"
               item-title="title"
               item-value="value"
               variant="solo-filled"
               density="compact"
               clearable
+              multiple
+              chips
+              closable-chips
               :error="!!errorMessage"
               :error-messages="errorMessage"
             >
@@ -341,7 +398,7 @@ async function onSubmit(formValues: Record<string, any>) {
                 />
               </template>
             </v-autocomplete>
-          </Field> -->
+          </Field>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
