@@ -1,36 +1,37 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import UserProfileCard from '../../components/system/userPanel/UserProfileCard.vue';
 import UserTimelineCard from '../../components/system/userPanel/UserTimelineCard.vue';
 import UserCareerPlanCard from '../../components/system/userPanel/UserCareerPlanCard.vue';
 import UserCareerPathTimeline from '../../components/system/userPanel/UserCareerPathTimeline.vue'; // Importe o novo componente
-import { getUserById, type User } from '@/types/teamPanel/project-mocks.type';
+import { useUserPanelStore } from '@/stores/user-panel.store';
+import type { UserPanel } from '@/types/user/user-panel.type';
 
 const route = useRoute();
+
+const userPanelStore = useUserPanelStore();
+
 const userUuid = ref<string | string[] | null>(null);
-const currentUser = ref<User | undefined>(undefined);
+const currentUser = ref<UserPanel | null>(null);
 
 const showDRDCard = ref(false);
 
-// Função para carregar o usuário com base no UUID da rota
-const loadUser = (uuid: string) => {
-  currentUser.value = getUserById(uuid);
+const loadUser = async () => {
+  currentUser.value = await userPanelStore.getUserPanel(userUuid.value as string);
 };
 
-// Monitora as mudanças na rota para carregar o usuário correto
 watch(
   () => route.params.uuid,
   (newUuid) => {
     if (newUuid) {
       userUuid.value = newUuid;
-      loadUser(newUuid as string); // Converte para string para usar na função
+      loadUser();
     }
   },
-  { immediate: true } // Carrega o usuário na montagem inicial do componente
+  { immediate: true }
 );
 
-// Título dinâmico do painel
 const panelTitle = computed(() => {
   return currentUser.value ? currentUser.value.name : 'Colaborador';
 });
