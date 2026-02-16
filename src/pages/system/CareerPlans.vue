@@ -23,17 +23,6 @@ const openDialog = (item?: CareerPlan) => {
   dialog.value = true;
 }
 
-async function getCareerPlans() {
-  await careerPlanStore.getCareerPlans({ page: currentPage.value, limit: itemsPerPage.value });
-}
-
-async function getJobPositions() {
-  await jobPositionStore.getJobPositions({ page: 1, limit: 1000 });
-}
-
-getCareerPlans();
-getJobPositions();
-
 const loadCareerPlans = async () => {
   await loadItems(
     { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
@@ -55,10 +44,6 @@ watch(searchTerm, (newVal) => {
   searchDebounceTimeout = setTimeout(() => {
     loadCareerPlans();
   }, 300);
-});
-
-onMounted(async () => {
-  loadCareerPlans();
 });
 </script>
 
@@ -101,37 +86,15 @@ onMounted(async () => {
     >
       <template #item.name="{ item }">
         <p class="font-weight-bold text-subtitle-1">{{ item.name }}</p>
-        
         <v-timeline direction="horizontal" side="start" dot-color="primary" class="custom-timeline">
-          <v-timeline-item v-for="jobPositionInCareer in item.jobPositionsInCareer" :key="jobPositionInCareer.uuid" size="small">
+          <v-timeline-item
+            v-for="jpic in item.careerPlanJobPositions"
+            :key="jpic.uuid"
+            size="small"
+          >
             <div>
-              <p>
-                {{ jobPositionInCareer.jobPosition.title }}
-              </p>
+              <p>{{ jpic.jobPosition?.title ?? '-' }}</p>
             </div>
-            <template v-slot:opposite>
-              <div v-if="jobPositionInCareer.careerPlanY" style="margin-right: -114px;">
-                <v-timeline-item
-                  size="small"
-                  class="custom-timeline-y"
-                  :class="{
-                    'custom-length-width': jobPositionInCareer.careerPlanY.name.length <= 14,
-                    'custom-length-width-2': jobPositionInCareer.careerPlanY.name.length > 14 && jobPositionInCareer.careerPlanY.name.length <= 16,
-                    'custom-length-width-3': jobPositionInCareer.careerPlanY.name.length > 16 && jobPositionInCareer.careerPlanY.name.length <= 18,
-                    'custom-length-width-4': jobPositionInCareer.careerPlanY.name.length > 18 && jobPositionInCareer.careerPlanY.name.length <= 20,
-                    'custom-length-width-5': jobPositionInCareer.careerPlanY.name.length > 20 && jobPositionInCareer.careerPlanY.name.length <= 22,
-                    'custom-length-width-6': jobPositionInCareer.careerPlanY.name.length > 22 && jobPositionInCareer.careerPlanY.name.length <= 24,
-                    'custom-length-width-7': jobPositionInCareer.careerPlanY.name.length > 24 && jobPositionInCareer.careerPlanY.name.length <= 26,
-                    'custom-length-width-8': jobPositionInCareer.careerPlanY.name.length > 26 && jobPositionInCareer.careerPlanY.name.length <= 28,
-                    'custom-length-width-9': jobPositionInCareer.careerPlanY.name.length > 28 && jobPositionInCareer.careerPlanY.name.length <= 30,
-                    'custom-length-width-10': jobPositionInCareer.careerPlanY.name.length > 30
-                  }">
-                  <template v-slot:opposite>
-                    {{ jobPositionInCareer.careerPlanY.name }}
-                  </template>
-                </v-timeline-item>
-              </div>
-            </template>
           </v-timeline-item>
         </v-timeline>
       </template>
@@ -178,46 +141,4 @@ onMounted(async () => {
   }
 }
 
-.custom-timeline-y .v-timeline-divider .v-timeline-divider__before {
-  transform: rotate(45deg);
-  margin-top: -65px;
-}
-
-.custom-timeline-y .v-timeline-item__opposite {
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-  text-align: center;
-  max-width: 200px;
-}
-
-.custom-length-width .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 0px !important;
-}
-.custom-length-width-2 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 5px !important;
-}
-.custom-length-width-3 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 7px !important;
-}
-.custom-length-width-4 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 9px !important;
-}
-.custom-length-width-5 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 13px !important;
-}
-.custom-length-width-6 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 18px !important;
-}
-.custom-length-width-7 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 20px !important;
-}
-.custom-length-width-8 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 22px !important;
-}
-.custom-length-width-9 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 28px !important;
-}
-.custom-length-width-10 .v-timeline-divider .v-timeline-divider__before {
-  margin-left: 31px !important;
-}
 </style>
