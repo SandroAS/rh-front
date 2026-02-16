@@ -90,18 +90,49 @@ watch(searchTerm, (newVal) => {
       @update:options="loadCareerPlans"
     >
       <template #item.name="{ item }">
-        <p class="font-weight-bold text-subtitle-1">{{ item.name }}</p>
-        <v-timeline direction="horizontal" side="start" dot-color="primary" class="custom-timeline">
-          <v-timeline-item
-            v-for="jpic in item.careerPlanJobPositions"
-            :key="jpic.uuid"
-            size="small"
-          >
-            <div>
-              <p>{{ jpic.jobPosition?.title ?? '-' }}</p>
+        <div class="name-cell-wrapper mb-3">
+          <p class="font-weight-bold text-subtitle-1 mb-2">{{ item.name }}</p>
+          <div class="career-path">
+            <!-- Linha dos títulos -->
+            <div class="career-path-row career-titles-row d-flex align-start">
+              <template v-for="(jpic, index) in item.careerPlanJobPositions" :key="'title-' + jpic.uuid">
+                <div
+                  class="career-title-cell shrink-0"
+                  :class="{
+                    'career-title-cell--first': index === 0 && item.careerPlanJobPositions.length > 1,
+                    'career-title-cell--last': index === item.careerPlanJobPositions.length - 1 && item.careerPlanJobPositions.length > 1,
+                    'career-title-cell--middle': item.careerPlanJobPositions.length === 1 || (index > 0 && index < item.careerPlanJobPositions.length - 1)
+                  }"
+                >
+                  <p class="career-step-title text-caption">{{ jpic.jobPosition?.title ?? '-' }}</p>
+                </div>
+                <div
+                  v-if="index < item.careerPlanJobPositions.length - 1"
+                  class="career-progress-wrapper flex-grow-1 career-spacer"
+                />
+              </template>
             </div>
-          </v-timeline-item>
-        </v-timeline>
+            <!-- Linha dos avatares + progress bar -->
+            <div class="career-path-row career-avatars-row d-flex align-center">
+              <template v-for="(jpic, index) in item.careerPlanJobPositions" :key="jpic.uuid">
+                <div class="career-avatar-cell shrink-0">
+                  <v-avatar size="28" color="primary" class="career-step-avatar" />
+                </div>
+                <div
+                  v-if="index < item.careerPlanJobPositions.length - 1"
+                  class="career-progress-wrapper flex-grow-1"
+                >
+                  <v-progress-linear
+                    :model-value="100"
+                    color="blue-grey-lighten-4"
+                    class="career-progressbar"
+                    rounded
+                  />
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
         <div>
@@ -119,31 +150,96 @@ watch(searchTerm, (newVal) => {
   </v-container>
 </template>
 
-<style>
-.custom-timeline .v-timeline-item__body {
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
+<style scoped>
+.name-cell-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
 }
 
-@media (max-width: 959px) {
-  .custom-timeline {
-    max-width: 500px;
-    overflow: auto;
-  }
+.career-path {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: min-content;
 }
 
-@media (max-width: 659px) {
-  .custom-timeline {
-    max-width: 300px;
-    overflow: auto;
-  }
+.career-path-row {
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
-@media (max-width: 400px) {
-  .custom-timeline {
-    max-width: 200px;
-    overflow: auto;
-  }
+.career-title-cell {
+  width: 140px;
+  min-width: 140px;
+  flex-shrink: 0;
 }
 
+.career-title-cell {
+  display: flex;
+}
+
+.career-title-cell--first {
+  justify-content: flex-start;
+}
+
+.career-title-cell--last {
+  justify-content: flex-end;
+}
+
+.career-title-cell--middle {
+  justify-content: center;
+}
+
+.career-avatar-cell {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.career-step-title {
+  max-width: 140px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.career-title-cell--first .career-step-title {
+  text-align: left;
+}
+
+.career-title-cell--last .career-step-title {
+  text-align: right;
+}
+
+.career-title-cell--middle .career-step-title {
+  text-align: center;
+}
+
+.career-step-avatar {
+  flex-shrink: 0;
+}
+
+.career-progress-wrapper {
+  min-width: 24px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  margin: 0 4px;
+}
+
+.career-spacer {
+  min-height: 1px;
+}
+
+.career-progressbar {
+  width: 100%;
+  min-height: 6px;
+}
 </style>
