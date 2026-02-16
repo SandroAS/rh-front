@@ -95,7 +95,7 @@ watch(searchTerm, (newVal) => {
           <div class="career-path">
             <!-- Linha dos títulos -->
             <div class="career-path-row career-titles-row d-flex align-start">
-              <template v-for="(jpic, index) in item.careerPlanJobPositions" :key="'title-' + jpic.uuid">
+              <template v-for="(jpic, index) in item.careerPlanJobPositions.reverse()" :key="'title-' + jpic.uuid">
                 <div
                   class="career-title-cell shrink-0"
                   :class="{
@@ -114,7 +114,7 @@ watch(searchTerm, (newVal) => {
             </div>
             <!-- Linha dos avatares + progress bar -->
             <div class="career-path-row career-avatars-row d-flex align-center">
-              <template v-for="(jpic, index) in item.careerPlanJobPositions" :key="jpic.uuid">
+              <template v-for="(jpic, index) in item.careerPlanJobPositions.reverse()" :key="jpic.uuid">
                 <div class="career-avatar-cell shrink-0">
                   <v-avatar size="28" color="primary" class="career-step-avatar" />
                 </div>
@@ -128,6 +128,24 @@ watch(searchTerm, (newVal) => {
                     class="career-progressbar"
                     rounded
                   />
+                </div>
+              </template>
+            </div>
+            <div v-if="item.careerPlanJobPositions.some(jpic => jpic.careerPlanY?.uuid)" class="career-path-row career-titles-row d-flex align-start">
+              <template v-for="(jpic, index) in item.careerPlanJobPositions.reverse()" :key="'title-' + jpic.uuid">
+                <div v-if="jpic.careerPlanY?.uuid" class="d-flex align-center">
+                  <div class="mb-6 ml-5">
+                    <v-progress-linear
+                      :model-value="100"
+                      color="blue-grey-lighten-4"
+                      class="career-progressbar-diagonal"
+                      rounded
+                    />
+                  </div>
+                  <div class="mt-4">
+                    <p class="career-step-title career-title-cell--first text-caption mb-1">{{ jpic.careerPlanY?.name }}</p>
+                    <v-avatar size="28" color="primary" class="career-step-avatar" />
+                  </div>
                 </div>
               </template>
             </div>
@@ -241,5 +259,11 @@ watch(searchTerm, (newVal) => {
 .career-progressbar {
   width: 100%;
   min-height: 6px;
+}
+
+.career-progressbar-diagonal {
+  width: 50px;
+  min-height: 6px;
+  transform: rotate(45deg);
 }
 </style>
