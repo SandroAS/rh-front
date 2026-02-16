@@ -1,7 +1,7 @@
-import type JobPositionInCareer from './job-position-in-career.type';
+import type CareerPlanJobPositions from './career-plan-job-position.type';
 
 export default interface CareerPlan {
   uuid: string;
   name: string;
-  jobPositionsInCareer: JobPositionInCareer[];
+  careerPlanJobPositions: CareerPlanJobPositions[];
 }
