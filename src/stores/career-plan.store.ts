@@ -89,10 +89,11 @@ export const useCareerPlanStore = defineStore('careerPlan', {
       try {
         const res = await saveCareerPlan(careerPlan, uuid);
         if (!this.careerPlans) this.careerPlans = [];
+        const positions = (careerPlan.careerPlanJobPositions ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         const careerPlanSaved: CareerPlan = {
           uuid: res.uuid,
           name: careerPlan.name,
-          careerPlanJobPositions: careerPlan.careerPlanJobPositions ?? [],
+          careerPlanJobPositions: positions,
         };
         if (uuid) {
           const index = this.careerPlans.findIndex((x) => x.uuid === uuid);
