@@ -9,6 +9,11 @@ import { useJobPositionStore } from '@/stores/job-position.store';
 const careerPlanStore = useCareerPlanStore();
 const jobPositionStore = useJobPositionStore();
 
+async function getAllJobPositions() {
+  await jobPositionStore.getAllJobPositions();
+}
+
+getAllJobPositions();
 
 const dialog = ref(false);
 const selectedCareerPlan = ref<CareerPlan | null>(null);
