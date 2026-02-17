@@ -41,9 +41,9 @@ const { value: userUuids, errorMessage: userUuidsError } = useField<string[]>('u
 
 // Watch para atualizar valores quando selectedSector mudar
 watch(() => props.selectedSector, (val) => {
-  if (val) {
+  if (val?.uuid) {
     setValues({
-      uuid: val.uuid || undefined,
+      uuid: val.uuid,
       name: val.name || '',
       user_uuids: val.users?.map(user => user.uuid) || []
     });

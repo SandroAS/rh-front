@@ -67,14 +67,16 @@ const careerPlanYOptions = computed(() => {
 watch(
   () => props.selectedCareerPlan,
   (val) => {
-    setValues({
-      name: val?.name ?? '',
-      uuid: val?.uuid,
-    });
-    careerPlanJobPositions.value =
-      (val?.careerPlanJobPositions?.length ?? 0) > 0
-        ? val!.careerPlanJobPositions.map(toFormItem)
-        : [defaultFormItem(0)];
+    if(val?.uuid) {
+      setValues({
+        name: val?.name ?? '',
+        uuid: val?.uuid,
+      });
+      careerPlanJobPositions.value =
+        (val?.careerPlanJobPositions?.length ?? 0) > 0
+          ? val!.careerPlanJobPositions.map(toFormItem)
+          : [defaultFormItem(0)];
+    }
   },
   { immediate: true }
 );
