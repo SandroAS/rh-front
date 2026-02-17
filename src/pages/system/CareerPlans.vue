@@ -28,9 +28,13 @@ const openDialog = (item?: CareerPlan) => {
   dialog.value = true;
 }
 
-const loadCareerPlans = async () => {
+const loadCareerPlans = async ({ page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam }: { page: number; itemsPerPage: number; sortBy: any[] }) => {
+  currentPage.value = page;
+  itemsPerPage.value = itemsPerPageParam;
+  sortBy.value = sortByParam;
+
   await loadItems(
-    { page: currentPage.value, itemsPerPage: itemsPerPage.value, sortBy: sortBy.value },
+    { page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam },
     searchTerm.value,
     careerPlanStore,
     'getCareerPlans',
@@ -39,16 +43,33 @@ const loadCareerPlans = async () => {
 
   currentPage.value = careerPlanStore.page;
   itemsPerPage.value = careerPlanStore.limit;
+  if (careerPlanStore.sort_column) {
+    sortBy.value = [{ key: careerPlanStore.sort_column, order: careerPlanStore.sort_order || 'asc' }];
+  } else {
+    sortBy.value = [];
+  }
 };
 
 let searchDebounceTimeout: ReturnType<typeof setTimeout>;
 watch(searchTerm, (newVal) => {
-  if (typeof newVal !== 'string') return; 
+  if (typeof newVal !== 'string') return;
 
   clearTimeout(searchDebounceTimeout);
   searchDebounceTimeout = setTimeout(() => {
-    loadCareerPlans();
+    loadCareerPlans({
+      page: careerPlanStore.page,
+      itemsPerPage: careerPlanStore.limit,
+      sortBy: careerPlanStore.sort_column ? [{ key: careerPlanStore.sort_column, order: careerPlanStore.sort_order || 'asc' }] : [],
+    });
   }, 300);
+});
+
+onMounted(() => {
+  loadCareerPlans({
+    page: careerPlanStore.page,
+    itemsPerPage: careerPlanStore.limit,
+    sortBy: careerPlanStore.sort_column ? [{ key: careerPlanStore.sort_column, order: careerPlanStore.sort_order || 'asc' }] : [],
+  });
 });
 </script>
 
