@@ -244,7 +244,7 @@ const onSubmit = handleSubmit(async (formValues) => {
               </div>
 
               <v-select
-                v-if="jobPositionInCareer.career_plan_y_uuid !== undefined"
+                v-if="typeof jobPositionInCareer.career_plan_y_uuid === 'string'"
                 :model-value="jobPositionInCareer.career_plan_y_uuid"
                 @update:model-value="onCareerPlanYChange(index, $event)"
                 label="Plano de Carreira Y"
@@ -282,13 +282,13 @@ const onSubmit = handleSubmit(async (formValues) => {
               :style="{
                 height:
                   (34 +
-                    (jobPositionInCareer.career_plan_y_uuid !== undefined
+                    (typeof jobPositionInCareer.career_plan_y_uuid === 'string'
                       ? 42
                       : 0)) + 'px',
                 'margin-top':
                   -(
                     24 +
-                    (jobPositionInCareer.career_plan_y_uuid !== undefined
+                    (typeof jobPositionInCareer.career_plan_y_uuid === 'string'
                       ? 52
                       : 0)
                   ) + 'px',
@@ -306,7 +306,7 @@ const onSubmit = handleSubmit(async (formValues) => {
               <v-icon size="18">mdi-arrow-bottom-right</v-icon>
             </v-btn>
             <v-btn
-              v-if="jobPositionInCareer.career_plan_y_uuid !== undefined"
+              v-if="typeof jobPositionInCareer.career_plan_y_uuid === 'string'"
               color="error"
               size="20"
               icon
@@ -315,7 +315,7 @@ const onSubmit = handleSubmit(async (formValues) => {
                 'margin-top':
                   -(
                     40 +
-                    (jobPositionInCareer.career_plan_y_uuid !== undefined
+                    (typeof jobPositionInCareer.career_plan_y_uuid === 'string'
                       ? 104
                       : 0)
                   ) + 'px',
