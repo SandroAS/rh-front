@@ -140,7 +140,7 @@ export const useTeamStore = defineStore('team', {
       this.error = null;
 
       try {
-        const res: Team = await getTeamMembersFromUserLogged();
+        const res = await getTeamMembersFromUserLogged();
         this.user_logged_team = res;
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar time do usuário logado.';

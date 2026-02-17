@@ -35,7 +35,11 @@ export const getTotalTeams = async (): Promise<TeamsTotals> => {
   return response.data;
 };
 
-export const getTeamMembersFromUserLogged = async (): Promise<Team> => {
-  const response: AxiosResponse<Team> = await api.get(`/teams/user-logged-members`);
-  return response.data;
+export const getTeamMembersFromUserLogged = async (): Promise<Team | null> => {
+  const response: AxiosResponse<Team | Record<string, never>> = await api.get(`/teams/user-logged-members`);
+  const data = response.data;
+  if (!data || typeof data !== 'object' || !('uuid' in data) || !data.uuid) {
+    return null;
+  }
+  return data as Team;
 };
