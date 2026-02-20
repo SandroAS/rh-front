@@ -79,7 +79,11 @@ export const useAccountUserStore = defineStore('accountUser', {
     async saveAccountUser(
       accountUser: AccountUserPayload,
       uuid?: string,
-      options?: { careerPlan?: CareerPlanSimple }
+      options?: {
+        careerPlan?: CareerPlanSimple;
+        jobPosition?: { uuid: string; title: string };
+        sectors?: { uuid: string; name: string }[];
+      }
     ) {
       this.loading = true;
       this.error = null;
@@ -88,6 +92,17 @@ export const useAccountUserStore = defineStore('accountUser', {
         const res: { uuid: string, role: { uuid: string } } = await saveAccountUser(accountUser, uuid);
         if(!this.account_users) this.account_users = [];
         const careerPlan = options?.careerPlan ?? (accountUser.career_plan_uuid ? { uuid: accountUser.career_plan_uuid, name: '' } : undefined);
+        const jobPosition = accountUser.job_position_uuid
+          ? (options?.jobPosition
+            ? { uuid: options.jobPosition.uuid, title: options.jobPosition.title, description: '', cbo_code: undefined, base_salary: undefined, levelsGroup: undefined, drd_uuid: undefined }
+            : { uuid: accountUser.job_position_uuid, title: '', description: '', cbo_code: undefined, base_salary: undefined, levelsGroup: undefined, drd_uuid: undefined })
+          : undefined;
+        const sectorUuids = accountUser.sector_uuids?.length
+          ? accountUser.sector_uuids
+          : accountUser.sector_uuid
+            ? [accountUser.sector_uuid]
+            : [];
+        const sectors = options?.sectors ?? sectorUuids.map(uuid => ({ uuid, name: '' }));
         const accountUserSaved = {
           uuid: res.uuid,
           name: accountUser.name,
@@ -102,21 +117,8 @@ export const useAccountUserStore = defineStore('accountUser', {
             created_at: '',
             permissions: []
           },
-          jobPosition: accountUser.job_position_uuid ? {
-            uuid: accountUser.job_position_uuid,
-            title: '',
-            description: '',
-            cbo_code: undefined,
-            base_salary: undefined,
-            levelsGroup: undefined,
-            drd_uuid: undefined
-          } : undefined,
-          sectors: (accountUser.sector_uuids?.length
-            ? accountUser.sector_uuids
-            : accountUser.sector_uuid
-              ? [accountUser.sector_uuid]
-              : []
-          ).map(uuid => ({ uuid, name: '' })),
+          jobPosition,
+          sectors,
           career_plan_uuid: accountUser.career_plan_uuid,
           careerPlan,
         }

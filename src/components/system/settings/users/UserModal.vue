@@ -206,12 +206,21 @@ async function onSubmit(formValues: Record<string, any>) {
   const accountUser: AccountUserPayload = formValues as AccountUserPayload;
   const careerPlanUuid = currentCareerPlan.value || accountUser.career_plan_uuid;
   const careerPlanOption = careerPlanUuid ? careerPlanStore.careerPlansOptions.find(opt => opt.value === careerPlanUuid) : undefined;
-  const saveOptions = careerPlanUuid
-    ? { careerPlan: { uuid: careerPlanUuid, name: careerPlanOption?.title ?? '' } }
-    : undefined;
+  const jobPositionUuid = currentJobPosition.value || accountUser.job_position_uuid;
+  const jobPositionOption = jobPositionUuid ? jobPositionStore.jobPositionsOptions.find(opt => opt.value === jobPositionUuid) : undefined;
+  const sectorUuids = currentSectors.value?.length ? currentSectors.value : (accountUser.sector_uuids ?? (accountUser.sector_uuid ? [accountUser.sector_uuid] : []));
+  const sectors = sectorUuids.map(uuid => {
+    const opt = sectorStore.sectorsOptions.find(o => o.value === uuid);
+    return { uuid, name: opt?.title ?? '' };
+  });
+  const saveOptions = {
+    ...(careerPlanUuid && { careerPlan: { uuid: careerPlanUuid, name: careerPlanOption?.title ?? '' } }),
+    ...(jobPositionUuid && { jobPosition: { uuid: jobPositionUuid, title: jobPositionOption?.title ?? '' } }),
+    ...(sectors.length > 0 && { sectors }),
+  };
 
   try {
-    await accountUserStore.saveAccountUser(accountUser, props.selectedAccountUser?.uuid, saveOptions);
+    await accountUserStore.saveAccountUser(accountUser, props.selectedAccountUser?.uuid, Object.keys(saveOptions).length > 0 ? saveOptions : undefined);
     snackbarStore.show('Registro realizado com sucesso! Bem-vindo(a)!', 'success');
     close();
   } catch (err: any) {
