@@ -129,6 +129,27 @@ watch(() => props.modelValue, async (isOpen) => {
     await getAllJobPositions();
     await getAllSectors();
     await getAllCareerPlans();
+    // Re-sincroniza o formulário com o usuário selecionado ao abrir (ex.: após fechar pelo overlay)
+    const val = props.selectedAccountUser;
+    const careerPlanUuid = val?.career_plan_uuid ?? val?.careerPlan?.uuid ?? undefined;
+    Object.assign(userAccount, {
+      name: val?.name || '',
+      email: val?.email || '',
+      cellphone: val?.cellphone || '',
+      cpf: val?.cpf || '',
+      password: '',
+      confirmPassword: '',
+      role: val?.role?.name || RoleType.MEMBER,
+      job_position_uuid: val?.jobPosition?.uuid || undefined,
+      job_position_current_level_uuid: val?.jobPositionCurrentLevel?.uuid ?? undefined,
+      sector_uuids: val?.sectors?.map(s => s.uuid) ?? [],
+      career_plan_uuid: careerPlanUuid,
+    });
+    currentJobPosition.value = val?.jobPosition?.uuid || '';
+    currentJobLevel.value = val?.jobPositionCurrentLevel?.uuid ?? '';
+    currentSectors.value = val?.sectors?.map(s => s.uuid) ?? [];
+    currentCareerPlan.value = val?.careerPlan?.uuid ?? '';
+    passwordField.value = '';
   }
 });
 
@@ -471,7 +492,7 @@ async function onSubmit(formValues: Record<string, any>) {
         <v-divider />
         <v-card-actions class="px-4 py-3">
           <v-spacer />
-          <v-btn variant="text" @click="close">Cancelar</v-btn>
+          <v-btn variant="text" @click="modalValueChanged(false)">Cancelar</v-btn>
           <v-btn color="primary" variant="elevated" type="submit">Salvar</v-btn>
         </v-card-actions>
       </v-card>
