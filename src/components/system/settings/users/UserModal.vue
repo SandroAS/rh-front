@@ -222,237 +222,248 @@ async function onSubmit(formValues: Record<string, any>) {
 </script>
 
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="modalValueChanged" max-width="500px">
+  <v-dialog :model-value="modelValue" @update:model-value="modalValueChanged" max-width="800px" transition="dialog-transition">
     <Form @submit="onSubmit" :initial-values="userAccount">
       <v-card>
-        <v-card-title>
+        <v-card-title class="text-h6 py-4">
           {{ !!selectedAccountUser ? 'Editar usuário' : 'Novo usuário' }}
         </v-card-title>
-        <v-card-text>
-          <Field name="name" label="Nome" rules="required|min:3|alpha_spaces" v-slot="{ field, errorMessage }">
-            <v-text-field
-              v-bind="field"
-              label="Nome"
-              prepend-inner-icon="mdi-account"
-              variant="solo-filled"
-              density="compact"
-              :persistent-placeholder="!!props.selectedAccountUser?.name"
-              :error="!!errorMessage"
-              :error-messages="errorMessage" class="mb-3"
-            />
-          </Field>
-
-          <Field name="email" label="E-mail" rules="required|email" v-slot="{ field, errorMessage }">
-            <v-text-field
-              v-bind="field"
-              label="E-mail"
-              prepend-inner-icon="mdi-email"
-              variant="solo-filled"
-              density="compact"
-              :persistent-placeholder="!!props.selectedAccountUser?.email"
-              :error="!!errorMessage"
-              :error-messages="errorMessage" class="mb-3"
-            />
-          </Field>
-
-          <Field name="cellphone" label="Telefone" rules="required|min:15|max:16" v-slot="{ field, errorMessage }">
-            <v-text-field
-              v-bind="field"
-              label="Telefone"
-              v-mask="['(##) #####-####', '(##) ####-####']"
-              prepend-inner-icon="mdi-phone"
-              variant="solo-filled"
-              density="compact"
-              :persistent-placeholder="!!props.selectedAccountUser?.cellphone"
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-              class="mb-3"
-            />
-          </Field>
-
-          <Field name="cpf" rules="required|cpf" v-slot="{ field, errorMessage }">
-            <v-text-field
-              v-bind="field"
-              label="CPF"
-              v-mask="'###.###.###-##'"
-              prepend-inner-icon="mdi-card-account-details"
-              variant="solo-filled"
-              density="compact"
-              :persistent-placeholder="!!props.selectedAccountUser?.cpf"
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-              class="mb-3"
-            />
-          </Field>
-
-          <Field name="password" label="Senha" :rules="!props.selectedAccountUser?.name ? 'required|min:6' : ''" v-slot="{ field, errorMessage }">
-            <v-text-field
-              v-bind="field"
-              v-model="passwordField"
-              label="Senha"
-              :type="showPassword ? 'text' : 'password'"
-              prepend-inner-icon="mdi-lock"
-              variant="solo-filled"
-              density="compact" :error="!!errorMessage"
-              :error-messages="errorMessage"
-              :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              @click:append-inner="showPassword = !showPassword"
-              class="mb-1"
-            />
-          </Field>
-          <v-progress-linear
-            v-if="!props.selectedAccountUser?.name || passwordField.length > 0"
-            :model-value="passwordIndicator.value"
-            :color="passwordIndicator.color"
-            height="6"
-            rounded
-            class="mb-2"
-          />
-          <div class="text-caption mb-3" :class="`text-${passwordIndicator.color}`">
-            Nível de segurança da senha: 
-            <strong class="text-capitalize">{{ passwordIndicator.text }}</strong>
-          </div>
-
-          <Field name="confirmPassword" label="Confirmar senha" :rules="!props.selectedAccountUser?.name ? 'required|confirmed:@password' : ''"
-            v-slot="{ field, errorMessage }">
-            <v-text-field
-              v-bind="field"
-              label="Confirmar senha"
-              :type="showConfirmPassword ? 'text' : 'password'"
-              prepend-inner-icon="mdi-lock"
-              variant="solo-filled"
-              density="compact"
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-              :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              @click:append-inner="showConfirmPassword = !showConfirmPassword"
-              class="mb-3"
-            />
-          </Field>
-          <Field name="role" rules="required" v-slot="{ field, errorMessage }">
-            <v-select
-              v-bind="field"
-              label="Permissão"
-              :items="userTypes"
-              item-value="value"
-              item-title="title"
-              item-props="disabled"
-              :return-object="false"
-              variant="solo-filled"
-              density="compact"
-              persistent-placeholder
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-              class="mb-3"
-              :disabled="props.selectedAccountUser?.role?.name === RoleType.ADMIN"
-            >
-              <template v-slot:item="{ item, props: itemProps }">
-                <v-list-item v-bind="itemProps" :title="item.title" :subtitle="item.raw.subtitle" :disabled="item.raw.disabled" />
-              </template>
-            </v-select>
-          </Field>
-
-          <Field name="job_position_uuid" label="Cargo" v-slot="{ field, errorMessage }">
-            <v-autocomplete
-              :model-value="currentJobPosition"
-              @update:model-value="(item: any) => {
-                const uuidValue = setJobPositionFromItem(item);
-                field.onChange(uuidValue);
-              }"
-              @blur="jobPositionOnBlur(field)"
-              label="Cargo"
-              :items="jobPositionStore.jobPositionsOptions"
-              item-title="title"
-              item-value="value"
-              variant="solo-filled"
-              density="compact"
-              clearable
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-              class="mb-3"
-            >
-              <template v-slot:item="{ props, item }">
-                <v-list-item 
-                  v-bind="props"
-                  :title="item.raw.title"
-                  :disabled="item.raw.disabled"
-                  density="compact"
+        <v-card-text class="pt-0">
+          <v-container fluid class="pa-0">
+            <v-row>
+              <v-col cols="12" md="6">
+                <Field name="name" label="Nome" rules="required|min:3|alpha_spaces" v-slot="{ field, errorMessage }">
+                  <v-text-field
+                    v-bind="field"
+                    label="Nome"
+                    prepend-inner-icon="mdi-account"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    :persistent-placeholder="!!props.selectedAccountUser?.name"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  />
+                </Field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="email" label="E-mail" rules="required|email" v-slot="{ field, errorMessage }">
+                  <v-text-field
+                    v-bind="field"
+                    label="E-mail"
+                    prepend-inner-icon="mdi-email"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    :persistent-placeholder="!!props.selectedAccountUser?.email"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  />
+                </Field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="cellphone" label="Telefone" rules="required|min:15|max:16" v-slot="{ field, errorMessage }">
+                  <v-text-field
+                    v-bind="field"
+                    label="Telefone"
+                    v-mask="['(##) #####-####', '(##) ####-####']"
+                    prepend-inner-icon="mdi-phone"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    :persistent-placeholder="!!props.selectedAccountUser?.cellphone"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  />
+                </Field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="cpf" rules="required|cpf" v-slot="{ field, errorMessage }">
+                  <v-text-field
+                    v-bind="field"
+                    label="CPF"
+                    v-mask="'###.###.###-##'"
+                    prepend-inner-icon="mdi-card-account-details"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    :persistent-placeholder="!!props.selectedAccountUser?.cpf"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  />
+                </Field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="password" label="Senha" :rules="!props.selectedAccountUser?.name ? 'required|min:6' : ''" v-slot="{ field, errorMessage }">
+                  <v-text-field
+                    v-bind="field"
+                    v-model="passwordField"
+                    label="Senha"
+                    :type="showPassword ? 'text' : 'password'"
+                    prepend-inner-icon="mdi-lock"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                    :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                    @click:append-inner="showPassword = !showPassword"
+                  />
+                </Field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="confirmPassword" label="Confirmar senha" :rules="!props.selectedAccountUser?.name ? 'required|confirmed:@password' : ''" v-slot="{ field, errorMessage }">
+                  <v-text-field
+                    v-bind="field"
+                    label="Confirmar senha"
+                    :type="showConfirmPassword ? 'text' : 'password'"
+                    prepend-inner-icon="mdi-lock"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                    :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                    @click:append-inner="showConfirmPassword = !showConfirmPassword"
+                  />
+                </Field>
+              </v-col>
+              <v-col v-if="!props.selectedAccountUser?.name || passwordField.length > 0" cols="12">
+                <v-progress-linear
+                  :model-value="passwordIndicator.value"
+                  :color="passwordIndicator.color"
+                  height="6"
+                  rounded
+                  class="mb-1"
                 />
-              </template>
-            </v-autocomplete>
-          </Field>
-
-          <Field name="job_position_current_level_uuid" label="Nível do cargo" v-slot="{ field, errorMessage }">
-            <v-select
-              v-bind="field"
-              :model-value="currentJobLevel"
-              @update:model-value="(v: string) => onJobLevelChange(v, field)"
-              label="Nível do cargo (Opcional)"
-              :items="jobLevelOptions"
-              item-title="title"
-              item-value="value"
-              variant="solo-filled"
-              density="compact"
-              clearable
-              :disabled="!isJobLevelFieldEnabled"
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-              class="mb-3"
-            />
-          </Field>
-
-          <Field name="sector_uuids" label="Setores" v-slot="{ field, errorMessage }">
-            <v-autocomplete
-              :model-value="currentSectors"
-              @update:model-value="(items: any) => {
-                const uuids = setSectorsFromItems(items);
-                field.onChange(uuids);
-              }"
-              @blur="sectorsOnBlur(field)"
-              label="Setores (Opcional)"
-              :items="sectorStore.sectorsOptions"
-              item-title="title"
-              item-value="value"
-              variant="solo-filled"
-              density="compact"
-              clearable
-              multiple
-              chips
-              closable-chips
-              :error="!!errorMessage"
-              :error-messages="errorMessage"
-            >
-              <template v-slot:item="{ props, item }">
-                <v-list-item 
-                  v-bind="props"
-                  :title="item.raw.title"
-                  :disabled="item.raw.disabled"
-                  density="compact"
-                />
-              </template>
-            </v-autocomplete>
-          </Field>
-
-          <Field name="career_plan_uuid" label="Plano de carreira" v-slot="{ field }">
-            <v-select
-              :model-value="currentCareerPlan"
-              @update:model-value="(v: string) => onCareerPlanChange(v, field)"
-              label="Plano de carreira (Opcional)"
-              :items="careerPlanStore.careerPlansOptions"
-              item-value="value"
-              item-title="title"
-              variant="solo-filled"
-              density="compact"
-              clearable
-              persistent-placeholder
-              class="mb-3"
-            />
-          </Field>
+                <div class="text-caption" :class="`text-${passwordIndicator.color}`">
+                  Nível de segurança da senha: <strong class="text-capitalize">{{ passwordIndicator.text }}</strong>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="role" rules="required" v-slot="{ field, errorMessage }">
+                  <v-select
+                    v-bind="field"
+                    label="Permissão"
+                    :items="userTypes"
+                    item-value="value"
+                    item-title="title"
+                    item-props="disabled"
+                    :return-object="false"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    persistent-placeholder
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                    :disabled="props.selectedAccountUser?.role?.name === RoleType.ADMIN"
+                  >
+                    <template v-slot:item="{ item, props: itemProps }">
+                      <v-list-item v-bind="itemProps" :title="item.title" :subtitle="item.raw.subtitle" :disabled="item.raw.disabled" />
+                    </template>
+                  </v-select>
+                </Field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="job_position_uuid" label="Cargo" v-slot="{ field, errorMessage }">
+                  <v-autocomplete
+                    :model-value="currentJobPosition"
+                    @update:model-value="(item: any) => {
+                      const uuidValue = setJobPositionFromItem(item);
+                      field.onChange(uuidValue);
+                    }"
+                    @blur="jobPositionOnBlur(field)"
+                    label="Cargo"
+                    :items="jobPositionStore.jobPositionsOptions"
+                    item-title="title"
+                    item-value="value"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    clearable
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  >
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item v-bind="props" :title="item.raw.title" :disabled="item.raw.disabled" density="compact" />
+                    </template>
+                  </v-autocomplete>
+                </Field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="job_position_current_level_uuid" label="Nível do cargo" v-slot="{ field, errorMessage }">
+                  <v-select
+                    v-bind="field"
+                    :model-value="currentJobLevel"
+                    @update:model-value="(v: string) => onJobLevelChange(v, field)"
+                    label="Nível do cargo (Opcional)"
+                    :items="jobLevelOptions"
+                    item-title="title"
+                    item-value="value"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    clearable
+                    :disabled="!isJobLevelFieldEnabled"
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  />
+                </Field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <Field name="career_plan_uuid" label="Plano de carreira" v-slot="{ field }">
+                  <v-select
+                    :model-value="currentCareerPlan"
+                    @update:model-value="(v: string) => onCareerPlanChange(v, field)"
+                    label="Plano de carreira (Opcional)"
+                    :items="careerPlanStore.careerPlansOptions"
+                    item-value="value"
+                    item-title="title"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details
+                    clearable
+                    persistent-placeholder
+                  />
+                </Field>
+              </v-col>
+              <v-col cols="12">
+                <Field name="sector_uuids" label="Setores" v-slot="{ field, errorMessage }">
+                  <v-autocomplete
+                    :model-value="currentSectors"
+                    @update:model-value="(items: any) => {
+                      const uuids = setSectorsFromItems(items);
+                      field.onChange(uuids);
+                    }"
+                    @blur="sectorsOnBlur(field)"
+                    label="Setores (Opcional)"
+                    :items="sectorStore.sectorsOptions"
+                    item-title="title"
+                    item-value="value"
+                    variant="solo-filled"
+                    density="compact"
+                    hide-details="auto"
+                    clearable
+                    multiple
+                    chips
+                    closable-chips
+                    :error="!!errorMessage"
+                    :error-messages="errorMessage"
+                  >
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item v-bind="props" :title="item.raw.title" :disabled="item.raw.disabled" density="compact" />
+                    </template>
+                  </v-autocomplete>
+                </Field>
+              </v-col>
+            </v-row>
+          </v-container>
         </v-card-text>
-        <v-card-actions>
+        <v-divider />
+        <v-card-actions class="px-4 py-3">
           <v-spacer />
-          <v-btn text @click="close">Cancelar</v-btn>
-          <v-btn color="primary" type="submit">Salvar</v-btn>
+          <v-btn variant="text" @click="close">Cancelar</v-btn>
+          <v-btn color="primary" variant="elevated" type="submit">Salvar</v-btn>
         </v-card-actions>
       </v-card>
     </Form>
