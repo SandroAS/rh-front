@@ -26,7 +26,7 @@ export const getCareerPlansPagination = async (page: number = 1, limit: number =
   return data;
 };
 
-export const getCareerPlansAll = async (): Promise<CareerPlan[]> => {
+export const getAllCareerPlans = async (): Promise<CareerPlan[]> => {
   const response: AxiosResponse<CareerPlan[]> = await api.get('/career-plans');
   return (response.data ?? []).map(sortCareerPlanJobPositions);
 };

@@ -12,4 +12,5 @@ export default interface AccountUserPayload {
   job_position_current_level_uuid?: string;
   sector_uuid?: string;
   sector_uuids?: string[];
+  career_plan_uuid?: string;
 }

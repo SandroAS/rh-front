@@ -1,4 +1,4 @@
-import { getSectors, saveSector } from '@/services/sector.service';
+import { getAllSectors, getSectors, saveSector } from '@/services/sector.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import { defineStore } from 'pinia';
 import type Sector from '@/types/sector/sector.type';
@@ -96,6 +96,20 @@ export const useSectorStore = defineStore('sector', {
         this.search_term = params.search_term;
       } catch (err: any) {
         this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getAllSectors() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const res = await getAllSectors();
+        this.sectors = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message ?? 'Erro ao buscar todos os setores.';
         throw err;
       } finally {
         this.loading = false;

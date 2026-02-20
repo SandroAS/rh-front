@@ -2,7 +2,7 @@ import type { AxiosResponse } from 'axios';
 import api from './api.service';
 import type SectorResponsePagination from '@/types/sector/sector-response-pagination.type';
 import type SectorPayload from '@/types/sector/sector-payload.type';
-
+import type Sector from '@/types/sector/sector.type';
 
 export const getSectors = async (page: number = 1, limit: number = 10, sortColumn?: string, sortOrder?: 'asc' | 'desc', searchTerm?: string): Promise<SectorResponsePagination> => {
   const params: any = { page, limit };
@@ -16,7 +16,10 @@ export const getSectors = async (page: number = 1, limit: number = 10, sortColum
   return response.data;
 };
 
-import type Sector from '@/types/sector/sector.type';
+export const getAllSectors = async (): Promise<Sector[]> => {
+  const response: AxiosResponse<Sector[]> = await api.get('/sectors');
+  return response.data;
+};
 
 export const saveSector = async (sector: SectorPayload, uuid?: string) => {
   const response: AxiosResponse<Sector> = uuid 

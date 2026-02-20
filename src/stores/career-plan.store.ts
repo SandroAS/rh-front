@@ -3,6 +3,7 @@ import {
   saveCareerPlan,
   removeCareerPlan,
   getCareerPlanByUuid,
+  getAllCareerPlans,
 } from '@/services/career-plan.service';
 import { defineStore } from 'pinia';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
@@ -37,7 +38,19 @@ export const useCareerPlanStore = defineStore('careerPlan', {
     search_term: undefined,
   }),
 
-  getters: {},
+  getters: {
+    careerPlansOptions(): { value: string, title: string, disabled: boolean }[] | [] {
+      if(!this.careerPlans) return [];
+      const careerPlansMapped = this.careerPlans.map(careerPlan => {
+        return {
+          value: careerPlan.uuid,
+          title: careerPlan.name,
+          disabled: false
+        }
+      });
+      return careerPlansMapped;
+    }
+  },
 
   actions: {
     async getCareerPlans(params: DataTableFilterParams) {
@@ -62,6 +75,20 @@ export const useCareerPlanStore = defineStore('careerPlan', {
         this.search_term = params.search_term;
       } catch (err: any) {
         this.error = err.response?.data?.message ?? 'Erro ao buscar planos de carreira.';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async getAllCareerPlans() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const res = await getAllCareerPlans();
+        this.careerPlans = res;
+      } catch (err: any) {
+        this.error = err.response?.data?.message ?? 'Erro ao buscar todos os planos de carreira.';
         throw err;
       } finally {
         this.loading = false;

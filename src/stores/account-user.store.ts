@@ -9,6 +9,7 @@ import { getAllAccountUsers, getAllAccountUsersWithTeams } from '@/services/user
 import type { UserAvatar } from '@/types/user/user-avatar.type';
 import type { UserTeam } from '@/types/user/user-team.type';
 import type TeamResponse from '@/types/team/team-response.type';
+import type CareerPlanSimple from '@/types/careerPlan/career-plan-simple.type';
 
 interface AccountUserStoreState {
   account_users: AccountUser[] | null;
@@ -75,13 +76,18 @@ export const useAccountUserStore = defineStore('accountUser', {
   },
 
   actions: {
-    async saveAccountUser(accountUser: AccountUserPayload, uuid?: string) {
+    async saveAccountUser(
+      accountUser: AccountUserPayload,
+      uuid?: string,
+      options?: { careerPlan?: CareerPlanSimple }
+    ) {
       this.loading = true;
       this.error = null;
 
       try {
         const res: { uuid: string, role: { uuid: string } } = await saveAccountUser(accountUser, uuid);
         if(!this.account_users) this.account_users = [];
+        const careerPlan = options?.careerPlan ?? (accountUser.career_plan_uuid ? { uuid: accountUser.career_plan_uuid, name: '' } : undefined);
         const accountUserSaved = {
           uuid: res.uuid,
           name: accountUser.name,
@@ -110,7 +116,9 @@ export const useAccountUserStore = defineStore('accountUser', {
             : accountUser.sector_uuid
               ? [accountUser.sector_uuid]
               : []
-          ).map(uuid => ({ uuid, name: '' }))
+          ).map(uuid => ({ uuid, name: '' })),
+          career_plan_uuid: accountUser.career_plan_uuid,
+          careerPlan,
         }
         if(uuid) {
           const accountUserFind = this.account_users.find(x => x.uuid === uuid);

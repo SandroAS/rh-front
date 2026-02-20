@@ -7,6 +7,7 @@ import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { useSectorStore } from '@/stores/sector.store';
+import { useCareerPlanStore } from '@/stores/career-plan.store';
 import { RoleType } from '@/types/user/user-role.type';
 import { checkPasswordStrength, passwordScore } from '@/utils/checkPasswordStrength.util';
 
@@ -14,6 +15,7 @@ const accountUserStore = useAccountUserStore();
 const snackbarStore = useSnackbarStore();
 const jobPositionStore = useJobPositionStore();
 const sectorStore = useSectorStore();
+const careerPlanStore = useCareerPlanStore();
 
 const props = defineProps<{
   modelValue: boolean,
@@ -33,6 +35,7 @@ const passwordField = ref('');
 const currentJobPosition = ref(props.selectedAccountUser?.jobPosition?.uuid || '');
 const currentJobLevel = ref(props.selectedAccountUser?.jobPositionCurrentLevel?.uuid ?? '');
 const currentSectors = ref<string[]>(props.selectedAccountUser?.sectors?.map(s => s.uuid) ?? []);
+const currentCareerPlan = ref(props.selectedAccountUser?.careerPlan?.uuid ?? '');
 
 const userTypes = [
   {
@@ -65,7 +68,8 @@ let userAccount = reactive<AccountUserPayload>({
   role: props.selectedAccountUser?.role?.name || RoleType.MEMBER,
   job_position_uuid: props.selectedAccountUser?.jobPosition?.uuid || undefined,
   job_position_current_level_uuid: props.selectedAccountUser?.jobPositionCurrentLevel?.uuid ?? undefined,
-  sector_uuids: props.selectedAccountUser?.sectors?.map(s => s.uuid) ?? []
+  sector_uuids: props.selectedAccountUser?.sectors?.map(s => s.uuid) ?? [],
+  career_plan_uuid: props.selectedAccountUser?.career_plan_uuid ?? props.selectedAccountUser?.careerPlan?.uuid ?? undefined
 })
 
 function modalValueChanged(value: boolean) {
@@ -77,10 +81,29 @@ function modalValueChanged(value: boolean) {
     userAccount.job_position_current_level_uuid = undefined;
     currentSectors.value = [];
     userAccount.sector_uuids = [];
+    currentCareerPlan.value = '';
+    userAccount.career_plan_uuid = undefined;
+  }
+}
+
+async function getAllJobPositions() {
+  await jobPositionStore.getAllJobPositions();
+}
+
+async function getAllSectors() {
+  if (!sectorStore.sectors || sectorStore.sectors.length === 0) {
+    await sectorStore.getAllSectors();
+  }
+}
+
+async function getAllCareerPlans() {
+  if (!careerPlanStore.careerPlans || careerPlanStore.careerPlans.length === 0) {
+    await careerPlanStore.getAllCareerPlans();
   }
 }
 
 watch(() => props.selectedAccountUser, (val) => {
+  const careerPlanUuid = val?.career_plan_uuid ?? val?.careerPlan?.uuid ?? undefined;
   Object.assign(userAccount, {
     name: val?.name || '',
     email: val?.email || '',
@@ -91,11 +114,13 @@ watch(() => props.selectedAccountUser, (val) => {
     role: val?.role?.name || RoleType.MEMBER,
     job_position_uuid: val?.jobPosition?.uuid || undefined,
     job_position_current_level_uuid: val?.jobPositionCurrentLevel?.uuid ?? undefined,
-    sector_uuids: val?.sectors?.map(s => s.uuid) ?? []
+    sector_uuids: val?.sectors?.map(s => s.uuid) ?? [],
+    career_plan_uuid: careerPlanUuid
   });
   currentJobPosition.value = val?.jobPosition?.uuid || '';
   currentJobLevel.value = val?.jobPositionCurrentLevel?.uuid ?? '';
   currentSectors.value = val?.sectors?.map(s => s.uuid) ?? [];
+  currentCareerPlan.value = val?.careerPlan?.uuid ?? '';
   passwordField.value = '';
 }, { immediate: true });
 
@@ -103,6 +128,7 @@ watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {
     await getAllJobPositions();
     await getAllSectors();
+    await getAllCareerPlans();
   }
 });
 
@@ -112,16 +138,6 @@ watch(currentJobPosition, (jobUuid) => {
     userAccount.job_position_current_level_uuid = undefined;
   }
 });
-
-async function getAllJobPositions() {
-  await jobPositionStore.getAllJobPositions();
-}
-
-async function getAllSectors() {
-  if (!sectorStore.sectors || sectorStore.sectors.length === 0) {
-    await sectorStore.getSectors({ page: 1, limit: 100 });
-  }
-}
 
 const passwordStrengthScore = computed(() => {
   return checkPasswordStrength(passwordField.value);
@@ -181,11 +197,21 @@ function onJobLevelChange(value: string, field: { onChange: (v: string | undefin
   field.onChange(value || undefined);
 }
 
+function onCareerPlanChange(v: string | undefined, field: { onChange: (v: string | undefined) => void }) {
+  currentCareerPlan.value = v ?? '';
+  field.onChange(v || undefined);
+}
+
 async function onSubmit(formValues: Record<string, any>) {
   const accountUser: AccountUserPayload = formValues as AccountUserPayload;
+  const careerPlanUuid = currentCareerPlan.value || accountUser.career_plan_uuid;
+  const careerPlanOption = careerPlanUuid ? careerPlanStore.careerPlansOptions.find(opt => opt.value === careerPlanUuid) : undefined;
+  const saveOptions = careerPlanUuid
+    ? { careerPlan: { uuid: careerPlanUuid, name: careerPlanOption?.title ?? '' } }
+    : undefined;
 
   try {
-    await accountUserStore.saveAccountUser(accountUser, props.selectedAccountUser?.uuid);
+    await accountUserStore.saveAccountUser(accountUser, props.selectedAccountUser?.uuid, saveOptions);
     snackbarStore.show('Registro realizado com sucesso! Bem-vindo(a)!', 'success');
     close();
   } catch (err: any) {
@@ -405,6 +431,22 @@ async function onSubmit(formValues: Record<string, any>) {
                 />
               </template>
             </v-autocomplete>
+          </Field>
+
+          <Field name="career_plan_uuid" label="Plano de carreira" v-slot="{ field }">
+            <v-select
+              :model-value="currentCareerPlan"
+              @update:model-value="(v: string) => onCareerPlanChange(v, field)"
+              label="Plano de carreira (Opcional)"
+              :items="careerPlanStore.careerPlansOptions"
+              item-value="value"
+              item-title="title"
+              variant="solo-filled"
+              density="compact"
+              clearable
+              persistent-placeholder
+              class="mb-3"
+            />
           </Field>
         </v-card-text>
         <v-card-actions>
