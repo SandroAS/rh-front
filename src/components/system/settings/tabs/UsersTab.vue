@@ -124,7 +124,7 @@ onMounted(() => {
         { title: 'Telefone', key: 'cellphone', align: 'end', sortable: true },
         { title: 'Permissão', key: 'role.name', align: 'end', sortable: true },
         { title: 'Cargo', key: 'jobPosition.title', align: 'end', sortable: true },
-        { title: 'Setor', key: 'sectors[0].name', align: 'end', sortable: true },
+        { title: 'Setores', key: 'sectors', align: 'start', sortable: false },
         { title: 'Status', key: 'is_active', align: 'end', sortable: true },
         { title: 'Editar', key: 'actions', sortable: false, align: 'end' }
       ]"
@@ -160,6 +160,23 @@ onMounted(() => {
 
       <template #item.role.name="{ item }">
         <div class="d-flex justify-end pr-2"> {{ roleStore.formatName(item.role.name) }}</div>
+      </template>
+
+      <template #item.sectors="{ item }">
+        <div v-if="!item.sectors || item.sectors.length === 0" class="text-caption text-medium-emphasis">
+          Nenhum setor
+        </div>
+        <div v-else class="d-flex flex-wrap gap-1">
+          <v-chip
+            v-for="sector in item.sectors"
+            :key="sector.uuid"
+            size="small"
+            variant="tonal"
+            color="primary"
+          >
+            {{ sector.name || '—' }}
+          </v-chip>
+        </div>
       </template>
 
       <template #item.is_active="{ item }">
