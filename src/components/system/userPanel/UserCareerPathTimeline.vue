@@ -26,8 +26,6 @@ const progression = computed(() => {
     }));
 });
 
-const currentJobTitle = computed(() => props.user.jobPosition?.title ?? props.user.jobPositionCurrentLevel?.name ?? '');
-
 const isCurrentJob = (step: { title: string; isCurrent: boolean }) => step.isCurrent;
 
 /** Percentual até o próximo cargo (baseado na posição atual da progressão) */
@@ -54,6 +52,29 @@ const formatDate = (dateString: string | null) => {
   return new Date(dateString).toLocaleDateString('pt-BR');
 };
 
+const getLevelColor = (order: number, isCurrentJob: boolean) => {
+  if(isCurrentJob && props.user.jobPositionCurrentLevel?.order) {
+    if (order === ((props.user.jobPositionCurrentLevel?.order ?? 0) + 1)) {
+      return 'primary';
+    }
+    if (order < ((props.user.jobPositionCurrentLevel?.order ?? 0) + 1)) {
+      return 'success';
+    }
+  }
+
+  return 'grey-lighten-2';
+}
+
+const canCheckLevelIcon = (order: number, isCurrentJob: boolean) => {
+  if(isCurrentJob && props.user.jobPositionCurrentLevel?.order) {
+    if (order < ((props.user.jobPositionCurrentLevel?.order ?? 0) + 1)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 onMounted(() => {
   const div = document.getElementById('career-path-container');
   if(div) {
@@ -68,6 +89,16 @@ onMounted(() => {
       <v-icon class="mr-2" color="primary">mdi-chart-line</v-icon>
       Jornada de Carreira -&#160;<b>{{ user.careerPlan.name }}</b>
     </v-card-title>
+    <v-alert
+      v-if="!user.jobPositionCurrentLevel?.uuid"
+      type="warning"
+      variant="tonal"
+      density="compact"
+      class="mx-4 mt-2"
+      icon="mdi-alert"
+    >
+      Usuário não tem o nível do cargo configurado.
+    </v-alert>
     <v-divider class="my-4"></v-divider>
 
     <v-card-text>
@@ -83,12 +114,12 @@ onMounted(() => {
                   <div class="d-flex align-center" style="margin-right: -50px;">
                     <v-avatar
                       size="20"
-                      :color="'grey-lighten-2'"
+                      :color="getLevelColor(userLevel.order, isCurrentJob(step))"
                       class="ma-2 ml-3"
                     >
-                    {{ userLevel.order }}
-                      <!-- <v-icon v-if="step.date" size="15" color="white">mdi-check</v-icon> -->
+                      <v-icon v-if="canCheckLevelIcon(userLevel.order, isCurrentJob(step))" size="15" color="white">mdi-check</v-icon>
                     </v-avatar>
+
                     <div class="text-caption font-weight-bold">{{ userLevel.name }}</div>
                   </div>
                   <template v-if="false">
