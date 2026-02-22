@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { Form, Field } from '@/plugins/vee-validate';
 import { useTeamStore } from '@/stores/team.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
@@ -27,6 +27,7 @@ const close = () => emit('update:modelValue', false)
 
 const currentLeader = ref(props.selectedTeam?.leader?.uuid || '');
 const currentMembers = ref(props.selectedTeam?.teamMembers?.map(teamMember => teamMember.user.uuid) || []);
+const currentSectorUuid = ref(props.selectedTeam?.sector?.uuid || '');
 
 let team = reactive<TeamPayload>({
   uuid: props.selectedTeam?.uuid || undefined,
@@ -47,10 +48,17 @@ function setMembers(newValue: string[]) {
   currentMembers.value = newValue as any;
 }
 
+function onSectorChange(item: any, field: { onChange: (v: string | undefined) => void }) {
+  const uuid = item?.value ?? (typeof item === 'string' ? item : '');
+  currentSectorUuid.value = uuid;
+  field.onChange(uuid || undefined);
+}
+
 watch(() => props.selectedTeam, (val) => {
   currentLeader.value = val?.leader?.uuid || '';
   currentMembers.value = val?.teamMembers?.map(teamMember => teamMember.user.uuid) || [];
-  
+  currentSectorUuid.value = val?.sector?.uuid || '';
+
   Object.assign(team, {
     uuid: val?.uuid || undefined,
     name: val?.name || '',
@@ -60,16 +68,29 @@ watch(() => props.selectedTeam, (val) => {
   });
 }, { immediate: true });
 
+const sectorOptions = computed(() => {
+  const list = sectorStore.sectorsOptions ?? [];
+  const currentUuid = currentSectorUuid.value;
+  const currentSector = props.selectedTeam?.sector;
+  if (currentUuid && currentSector?.name && !list.some((o: { value: string }) => o.value === currentUuid)) {
+    return [{ value: currentSector.uuid, title: currentSector.name, disabled: false }, ...list];
+  }
+  return list;
+});
+
 async function onSubmit(formValues: Record<string, any>) {
   const payload: TeamPayload = { ...formValues as TeamPayload, createdBy: userStore.userAvatar! };
 
   const leader = accountUserStore.accountUsersOptions.find(x => x.value === payload.leader);
   const leaderUserAvatar = { uuid: leader!.value, name: leader!.title, email: '', profile_img_url: leader?.avatar };
 
-  let sector = undefined;
-  if(payload.sector_uuid) {
-    sector = sectorStore.sectorsOptions.find(x => x.value === payload.sector_uuid);
-    sector = { uuid: sector!.value, name: sector!.title }
+  let sector: { uuid: string; name: string } | undefined;
+  if (payload.sector_uuid) {
+    const sectorOption = sectorStore.sectorsOptions.find(x => x.value === payload.sector_uuid)
+      ?? sectorOptions.value.find((o: { value: string }) => o.value === payload.sector_uuid);
+    sector = sectorOption ? { uuid: sectorOption.value, name: 'title' in sectorOption ? sectorOption.title : '' } : undefined;
+  } else {
+    sector = undefined;
   }
 
   try {
@@ -182,11 +203,10 @@ function leaderOnBlur(field: any) {
 
           <Field name="sector_uuid" label="Setor" v-slot="{ field, errorMessage }">
             <v-autocomplete
-              v-bind="field"
-              :model-value="field.value" 
-              @update:model-value="field.onChange"
+              :model-value="currentSectorUuid"
+              @update:model-value="(item: any) => onSectorChange(item, field)"
               label="Setor (Opcional)"
-              :items="sectorStore.sectorsOptions"
+              :items="sectorOptions"
               item-title="title"
               item-value="value"
               variant="solo-filled"

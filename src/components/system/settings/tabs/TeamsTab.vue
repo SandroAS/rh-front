@@ -6,9 +6,11 @@ import loadItems from '@/utils/loadItems.util';
 import type Team from '../../../../types/team/team.type';
 import TeamModal from '../teams/TeamModal.vue';
 import { getInitials } from '@/utils/getInitialsFromName.util';
+import { useSectorStore } from '@/stores/sector.store';
 
 const teamStore = useTeamStore();
 const accountUserStore = useAccountUserStore();
+const sectorStore = useSectorStore();
 
 const dialog = ref(false);
 const selectedTeam = ref<Team | null>(null);
@@ -27,7 +29,14 @@ async function getAccountUsers() {
   await accountUserStore.getAllAccountUsers();
 }
 
+async function getAllSectors() {
+  if (!sectorStore.sectors || sectorStore.sectors.length === 0) {
+    await sectorStore.getAllSectors();
+  }
+}
+
 getAccountUsers()
+getAllSectors()
 
 const loadTeams = async ({ page, itemsPerPage: itemsPerPageParam, sortBy: sortByParam }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
   currentPage.value = page;
