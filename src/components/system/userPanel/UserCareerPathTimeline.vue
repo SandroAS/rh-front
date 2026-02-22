@@ -9,7 +9,8 @@ const props = defineProps<{
 const emit = defineEmits(['progressbar']);
 
 const userLevels = computed(() => {
-  return props.user.jobPosition.drd.levels.sort((a, b) => b.order - a.order);
+  const levels = props.user.jobPosition?.drd?.levels ?? [];
+  return [...levels].sort((a, b) => b.order - a.order);
 });
 
 // Dados mockados para simular um plano de carreira

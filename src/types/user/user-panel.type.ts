@@ -5,12 +5,28 @@ export interface UserPanelDrdLevel {
   order: number;
 }
 
+/** Score por nível em um item de tópico do DRD */
+export interface UserPanelDrdTopicItemScore {
+  uuid: string;
+  drd_level_uuid: string;
+  min_score: string;
+  drd_level_order: number;
+}
+
+/** Item de tópico do DRD no painel */
+export interface UserPanelDrdTopicItem {
+  uuid: string;
+  name: string;
+  order: number;
+  scoresByLevel: UserPanelDrdTopicItemScore[];
+}
+
 /** Tópicos do DRD no painel do usuário */
 export interface UserPanelDrdTopic {
   uuid: string;
   name: string;
   order: number;
-  drdTopicItems: unknown[];
+  drdTopicItems: UserPanelDrdTopicItem[];
 }
 
 /** Métricas do DRD no painel do usuário */
@@ -42,8 +58,47 @@ export interface UserPanelLevelsGroup {
 export interface UserPanelJobPosition {
   uuid: string;
   title: string;
-  levelsGroup: UserPanelLevelsGroup;
-  drd: UserPanelDrd;
+  levelsGroup?: UserPanelLevelsGroup;
+  drd?: UserPanelDrd;
+}
+
+/** Nível atual do cargo no painel do usuário */
+export interface UserPanelJobPositionCurrentLevel {
+  uuid: string;
+  name: string;
+  salary?: string;
+  order: number;
+}
+
+/** Plano de carreira Y (resumido) no painel */
+export interface UserPanelCareerPlanY {
+  uuid: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+/** Cargo (resumido) em um item do plano de carreira no painel */
+export interface UserPanelCareerPlanJobPositionRef {
+  uuid: string;
+  title?: string;
+  [key: string]: unknown;
+}
+
+/** Item do plano de carreira no painel do usuário */
+export interface UserPanelCareerPlanJobPosition {
+  uuid: string;
+  job_position_uuid: string;
+  order: number;
+  career_plan_y_uuid: string | null;
+  jobPosition: UserPanelCareerPlanJobPositionRef | null;
+  careerPlanY: UserPanelCareerPlanY | null;
+}
+
+/** Plano de carreira no painel do usuário */
+export interface UserPanelCareerPlan {
+  uuid: string;
+  name: string;
+  careerPlanJobPositions: UserPanelCareerPlanJobPosition[];
 }
 
 /** Usuário submetente (avaliador) no painel */
@@ -116,6 +171,8 @@ export interface UserPanel {
   uuid: string;
   name: string;
   profile_img_url: string | null;
-  jobPosition: UserPanelJobPosition;
+  jobPosition?: UserPanelJobPosition;
+  jobPositionCurrentLevel?: UserPanelJobPositionCurrentLevel;
+  careerPlan?: UserPanelCareerPlan;
   evaluationsReceived: UserPanelEvaluationReceived[];
 }
