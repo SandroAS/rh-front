@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import type { UserPanel, UserPanelDrdLevel } from '@/types/user/user-panel.type';
+import type {
+  UserPanel,
+  UserPanelDrdLevel,
+  UserPanelEvaluationReceived,
+} from '@/types/user/user-panel.type';
 
 const props = defineProps<{
   user: UserPanel;
@@ -73,25 +77,104 @@ const canCheckLevelIcon = (order: number, isCurrentJob: boolean) => {
   return false;
 }
 
-const isCurrentLevelProgressBar = (userLevel: UserPanelDrdLevel, isCurrentJob: boolean) => {
-  if(isCurrentJob && props.user.jobPositionCurrentLevel?.order) {
-    if (userLevel.order === ((props.user.jobPositionCurrentLevel?.order ?? 0) + 2)) {
-      return true;
+/** Ordem do nível no DRD que corresponde ao nível atual do usuário (jobPositionCurrentLevel.order + 1) */
+const currentLevelDrdOrder = computed(() => {
+  const order = props.user.jobPositionCurrentLevel?.order;
+  if (order == null) return null;
+  return order + 1;
+});
+
+/** UUID do nível atual no DRD (level em drd.levels cujo order === currentLevelDrdOrder) */
+const currentLevelDrdUuid = computed(() => {
+  const order = currentLevelDrdOrder.value;
+  if (order == null) return null;
+  const level = props.user.jobPosition?.drd?.levels?.find((l) => l.order === order);
+  return level?.uuid ?? null;
+});
+
+/**
+ * Porcentagem de progresso no nível atual: considera os min_score do nível no DRD
+ * e as respostas das últimas avaliações (por tipo) para ver quantos itens atingem o mínimo.
+ * 100% = todos os itens avaliados atingem o min_score necessário.
+ */
+const currentLevelProgressPercentage = computed(() => {
+  const levelUuid = currentLevelDrdUuid.value;
+  const drd = props.user.jobPosition?.drd;
+  const evaluations = props.user.evaluationsReceived ?? [];
+  if (!levelUuid || !drd?.topics?.length || !evaluations.length) return 0;
+
+  // 1) Montar lista de (nome do item, min_score) para o nível atual
+  const itemsWithMinScore: { name: string; minScore: number }[] = [];
+  for (const topic of drd.topics) {
+    for (const item of topic.drdTopicItems ?? []) {
+      const scoreEntry = item.scoresByLevel?.find((s) => s.drd_level_uuid === levelUuid);
+      if (scoreEntry?.min_score != null) {
+        const minScore = parseFloat(scoreEntry.min_score);
+        if (!Number.isNaN(minScore)) {
+          itemsWithMinScore.push({ name: item.name.trim(), minScore });
+        }
+      }
     }
   }
 
-  return false;
-}
+  if (itemsWithMinScore.length === 0) return 0;
+
+  // 2) Última avaliação de cada tipo (FINISHED, ordenado por finished_at desc)
+  const byType = new Map<string, UserPanelEvaluationReceived>();
+  const finished = evaluations.filter((e) => e.status === 'FINISHED' && e.finished_at);
+  const sorted = [...finished].sort(
+    (a, b) => new Date(b.finished_at ?? 0).getTime() - new Date(a.finished_at ?? 0).getTime()
+  );
+  for (const ev of sorted) {
+    if (!byType.has(ev.type)) byType.set(ev.type, ev);
+  }
+
+  // 3) Coletar todas as respostas dessas avaliações (primeira response completa de cada)
+  const answersByItemName = new Map<string, number>();
+  for (const ev of byType.values()) {
+    const response = ev.responses?.find((r) => r.is_completed && r.answers?.length);
+    if (!response?.answers) continue;
+    for (const answer of response.answers) {
+      const title = answer.question?.title?.trim();
+      const numVal = answer.number_value != null ? parseFloat(answer.number_value) : NaN;
+      if (!title || Number.isNaN(numVal)) continue;
+      const current = answersByItemName.get(title);
+      if (current == null || numVal > current) {
+        answersByItemName.set(title, numVal);
+      }
+    }
+  }
+
+  // 4) Contar quantos itens atingem o min_score (match por título da pergunta ≈ nome do item)
+  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  let achieved = 0;
+  for (const { name, minScore } of itemsWithMinScore) {
+    const key = normalize(name);
+    let found = false;
+    for (const [answerTitle, score] of answersByItemName) {
+      if (normalize(answerTitle) === key && score >= minScore) {
+        found = true;
+        break;
+      }
+    }
+    if (found) achieved++;
+  }
+
+  return Math.round((achieved / itemsWithMinScore.length) * 100);
+});
+
+const isCurrentLevelProgressBar = (userLevel: UserPanelDrdLevel, isCurrentJob: boolean) => {
+  if (!isCurrentJob || currentLevelDrdOrder.value == null) return false;
+  return userLevel.order === currentLevelDrdOrder.value;
+};
 
 const getLevelProgressBarPercentage = (order: number, isCurrentJob: boolean) => {
-  if(isCurrentJob && props.user.jobPositionCurrentLevel?.order) {
-    if (order < ((props.user.jobPositionCurrentLevel?.order ?? 0) + 2)) {
-      return 100;
-    }
-  }
-
+  const drdOrder = currentLevelDrdOrder.value;
+  if (!isCurrentJob || drdOrder == null) return 0;
+  if (order < drdOrder) return 100;
+  if (order === drdOrder) return currentLevelProgressPercentage.value;
   return 0;
-}
+};
 
 onMounted(() => {
   const div = document.getElementById('career-path-container');
