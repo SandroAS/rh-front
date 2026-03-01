@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import type { UserPanel } from '@/types/user/user-panel.type';
+import type { UserPanel, UserPanelDrdLevel } from '@/types/user/user-panel.type';
 
 const props = defineProps<{
   user: UserPanel;
@@ -37,15 +37,13 @@ const progressToNext = computed(() => {
   return Math.round(((currentIndex + 1) / list.length) * 100);
 });
 
-// A cor da barra de progresso pode mudar com base na porcentagem
-const progressBarColor = computed(() => {
-  if (progressToNext.value >= 90) return 'success';
-  if (progressToNext.value >= 50) return 'warning';
-  if (progressToNext.value >= 30) return 'warning';
+const progressBarColor = (percentage: number) => {
+  if (percentage >= 90) return 'success';
+  if (percentage >= 50) return 'yellow';
+  if (percentage >= 0) return 'warning';
   return 'primary';
-});
+}
 
-// Função para formatar a data
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'Data não definida';
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -73,6 +71,26 @@ const canCheckLevelIcon = (order: number, isCurrentJob: boolean) => {
   }
 
   return false;
+}
+
+const isCurrentLevelProgressBar = (userLevel: UserPanelDrdLevel, isCurrentJob: boolean) => {
+  if(isCurrentJob && props.user.jobPositionCurrentLevel?.order) {
+    if (userLevel.order === ((props.user.jobPositionCurrentLevel?.order ?? 0) + 2)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+const getLevelProgressBarPercentage = (order: number, isCurrentJob: boolean) => {
+  if(isCurrentJob && props.user.jobPositionCurrentLevel?.order) {
+    if (order < ((props.user.jobPositionCurrentLevel?.order ?? 0) + 2)) {
+      return 100;
+    }
+  }
+
+  return 0;
 }
 
 onMounted(() => {
@@ -122,29 +140,21 @@ onMounted(() => {
 
                     <div class="text-caption font-weight-bold">{{ userLevel.name }}</div>
                   </div>
-                  <template v-if="false">
-                    <div class="vertical-progress-container">
-                      <v-progress-linear
-                        class="vertical-progress-bar"
-                        :model-value="progressToNext"
-                        :color="progressBarColor"
-                        rounded
-                      ></v-progress-linear>
-                      <div class="text-caption text-center font-weight-bold vertical-percentage mr-6" :class="`text-${progressBarColor}`">
-                        {{ progressToNext }}%
-                      </div>
+                  <div class="vertical-progress-container">
+                    <v-progress-linear
+                      class="vertical-progress-bar"
+                      :model-value="getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step))"
+                      :color="progressBarColor(getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)))"
+                      rounded
+                    ></v-progress-linear>
+                    <div
+                      v-if="isCurrentLevelProgressBar(userLevel, isCurrentJob(step))"
+                      class="text-caption text-center font-weight-bold vertical-percentage mr-6"
+                      :class="`text-${progressBarColor(getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)))}`"
+                    >
+                      {{ getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)) }}%
                     </div>
-                  </template>
-                  <template v-else>
-                    <div class="vertical-progress-container">
-                      <v-progress-linear
-                        class="vertical-progress-bar"
-                        :model-value="100"
-                        color="blue-grey-lighten-4"
-                        rounded
-                      ></v-progress-linear>
-                    </div>
-                  </template>
+                  </div>
                 </div>
 
                 <v-avatar
@@ -161,12 +171,15 @@ onMounted(() => {
                 class="flex-grow-1"
               >
                 <div v-if="isCurrentJob(step)" class="teste2">
-                  <div class="text-caption text-center font-weight-bold" :class="`text-${progressBarColor}`">
+                  <div
+                    class="text-caption text-center font-weight-bold"
+                    :class="`text-${progressBarColor(progressToNext)}`"
+                  >
                     {{ progressToNext }}%
                   </div>
                   <v-progress-linear
                     :model-value="progressToNext"
-                    :color="progressBarColor"
+                    :color="progressBarColor(progressToNext)"
                     class="custom-progressbar mb-5"
                     rounded
                   ></v-progress-linear>
@@ -258,13 +271,9 @@ onMounted(() => {
 }
 
 .vertical-progress-bar {
-  /* Altera a orientação da barra */
-
   transform: rotate(90deg) translateX(0);
-  
-  /* Ajusta a largura e a altura para o novo alinhamento */
-  width: 100%; /* Ocupa a altura do contêiner */
-  height: 100%; /* Ocupa a largura do contêiner */
+  width: 100%;
+  height: 100%;
 }
 
 .vertical-percentage {
