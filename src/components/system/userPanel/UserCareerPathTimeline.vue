@@ -43,7 +43,7 @@ const progressToNext = computed(() => {
 
 const progressBarColor = (percentage: number) => {
   if (percentage >= 90) return 'success';
-  if (percentage >= 50) return 'yellow';
+  if (percentage >= 50) return 'yellow-darken-1';
   if (percentage >= 0) return 'warning';
   return 'primary';
 }
@@ -165,14 +165,14 @@ const currentLevelProgressPercentage = computed(() => {
 
 const isCurrentLevelProgressBar = (userLevel: UserPanelDrdLevel, isCurrentJob: boolean) => {
   if (!isCurrentJob || currentLevelDrdOrder.value == null) return false;
-  return userLevel.order === currentLevelDrdOrder.value;
+  return (userLevel.order - 1) === currentLevelDrdOrder.value;
 };
 
 const getLevelProgressBarPercentage = (order: number, isCurrentJob: boolean) => {
-  const drdOrder = currentLevelDrdOrder.value;
+  const drdOrder = (currentLevelDrdOrder.value);
   if (!isCurrentJob || drdOrder == null) return 0;
-  if (order < drdOrder) return 100;
-  if (order === drdOrder) return currentLevelProgressPercentage.value;
+  if ((order - 1) < drdOrder) return 100;
+  if ((order - 1) === drdOrder) return currentLevelProgressPercentage.value;
   return 0;
 };
 
