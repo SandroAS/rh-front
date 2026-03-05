@@ -32,21 +32,153 @@ const progression = computed(() => {
 
 const isCurrentJob = (step: { title: string; isCurrent: boolean }) => step.isCurrent;
 
+/** Índice do passo atual na progressão */
+const currentStepIndex = computed(() => progression.value.findIndex((s) => s.isCurrent));
+
 /** Percentual até o próximo cargo (baseado na posição atual da progressão) */
 const progressToNext = computed(() => {
   const list = progression.value;
   if (list.length === 0) return 0;
-  const currentIndex = list.findIndex((s) => s.isCurrent);
-  if (currentIndex < 0) return 0;
-  return Math.round(((currentIndex + 1) / list.length) * 100);
+  const idx = currentStepIndex.value;
+  if (idx < 0) return 0;
+  return Math.round(((idx + 1) / list.length) * 100);
 });
 
-const progressBarColor = (percentage: number) => {
+/** UUID do primeiro nível no DRD (order === 1 ou menor order) */
+const firstLevelDrdUuid = computed(() => {
+  const levels = props.user.jobPosition?.drd?.levels ?? [];
+  if (levels.length === 0) return null;
+  const first = [...levels].sort((a, b) => a.order - b.order)[0];
+  return first?.uuid ?? null;
+});
+
+/**
+ * Calcula porcentagem de progresso para um nível (levelUuid) usando apenas avaliações
+ * cujo nome contém jobTitleFilter. Usado para "progresso para o primeiro nível do próximo cargo".
+ */
+function progressPercentageForLevelAndEvaluations(
+  levelUuid: string | null,
+  jobTitleFilter: string
+): number {
+  const drd = props.user.jobPosition?.drd;
+  const evaluations = props.user.evaluationsReceived ?? [];
+  if (!levelUuid || !drd?.topics?.length || !evaluations.length) return 0;
+
+  const filterLower = jobTitleFilter.toLowerCase().trim();
+  const filteredEvals = evaluations.filter(
+    (e) => e.status === 'FINISHED' && e.finished_at && e.name?.toLowerCase().includes(filterLower)
+  );
+  if (filteredEvals.length === 0) return 0;
+
+  const itemsWithMinScore: { name: string; minScore: number }[] = [];
+  for (const topic of drd.topics) {
+    for (const item of topic.drdTopicItems ?? []) {
+      const scoreEntry = item.scoresByLevel?.find((s) => s.drd_level_uuid === levelUuid);
+      if (scoreEntry?.min_score != null) {
+        const minScore = parseFloat(scoreEntry.min_score);
+        if (!Number.isNaN(minScore)) {
+          itemsWithMinScore.push({ name: item.name.trim(), minScore });
+        }
+      }
+    }
+  }
+  if (itemsWithMinScore.length === 0) return 0;
+
+  const byType = new Map<string, UserPanelEvaluationReceived>();
+  const sorted = [...filteredEvals].sort(
+    (a, b) => new Date(b.finished_at ?? 0).getTime() - new Date(a.finished_at ?? 0).getTime()
+  );
+  for (const ev of sorted) {
+    if (!byType.has(ev.type)) byType.set(ev.type, ev);
+  }
+
+  const answersByItemName = new Map<string, number>();
+  for (const ev of byType.values()) {
+    const response = ev.responses?.find((r) => r.is_completed && r.answers?.length);
+    if (!response?.answers) continue;
+    for (const answer of response.answers) {
+      const title = answer.question?.title?.trim();
+      const numVal = answer.number_value != null ? parseFloat(answer.number_value) : NaN;
+      if (!title || Number.isNaN(numVal)) continue;
+      const current = answersByItemName.get(title);
+      if (current == null || numVal > current) answersByItemName.set(title, numVal);
+    }
+  }
+
+  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  let achieved = 0;
+  for (const { name, minScore } of itemsWithMinScore) {
+    const key = normalize(name);
+    let found = false;
+    for (const [answerTitle, score] of answersByItemName) {
+      if (normalize(answerTitle) === key && score >= minScore) {
+        found = true;
+        break;
+      }
+    }
+    if (found) achieved++;
+  }
+  return Math.round((achieved / itemsWithMinScore.length) * 100);
+}
+
+/** Título do próximo cargo no plano (para filtrar avaliações) */
+const nextStepTitle = computed(() => {
+  const idx = currentStepIndex.value;
+  const list = progression.value;
+  if (idx < 0 || idx >= list.length - 1) return '';
+  return list[idx + 1]?.title?.trim() ?? '';
+});
+
+/** Se existe pelo menos uma avaliação FINISHED para o próximo cargo */
+const hasEvaluationsForNextJob = computed(() => {
+  const title = nextStepTitle.value;
+  if (!title) return false;
+  const filterLower = title.toLowerCase();
+  return (props.user.evaluationsReceived ?? []).some(
+    (e) => e.status === 'FINISHED' && e.finished_at && e.name?.toLowerCase().includes(filterLower)
+  );
+});
+
+/** Progresso para o primeiro nível do próximo cargo (avaliações que são do próximo cargo) */
+const nextJobFirstLevelProgressPercentage = computed(() => {
+  const title = nextStepTitle.value;
+  if (!title) return 0;
+  return progressPercentageForLevelAndEvaluations(firstLevelDrdUuid.value, title);
+});
+
+/** Valor e se deve mostrar label para a barra de conexão após o step no índice dado */
+function getStepConnectorProgress(_step: { isCurrent: boolean }, index: number): { value: number; showLabel: boolean } {
+  const currentIdx = currentStepIndex.value;
+  if (currentIdx < 0) return { value: 0, showLabel: false };
+
+  if (index < currentIdx) return { value: 100, showLabel: false };
+  if (index === currentIdx) {
+    const value = hasEvaluationsForNextJob.value
+      ? nextJobFirstLevelProgressPercentage.value
+      : currentLevelProgressPercentage.value;
+    return { value, showLabel: true };
+  }
+  if (index === currentIdx + 1) {
+    const value = nextJobFirstLevelProgressPercentage.value;
+    return { value, showLabel: false };
+  }
+  return { value: 0, showLabel: false };
+}
+
+/** Lista de { value, showLabel } por índice (barra após cada step) para evitar múltiplas chamadas no template */
+const stepConnectorProgressList = computed(() => {
+  const list = progression.value;
+  return list.map((step, index) => getStepConnectorProgress(step, index));
+});
+
+/** Cor da barra de progresso; useNeutral true para níveis/cargos inativos (ex.: após o atual) */
+const progressBarColor = (percentage: number, useNeutral = false) => {
+  if (useNeutral) return 'blue-grey-lighten-4';
   if (percentage >= 90) return 'success';
   if (percentage >= 50) return 'yellow-darken-1';
   if (percentage >= 0) return 'warning';
   return 'primary';
-}
+};
 
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'Data não definida';
@@ -227,13 +359,13 @@ onMounted(() => {
                     <v-progress-linear
                       class="vertical-progress-bar"
                       :model-value="getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step))"
-                      :color="progressBarColor(getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)))"
+                      :color="progressBarColor(getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)), getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)) === 0)"
                       rounded
                     ></v-progress-linear>
                     <div
                       v-if="isCurrentLevelProgressBar(userLevel, isCurrentJob(step))"
                       class="text-caption text-center font-weight-bold vertical-percentage mr-6"
-                      :class="`text-${progressBarColor(getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)))}`"
+                      :class="`text-${progressBarColor(getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)), getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)) === 0)}`"
                     >
                       {{ getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)) }}%
                     </div>
@@ -249,31 +381,22 @@ onMounted(() => {
                 </v-avatar>
               </div>
 
-              <div
-                v-if="index < progression.length - 1"
-                class="flex-grow-1"
-              >
-                <div v-if="isCurrentJob(step)" class="teste2">
+              <div v-if="index < progression.length - 1" class="flex-grow-1">
+                <div class="teste2">
                   <div
+                    v-if="stepConnectorProgressList[index]?.showLabel"
                     class="text-caption text-center font-weight-bold"
-                    :class="`text-${progressBarColor(progressToNext)}`"
+                    :class="`text-${progressBarColor(stepConnectorProgressList[index].value)}`"
                   >
-                    {{ progressToNext }}%
+                    {{ stepConnectorProgressList[index].value }}%
                   </div>
                   <v-progress-linear
-                    :model-value="progressToNext"
-                    :color="progressBarColor(progressToNext)"
+                    :model-value="stepConnectorProgressList[index]?.value ?? 0"
+                    :color="progressBarColor(stepConnectorProgressList[index]?.value ?? 0, !stepConnectorProgressList[index]?.showLabel)"
                     class="custom-progressbar mb-5"
                     rounded
                   ></v-progress-linear>
                 </div>
-                <v-progress-linear
-                  v-else
-                  :model-value="100"
-                  color="blue-grey-lighten-4"
-                  class="custom-progressbar mb-5"
-                  rounded
-                ></v-progress-linear>
               </div>
             </div>
 
@@ -321,15 +444,14 @@ onMounted(() => {
 }
 
 .step-container {
-  min-width: 150px; /* Garante que os títulos não fiquem espremidos */
+  min-width: 150px;
   padding: 0 8px;
 }
 
 .step-line-container {
-  flex-grow: 1; /* Ocupa o espaço disponível para a linha */
+  flex-grow: 1;
 }
 
-/* Remove o grow do último item para que a linha não estenda além */
 .step-line-container:last-child {
   flex-grow: 0;
 }
@@ -339,7 +461,6 @@ onMounted(() => {
   position: relative;
 }
 
-/* Garante que o container da linha da timeline tenha o tamanho correto */
 .d-flex.w-100.flex-nowrap {
   flex-wrap: nowrap !important;
   white-space: nowrap;
