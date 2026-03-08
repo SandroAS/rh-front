@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import type {
-  UserPanel,
-  UserPanelDrdLevel,
-  UserPanelEvaluationReceived,
-} from '@/types/user/user-panel.type';
+import { computed, onMounted } from 'vue';
+import type { UserPanel, UserPanelEvaluationReceived } from '@/types/user/user-panel.type';
 
 const props = defineProps<{
   user: UserPanel;
@@ -155,11 +151,6 @@ const getLevelColor = (order: number, isCurrentJob: boolean) => {
   if (order === currentLevelDrdOrder.value) return 'primary';
   if (order < currentLevelDrdOrder.value) return 'success';
   return 'grey-lighten-2';
-};
-
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return 'Data não definida';
-  return new Date(dateString).toLocaleDateString('pt-BR');
 };
 
 onMounted(() => {
