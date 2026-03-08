@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useUserPanelStore } from '@/stores/user-panel.store';
 import { getMetricTypeOption } from '@/types/drd/drd-metric.type';
 import type {
   UserPanel,
@@ -8,6 +9,8 @@ import type {
   UserPanelDrdTopicItem,
   UserPanelEvaluationReceived,
 } from '@/types/user/user-panel.type';
+
+const userPanel = useUserPanelStore();
 
 const EVALUATION_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   SELF: { label: 'Auto', color: 'indigo' },
@@ -152,15 +155,15 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                     </h4>
                     <v-divider class="ml-4" />
                   </div>
-                  <v-row dense>
-                    <v-col v-for="metric in tab.drd.drdMetrics" :key="metric.uuid" cols="12" sm="6" md="4">
-                      <v-hover v-slot="{ isHovering, props: hoverProps }">
+                  <v-row dense align="stretch">
+                    <v-col v-for="metric in tab.drd.drdMetrics" :key="metric.uuid" cols="12" sm="6" md="4" class="d-flex">
+                      <v-hover v-slot="{ isHovering, props: hoverProps }" class="d-flex flex-grow-1">
                         <v-card
                           v-bind="hoverProps"
                           :elevation="isHovering ? 4 : 0"
                           border
                           rounded="lg"
-                          class="pa-4 transition-swing"
+                          class="pa-4 transition-swing d-flex flex-column flex-grow-1"
                         >
                           <div class="d-flex justify-space-between align-start">
                             <div>
@@ -171,19 +174,21 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                               </div>
                             </div>
                             <v-icon 
-:icon="getMetricTypeOption(metric.type)?.icon"
+                              :icon="getMetricTypeOption(metric.type)?.icon"
                               :color="getMetricTypeOption(metric.type)?.color"
                               size="large"
                               class="opacity-60"
                             />
                           </div>
-                          <v-progress-linear 
-                            indeterminate 
-                            height="4" 
-                            rounded 
-                            :color="getMetricTypeOption(metric.type)?.color" 
-                            class="mt-2 opacity-20"
-                          />
+                          <div class="flex-grow-1 mt-2">
+                            <v-progress-linear 
+                              :indeterminate="userPanel.loading"
+                              height="4" 
+                              rounded 
+                              :color="getMetricTypeOption(metric.type)?.color" 
+                              class="opacity-20"
+                            />
+                          </div>
                           <div class="text-caption mt-2 text-disabled">Meta para o nível alvo</div>
                         </v-card>
                       </v-hover>
