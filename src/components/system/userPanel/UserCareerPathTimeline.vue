@@ -53,8 +53,9 @@ const firstLevelDrdUuid = computed(() => {
 });
 
 /**
- * Calcula porcentagem de progresso para um nível (levelUuid) usando apenas avaliações
+ * Calcula porcentagem de progresso para um nível usando apenas avaliações
  * cujo nome contém jobTitleFilter. Usado para "progresso para o primeiro nível do próximo cargo".
+ * Para o próximo cargo usamos os itens das próprias avaliações (o DRD do cargo atual não tem os itens do outro cargo).
  */
 function progressPercentageForLevelAndEvaluations(
   levelUuid: string | null,
@@ -62,27 +63,13 @@ function progressPercentageForLevelAndEvaluations(
 ): number {
   const drd = props.user.jobPosition?.drd;
   const evaluations = props.user.evaluationsReceived ?? [];
-  if (!levelUuid || !drd?.topics?.length || !evaluations.length) return 0;
+  if (!evaluations.length) return 0;
 
   const filterLower = jobTitleFilter.toLowerCase().trim();
   const filteredEvals = evaluations.filter(
     (e) => e.status === 'FINISHED' && e.finished_at && e.name?.toLowerCase().includes(filterLower)
   );
   if (filteredEvals.length === 0) return 0;
-
-  const itemsWithMinScore: { name: string; minScore: number }[] = [];
-  for (const topic of drd.topics) {
-    for (const item of topic.drdTopicItems ?? []) {
-      const scoreEntry = item.scoresByLevel?.find((s) => s.drd_level_uuid === levelUuid);
-      if (scoreEntry?.min_score != null) {
-        const minScore = parseFloat(scoreEntry.min_score);
-        if (!Number.isNaN(minScore)) {
-          itemsWithMinScore.push({ name: item.name.trim(), minScore });
-        }
-      }
-    }
-  }
-  if (itemsWithMinScore.length === 0) return 0;
 
   const byType = new Map<string, UserPanelEvaluationReceived>();
   const sorted = [...filteredEvals].sort(
@@ -93,6 +80,7 @@ function progressPercentageForLevelAndEvaluations(
   }
 
   const answersByItemName = new Map<string, number>();
+  const uniqueQuestionTitles = new Set<string>();
   for (const ev of byType.values()) {
     const response = ev.responses?.find((r) => r.is_completed && r.answers?.length);
     if (!response?.answers) continue;
@@ -100,10 +88,35 @@ function progressPercentageForLevelAndEvaluations(
       const title = answer.question?.title?.trim();
       const numVal = answer.number_value != null ? parseFloat(answer.number_value) : NaN;
       if (!title || Number.isNaN(numVal)) continue;
+      uniqueQuestionTitles.add(title);
       const current = answersByItemName.get(title);
       if (current == null || numVal > current) answersByItemName.set(title, numVal);
     }
   }
+
+  let itemsWithMinScore: { name: string; minScore: number }[] = [];
+
+  if (drd?.topics?.length && levelUuid) {
+    for (const topic of drd.topics) {
+      for (const item of topic.drdTopicItems ?? []) {
+        const scoreEntry = item.scoresByLevel?.find((s) => s.drd_level_uuid === levelUuid);
+        if (scoreEntry?.min_score != null) {
+          const minScore = parseFloat(scoreEntry.min_score);
+          if (!Number.isNaN(minScore)) {
+            itemsWithMinScore.push({ name: item.name.trim(), minScore });
+          }
+        }
+      }
+    }
+  }
+
+  if (itemsWithMinScore.length === 0) {
+    const rate = filteredEvals[0]?.rate ?? 5;
+    const defaultMin = rate <= 5 ? 3 : Math.ceil(rate * 0.6);
+    itemsWithMinScore = Array.from(uniqueQuestionTitles).map((name) => ({ name, minScore: defaultMin }));
+  }
+
+  if (itemsWithMinScore.length === 0) return 0;
 
   const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
   let achieved = 0;
@@ -152,16 +165,23 @@ function getStepConnectorProgress(_step: { isCurrent: boolean }, index: number):
   if (currentIdx < 0) return { value: 0, showLabel: false };
 
   if (index < currentIdx) return { value: 100, showLabel: false };
+
   if (index === currentIdx) {
+  console.log('hasEvaluationsForNextJob', hasEvaluationsForNextJob.value)
+  console.log('nextJobFirstLevelProgressPercentage', nextJobFirstLevelProgressPercentage.value)
+  console.log('currentLevelProgressPercentage', currentLevelProgressPercentage.value)
     const value = hasEvaluationsForNextJob.value
       ? nextJobFirstLevelProgressPercentage.value
       : currentLevelProgressPercentage.value;
     return { value, showLabel: true };
   }
+
   if (index === currentIdx + 1) {
+    console.log('nextJobFirstLevelProgressPercentage 2', nextJobFirstLevelProgressPercentage.value)
     const value = nextJobFirstLevelProgressPercentage.value;
     return { value, showLabel: false };
   }
+
   return { value: 0, showLabel: false };
 }
 
