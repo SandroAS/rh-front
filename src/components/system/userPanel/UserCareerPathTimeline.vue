@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import type {
   UserPanel,
   UserPanelDrdLevel,
@@ -10,14 +10,13 @@ const props = defineProps<{
   user: UserPanel;
 }>();
 
-const emit = defineEmits(['progressbar']);
-
+/** 1. Lógica de Níveis (Vertical) */
 const userLevels = computed(() => {
   const levels = props.user.jobPosition?.drd?.levels ?? [];
   return [...levels].sort((a, b) => b.order - a.order);
 });
 
-/** Progressão do plano de carreira */
+/** 2. Lógica de Cargos (Horizontal) */
 const progression = computed(() => {
   const positions = props.user.careerPlan?.careerPlanJobPositions ?? [];
   const currentJobUuid = props.user.jobPosition?.uuid;
@@ -30,407 +29,219 @@ const progression = computed(() => {
     }));
 });
 
-const isCurrentJob = (step: { title: string; isCurrent: boolean }) => step.isCurrent;
-
-/** Índice do passo atual na progressão */
 const currentStepIndex = computed(() => progression.value.findIndex((s) => s.isCurrent));
 
-/** Percentual até o próximo cargo (baseado na posição atual da progressão) */
-const progressToNext = computed(() => {
-  const list = progression.value;
-  if (list.length === 0) return 0;
-  const idx = currentStepIndex.value;
-  if (idx < 0) return 0;
-  return Math.round(((idx + 1) / list.length) * 100);
-});
-
-/** UUID do primeiro nível no DRD (order === 1 ou menor order) */
-const firstLevelDrdUuid = computed(() => {
-  const levels = props.user.jobPosition?.drd?.levels ?? [];
-  if (levels.length === 0) return null;
-  const first = [...levels].sort((a, b) => a.order - b.order)[0];
-  return first?.uuid ?? null;
-});
-
-/**
- * Calcula porcentagem de progresso para um nível usando apenas avaliações
- * cujo nome contém jobTitleFilter. Usado para "progresso para o primeiro nível do próximo cargo".
- * Para o próximo cargo usamos os itens das próprias avaliações (o DRD do cargo atual não tem os itens do outro cargo).
+/** * FUNÇÃO CORE: Calcula progresso baseado em DRD e Avaliações 
+ * Agora aceita um título opcional para filtrar avaliações de outros cargos
  */
-function progressPercentageForLevelAndEvaluations(
-  levelUuid: string | null,
-  jobTitleFilter: string
-): number {
+function calculateProgress(levelUuid: string | null, jobTitleFilter?: string): number {
   const drd = props.user.jobPosition?.drd;
   const evaluations = props.user.evaluationsReceived ?? [];
-  if (!evaluations.length) return 0;
+  if (!levelUuid || !evaluations.length) return 0;
 
-  const filterLower = jobTitleFilter.toLowerCase().trim();
-  const filteredEvals = evaluations.filter(
-    (e) => e.status === 'FINISHED' && e.finished_at && e.name?.toLowerCase().includes(filterLower)
-  );
+  // Filtrar avaliações: Se houver filtro de título (próximo cargo), usa ele. 
+  // Caso contrário, usa todas (cargo atual).
+  let filteredEvals = evaluations.filter(e => e.status === 'FINISHED' && e.finished_at);
+  if (jobTitleFilter) {
+    const filterLower = jobTitleFilter.toLowerCase().trim();
+    filteredEvals = filteredEvals.filter(e => e.name?.toLowerCase().includes(filterLower));
+  }
+  
   if (filteredEvals.length === 0) return 0;
 
-  const byType = new Map<string, UserPanelEvaluationReceived>();
-  const sorted = [...filteredEvals].sort(
-    (a, b) => new Date(b.finished_at ?? 0).getTime() - new Date(a.finished_at ?? 0).getTime()
-  );
-  for (const ev of sorted) {
-    if (!byType.has(ev.type)) byType.set(ev.type, ev);
-  }
-
-  const answersByItemName = new Map<string, number>();
-  const uniqueQuestionTitles = new Set<string>();
-  for (const ev of byType.values()) {
-    const response = ev.responses?.find((r) => r.is_completed && r.answers?.length);
-    if (!response?.answers) continue;
-    for (const answer of response.answers) {
-      const title = answer.question?.title?.trim();
-      const numVal = answer.number_value != null ? parseFloat(answer.number_value) : NaN;
-      if (!title || Number.isNaN(numVal)) continue;
-      uniqueQuestionTitles.add(title);
-      const current = answersByItemName.get(title);
-      if (current == null || numVal > current) answersByItemName.set(title, numVal);
-    }
-  }
-
-  let itemsWithMinScore: { name: string; minScore: number }[] = [];
-
-  if (drd?.topics?.length && levelUuid) {
+  // Itens do DRD e seus scores mínimos para o nível alvo
+  const itemsWithMinScore: { name: string; minScore: number }[] = [];
+  // Nota: Para o próximo cargo, idealmente usaríamos o DRD do próximo cargo, 
+  // mas como o painel costuma trazer o DRD atual, usamos a lógica de fallback ou do DRD atual
+  if (drd?.topics) {
     for (const topic of drd.topics) {
       for (const item of topic.drdTopicItems ?? []) {
-        const scoreEntry = item.scoresByLevel?.find((s) => s.drd_level_uuid === levelUuid);
-        if (scoreEntry?.min_score != null) {
-          const minScore = parseFloat(scoreEntry.min_score);
-          if (!Number.isNaN(minScore)) {
-            itemsWithMinScore.push({ name: item.name.trim(), minScore });
-          }
+        const scoreEntry = item.scoresByLevel?.find(s => s.drd_level_uuid === levelUuid);
+        if (scoreEntry?.min_score) {
+          itemsWithMinScore.push({ name: item.name.trim(), minScore: parseFloat(scoreEntry.min_score) });
         }
       }
     }
   }
 
-  if (itemsWithMinScore.length === 0) {
-    const rate = filteredEvals[0]?.rate ?? 5;
-    const defaultMin = rate <= 5 ? 3 : Math.ceil(rate * 0.6);
-    itemsWithMinScore = Array.from(uniqueQuestionTitles).map((name) => ({ name, minScore: defaultMin }));
-  }
-
   if (itemsWithMinScore.length === 0) return 0;
+
+  // Pegar melhores respostas das últimas avaliações por tipo
+  const byType = new Map<string, UserPanelEvaluationReceived>();
+  const sorted = [...filteredEvals].sort((a, b) => new Date(b.finished_at!).getTime() - new Date(a.finished_at!).getTime());
+  for (const ev of sorted) { if (!byType.has(ev.type)) byType.set(ev.type, ev); }
+
+  const answersByItemName = new Map<string, number>();
+  for (const ev of byType.values()) {
+    const response = ev.responses?.find(r => r.is_completed && r.answers?.length);
+    for (const answer of response?.answers ?? []) {
+      const title = answer.question?.title?.trim();
+      const val = parseFloat(answer.number_value ?? '');
+      if (!title || isNaN(val)) continue;
+      if (!answersByItemName.has(title) || val > answersByItemName.get(title)!) answersByItemName.set(title, val);
+    }
+  }
 
   const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
   let achieved = 0;
   for (const { name, minScore } of itemsWithMinScore) {
     const key = normalize(name);
-    let found = false;
     for (const [answerTitle, score] of answersByItemName) {
       if (normalize(answerTitle) === key && score >= minScore) {
-        found = true;
+        achieved++;
         break;
       }
     }
-    if (found) achieved++;
   }
   return Math.round((achieved / itemsWithMinScore.length) * 100);
 }
 
-/** Título do próximo cargo no plano (para filtrar avaliações) */
+/** 3. Nível Atual (Vertical) */
+const currentLevelDrdOrder = computed(() => (props.user.jobPositionCurrentLevel?.order ?? 0) + 1);
+const currentLevelDrdUuid = computed(() => 
+  props.user.jobPosition?.drd?.levels?.find(l => l.order === currentLevelDrdOrder.value)?.uuid ?? null
+);
+
+const currentLevelProgressPercentage = computed(() => calculateProgress(currentLevelDrdUuid.value));
+
+const getLevelProgressBarPercentage = (order: number, isCurrentJob: boolean) => {
+  if (!isCurrentJob) return 0;
+  if (order < currentLevelDrdOrder.value) return 100;
+  if (order === currentLevelDrdOrder.value) return currentLevelProgressPercentage.value;
+  return 0;
+};
+
+/** 4. Próximo Cargo (Horizontal) */
 const nextStepTitle = computed(() => {
   const idx = currentStepIndex.value;
-  const list = progression.value;
-  if (idx < 0 || idx >= list.length - 1) return '';
-  return list[idx + 1]?.title?.trim() ?? '';
+  return (idx >= 0 && idx < progression.value.length - 1) ? progression.value[idx + 1].title : '';
 });
 
-/** Se existe pelo menos uma avaliação FINISHED para o próximo cargo */
-const hasEvaluationsForNextJob = computed(() => {
-  const title = nextStepTitle.value;
-  if (!title) return false;
-  const filterLower = title.toLowerCase();
-  return (props.user.evaluationsReceived ?? []).some(
-    (e) => e.status === 'FINISHED' && e.finished_at && e.name?.toLowerCase().includes(filterLower)
-  );
+// UUID do primeiro nível para comparar com avaliações do próximo cargo
+const firstLevelDrdUuid = computed(() => {
+  const levels = props.user.jobPosition?.drd?.levels ?? [];
+  return [...levels].sort((a, b) => a.order - b.order)[0]?.uuid ?? null;
 });
 
-/** Progresso para o primeiro nível do próximo cargo (avaliações que são do próximo cargo) */
-const nextJobFirstLevelProgressPercentage = computed(() => {
-  const title = nextStepTitle.value;
-  if (!title) return 0;
-  return progressPercentageForLevelAndEvaluations(firstLevelDrdUuid.value, title);
+const nextJobProgressPercentage = computed(() => {
+  if (!nextStepTitle.value) return 0;
+  return calculateProgress(firstLevelDrdUuid.value, nextStepTitle.value);
 });
 
-/** Valor e se deve mostrar label para a barra de conexão após o step no índice dado */
-function getStepConnectorProgress(_step: { isCurrent: boolean }, index: number): { value: number; showLabel: boolean } {
+/** Lógica da Barra de Conexão (Horizontal) */
+function getStepConnectorProgress(index: number): { value: number; showLabel: boolean } {
   const currentIdx = currentStepIndex.value;
-  if (currentIdx < 0) return { value: 0, showLabel: false };
-
-  if (index < currentIdx) return { value: 100, showLabel: false };
-
+  if (currentIdx < 0 || index < currentIdx) return { value: 100, showLabel: false };
+  
+  // Se for o cargo atual, a barra mostra o progresso para o PRÓXIMO cargo
   if (index === currentIdx) {
-  console.log('hasEvaluationsForNextJob', hasEvaluationsForNextJob.value)
-  console.log('nextJobFirstLevelProgressPercentage', nextJobFirstLevelProgressPercentage.value)
-  console.log('currentLevelProgressPercentage', currentLevelProgressPercentage.value)
-    const value = hasEvaluationsForNextJob.value
-      ? nextJobFirstLevelProgressPercentage.value
-      : currentLevelProgressPercentage.value;
-    return { value, showLabel: true };
+    return { value: nextJobProgressPercentage.value, showLabel: true };
   }
-
-  if (index === currentIdx + 1) {
-    console.log('nextJobFirstLevelProgressPercentage 2', nextJobFirstLevelProgressPercentage.value)
-    const value = nextJobFirstLevelProgressPercentage.value;
-    return { value, showLabel: false };
-  }
-
   return { value: 0, showLabel: false };
 }
 
-/** Lista de { value, showLabel } por índice (barra após cada step) para evitar múltiplas chamadas no template */
-const stepConnectorProgressList = computed(() => {
-  const list = progression.value;
-  return list.map((step, index) => getStepConnectorProgress(step, index));
-});
+const stepConnectorProgressList = computed(() => progression.value.map((_, i) => getStepConnectorProgress(i)));
 
-/** Cor da barra de progresso; useNeutral true para níveis/cargos inativos (ex.: após o atual) */
-const progressBarColor = (percentage: number, useNeutral = false) => {
-  if (useNeutral) return 'blue-grey-lighten-4';
+/** Helpers de Estilo */
+const progressBarColor = (percentage: number, isInactive = false) => {
+  if (isInactive) return 'blue-grey-lighten-4';
   if (percentage >= 90) return 'success';
   if (percentage >= 50) return 'yellow-darken-1';
-  if (percentage >= 0) return 'warning';
-  return 'primary';
+  return 'warning';
+};
+
+const getLevelColor = (order: number, isCurrentJob: boolean) => {
+  if (!isCurrentJob) return 'grey-lighten-2';
+  if (order === currentLevelDrdOrder.value) return 'primary';
+  if (order < currentLevelDrdOrder.value) return 'success';
+  return 'grey-lighten-2';
 };
 
 const formatDate = (dateString: string | null) => {
   if (!dateString) return 'Data não definida';
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString('pt-BR');
-};
-
-const getLevelColor = (order: number, isCurrentJob: boolean) => {
-  if(isCurrentJob && props.user.jobPositionCurrentLevel?.order) {
-    if (order === ((props.user.jobPositionCurrentLevel?.order ?? 0) + 1)) {
-      return 'primary';
-    }
-    if (order < ((props.user.jobPositionCurrentLevel?.order ?? 0) + 1)) {
-      return 'success';
-    }
-  }
-
-  return 'grey-lighten-2';
-}
-
-const canCheckLevelIcon = (order: number, isCurrentJob: boolean) => {
-  if(isCurrentJob && props.user.jobPositionCurrentLevel?.order) {
-    if (order < ((props.user.jobPositionCurrentLevel?.order ?? 0) + 1)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/** Ordem do nível no DRD que corresponde ao nível atual do usuário (jobPositionCurrentLevel.order + 1) */
-const currentLevelDrdOrder = computed(() => {
-  const order = props.user.jobPositionCurrentLevel?.order;
-  if (order == null) return null;
-  return order + 1;
-});
-
-/** UUID do nível atual no DRD (level em drd.levels cujo order === currentLevelDrdOrder) */
-const currentLevelDrdUuid = computed(() => {
-  const order = currentLevelDrdOrder.value;
-  if (order == null) return null;
-  const level = props.user.jobPosition?.drd?.levels?.find((l) => l.order === order);
-  return level?.uuid ?? null;
-});
-
-/**
- * Porcentagem de progresso no nível atual: considera os min_score do nível no DRD
- * e as respostas das últimas avaliações (por tipo) para ver quantos itens atingem o mínimo.
- * 100% = todos os itens avaliados atingem o min_score necessário.
- */
-const currentLevelProgressPercentage = computed(() => {
-  const levelUuid = currentLevelDrdUuid.value;
-  const drd = props.user.jobPosition?.drd;
-  const evaluations = props.user.evaluationsReceived ?? [];
-  if (!levelUuid || !drd?.topics?.length || !evaluations.length) return 0;
-
-  // 1) Montar lista de (nome do item, min_score) para o nível atual
-  const itemsWithMinScore: { name: string; minScore: number }[] = [];
-  for (const topic of drd.topics) {
-    for (const item of topic.drdTopicItems ?? []) {
-      const scoreEntry = item.scoresByLevel?.find((s) => s.drd_level_uuid === levelUuid);
-      if (scoreEntry?.min_score != null) {
-        const minScore = parseFloat(scoreEntry.min_score);
-        if (!Number.isNaN(minScore)) {
-          itemsWithMinScore.push({ name: item.name.trim(), minScore });
-        }
-      }
-    }
-  }
-
-  if (itemsWithMinScore.length === 0) return 0;
-
-  // 2) Última avaliação de cada tipo (FINISHED, ordenado por finished_at desc)
-  const byType = new Map<string, UserPanelEvaluationReceived>();
-  const finished = evaluations.filter((e) => e.status === 'FINISHED' && e.finished_at);
-  const sorted = [...finished].sort(
-    (a, b) => new Date(b.finished_at ?? 0).getTime() - new Date(a.finished_at ?? 0).getTime()
-  );
-  for (const ev of sorted) {
-    if (!byType.has(ev.type)) byType.set(ev.type, ev);
-  }
-
-  // 3) Coletar todas as respostas dessas avaliações (primeira response completa de cada)
-  const answersByItemName = new Map<string, number>();
-  for (const ev of byType.values()) {
-    const response = ev.responses?.find((r) => r.is_completed && r.answers?.length);
-    if (!response?.answers) continue;
-    for (const answer of response.answers) {
-      const title = answer.question?.title?.trim();
-      const numVal = answer.number_value != null ? parseFloat(answer.number_value) : NaN;
-      if (!title || Number.isNaN(numVal)) continue;
-      const current = answersByItemName.get(title);
-      if (current == null || numVal > current) {
-        answersByItemName.set(title, numVal);
-      }
-    }
-  }
-
-  // 4) Contar quantos itens atingem o min_score (match por título da pergunta ≈ nome do item)
-  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
-  let achieved = 0;
-  for (const { name, minScore } of itemsWithMinScore) {
-    const key = normalize(name);
-    let found = false;
-    for (const [answerTitle, score] of answersByItemName) {
-      if (normalize(answerTitle) === key && score >= minScore) {
-        found = true;
-        break;
-      }
-    }
-    if (found) achieved++;
-  }
-
-  return Math.round((achieved / itemsWithMinScore.length) * 100);
-});
-
-const isCurrentLevelProgressBar = (userLevel: UserPanelDrdLevel, isCurrentJob: boolean) => {
-  if (!isCurrentJob || currentLevelDrdOrder.value == null) return false;
-  return (userLevel.order - 1) === currentLevelDrdOrder.value;
-};
-
-const getLevelProgressBarPercentage = (order: number, isCurrentJob: boolean) => {
-  const drdOrder = (currentLevelDrdOrder.value);
-  if (!isCurrentJob || drdOrder == null) return 0;
-  if ((order - 1) < drdOrder) return 100;
-  if ((order - 1) === drdOrder) return currentLevelProgressPercentage.value;
-  return 0;
 };
 
 onMounted(() => {
   const div = document.getElementById('career-path-container');
-  if(div) {
-    div.scrollTop = div.scrollHeight;
-  }
-})
+  if (div) div.scrollLeft = 0; // Timeline horizontal costuma começar na esquerda
+});
 </script>
 
 <template>
-  <v-card v-if="user.careerPlan?.uuid">
-    <v-card-title class="text-h6 d-flex align-center">
+  <v-card v-if="user.careerPlan?.uuid" elevation="0" border>
+    <v-card-title class="text-h6 d-flex align-center pa-4">
       <v-icon class="mr-2" color="primary">mdi-chart-line</v-icon>
-      Jornada de Carreira -&#160;<b>{{ user.careerPlan.name }}</b>
+      Jornada de Carreira - <b>{{ user.careerPlan.name }}</b>
     </v-card-title>
-    <v-alert
-      v-if="!user.jobPositionCurrentLevel?.uuid"
-      type="warning"
-      variant="tonal"
-      density="compact"
-      class="mx-4 mt-2"
-      icon="mdi-alert"
-    >
-      Usuário não tem o nível do cargo configurado.
-    </v-alert>
-    <v-divider class="my-4"></v-divider>
 
-    <v-card-text>
-      <div id="career-path-container" class="career-path-container w-100">
-        <div class="d-flex align-center w-100 mt-4">
-          <div
-            v-for="(step, index) in progression"
-            :key="index"
-          >
-            <div class="d-flex align-end step-line-container">
-              <div>
-                <div v-for="userLevel in userLevels">
-                  <div class="d-flex align-center" style="margin-right: -50px;">
-                    <v-avatar
-                      size="20"
-                      :color="getLevelColor(userLevel.order, isCurrentJob(step))"
-                      class="ma-2 ml-3"
-                    >
-                      <v-icon v-if="canCheckLevelIcon(userLevel.order, isCurrentJob(step))" size="15" color="white">mdi-check</v-icon>
+    <v-divider></v-divider>
+
+    <v-card-text class="pa-0">
+      <div id="career-path-container" class="career-path-container">
+        <div class="d-flex align-start flex-nowrap pa-6">
+          <div v-for="(step, index) in progression" :key="index" class="d-flex">
+            
+            <!-- Coluna do Cargo -->
+            <div class="d-flex flex-column align-center" style="min-width: 140px;">
+              
+              <!-- Níveis Verticais -->
+              <div class="levels-stack mb-4">
+                <div v-for="userLevel in userLevels" :key="userLevel.uuid" class="level-item">
+                  <div class="d-flex align-center mb-1">
+                    <v-avatar size="18" :color="getLevelColor(userLevel.order, step.isCurrent)" class="mr-2">
+                      <v-icon v-if="userLevel.order < currentLevelDrdOrder && step.isCurrent" size="12" color="white">mdi-check</v-icon>
+                      <span v-else class="text-caption text-white" style="font-size: 10px !important;">{{ userLevel.order }}</span>
                     </v-avatar>
-
-                    <div class="text-caption font-weight-bold">{{ userLevel.name }}</div>
+                    <span class="text-caption font-weight-bold text-truncate" style="max-width: 80px;">{{ userLevel.name }}</span>
                   </div>
-                  <div class="vertical-progress-container">
+                  
+                  <!-- Barra Vertical -->
+                  <div class="vertical-bar-wrapper">
                     <v-progress-linear
-                      class="vertical-progress-bar"
-                      :model-value="getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step))"
-                      :color="progressBarColor(getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)), getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)) === 0)"
+                      vertical
+                      :model-value="getLevelProgressBarPercentage(userLevel.order, step.isCurrent)"
+                      :color="progressBarColor(getLevelProgressBarPercentage(userLevel.order, step.isCurrent), !step.isCurrent)"
+                      height="6"
                       rounded
                     ></v-progress-linear>
-                    <div
-                      v-if="isCurrentLevelProgressBar(userLevel, isCurrentJob(step))"
-                      class="text-caption text-center font-weight-bold vertical-percentage mr-6"
-                      :class="`text-${progressBarColor(getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)), getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)) === 0)}`"
-                    >
-                      {{ getLevelProgressBarPercentage(userLevel.order, isCurrentJob(step)) }}%
+                    <div v-if="step.isCurrent && userLevel.order === currentLevelDrdOrder" class="percentage-label">
+                      {{ currentLevelProgressPercentage }}%
                     </div>
                   </div>
                 </div>
-
-                <v-avatar
-                  size="28"
-                  :color="step.date ? 'success' : isCurrentJob(step) ? 'primary' : 'grey-lighten-2'"
-                  class="ma-2"
-                >
-                  <v-icon v-if="step.date" color="white">mdi-check</v-icon>
-                </v-avatar>
               </div>
 
-              <div v-if="index < progression.length - 1" class="flex-grow-1">
-                <div class="teste2">
-                  <div
-                    v-if="stepConnectorProgressList[index]?.showLabel"
-                    class="text-caption text-center font-weight-bold"
-                    :class="`text-${progressBarColor(stepConnectorProgressList[index].value)}`"
-                  >
-                    {{ stepConnectorProgressList[index].value }}%
-                  </div>
-                  <v-progress-linear
-                    :model-value="stepConnectorProgressList[index]?.value ?? 0"
-                    :color="progressBarColor(stepConnectorProgressList[index]?.value ?? 0, !stepConnectorProgressList[index]?.showLabel)"
-                    class="custom-progressbar mb-5"
-                    rounded
-                  ></v-progress-linear>
+              <!-- Ícone do Cargo -->
+              <v-avatar size="32" :color="step.isCurrent ? 'primary' : 'grey-lighten-2'" class="elevation-2">
+                <v-icon v-if="index < currentStepIndex" color="white" size="20">mdi-check</v-icon>
+                <v-icon v-else color="white" size="20">{{ step.isCurrent ? 'mdi-account-star' : 'mdi-lock' }}</v-icon>
+              </v-avatar>
+
+              <!-- Texto do Cargo -->
+              <div class="mt-3 text-center">
+                <div class="text-subtitle-2 font-weight-bold text-truncate" style="max-width: 130px;">{{ step.title }}</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ step.isCurrent ? 'Cargo Atual' : (index < currentStepIndex ? 'Concluído' : 'Próximo objetivo') }}
                 </div>
               </div>
             </div>
 
-            <div class="d-flex flex-column step-container">
-              <div class="text-caption font-weight-bold" style="white-space: nowrap;">
-                {{ step.title }}
+            <!-- Barra de Conexão Horizontal -->
+            <div v-if="index < progression.length - 1" class="connector-wrapper">
+              <div class="connector-content">
+                <div v-if="stepConnectorProgressList[index].showLabel" class="text-caption font-weight-black mb-1" :class="`text-${progressBarColor(stepConnectorProgressList[index].value)}`">
+                  {{ stepConnectorProgressList[index].value }}% para próximo cargo
+                </div>
+                <v-progress-linear
+                  :model-value="stepConnectorProgressList[index].value"
+                  :color="progressBarColor(stepConnectorProgressList[index].value, !stepConnectorProgressList[index].showLabel)"
+                  height="8"
+                  rounded
+                ></v-progress-linear>
               </div>
-              <span v-if="step.date" class="text-caption text-medium-emphasis">
-                Início: {{ formatDate(step.date) }}
-              </span>
-              <span v-else class="text-caption text-medium-emphasis">
-                Próximo cargo
-              </span>
             </div>
+
           </div>
         </div>
       </div>
@@ -439,69 +250,61 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.teste2 {
-  cursor: pointer;
-  transition: transform .2s ease-in-out;
-}
-
-.teste2:hover {
-  transform: scale(1.1);
-}
-
-.teste {
-  cursor: pointer;
-  transition: transform .2s ease-in-out;
-}
-
-.teste:hover {
-  transform: rotate(180deg) scale(1.1);
-}
-
 .career-path-container {
-  overflow: auto;
-  max-height: 340px;
-  padding: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #fdfdfd;
 }
 
-.step-container {
-  min-width: 150px;
-  padding: 0 8px;
+.levels-stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0 10px;
 }
 
-.step-line-container {
-  flex-grow: 1;
+.level-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2px;
 }
 
-.step-line-container:last-child {
-  flex-grow: 0;
-}
-
-.custom-progressbar {
-  height: 10px;
+.vertical-bar-wrapper {
+  height: 30px;
+  margin-left: 9px;
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.d-flex.w-100.flex-nowrap {
-  flex-wrap: nowrap !important;
+.percentage-label {
+  position: absolute;
+  left: 12px;
+  font-size: 10px;
+  font-weight: 800;
   white-space: nowrap;
 }
 
-.vertical-progress-container {
-  transform: rotate(180deg);
-  margin-top: 29px;
-  margin-bottom: 34px;
-  margin-right: -13px;
-  margin-left: -14px;
+.connector-wrapper {
+  min-width: 120px;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 58px; /* Alinha com o avatar do cargo */
+  flex-grow: 1;
 }
 
-.vertical-progress-bar {
-  transform: rotate(90deg) translateX(0);
+.connector-content {
   width: 100%;
-  height: 100%;
+  padding: 0 8px;
+  text-align: center;
 }
 
-.vertical-percentage {
-  transform: rotate(270deg);
-  margin-top: -16px;
+/* Scrollbar fina para melhor visual */
+.career-path-container::-webkit-scrollbar {
+  height: 6px;
+}
+.career-path-container::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 10px;
 }
 </style>
