@@ -11,27 +11,29 @@ import type {
   UserPanelEvaluationReceived,
 } from '@/types/user/user-panel.type';
 
-const METRIC_TYPE_OPTIONS: Record<string, { title: string; icon: string; suffix?: string }> = {
-  PERCENTAGE: { title: 'Pct.', icon: 'mdi-percent-outline', suffix: '%' },
-  QUANTITY: { title: 'Qtd.', icon: 'mdi-tune-variant' },
-  DURATION_MONTHS: { title: 'Mês', icon: 'mdi-calendar-month', suffix: 'm' },
-  DURATION_WEEKS: { title: 'Sem.', icon: 'mdi-calendar-range', suffix: 'sem' },
-  DURATION_DAYS: { title: 'Dia', icon: 'mdi-calendar', suffix: 'd' },
-  DURATION_HOURS: { title: 'Hrs.', icon: 'mdi-clock-outline', suffix: 'h' },
-  DURATION_MINUTES: { title: 'Min.', icon: 'mdi-timer-outline', suffix: 'min' },
+const METRIC_TYPE_OPTIONS: Record<string, { title: string; icon: string; suffix?: string; color: string }> = {
+  PERCENTAGE: { title: 'Percentual', icon: 'mdi-percent', suffix: '%', color: 'blue' },
+  QUANTITY: { title: 'Quantidade', icon: 'mdi-numeric', suffix: '', color: 'purple' },
+  DURATION_MONTHS: { title: 'Meses', icon: 'mdi-calendar-month', suffix: 'm', color: 'teal' },
+  DURATION_WEEKS: { title: 'Semanas', icon: 'mdi-calendar-range', suffix: 'sem', color: 'cyan' },
+  DURATION_DAYS: { title: 'Dias', icon: 'mdi-calendar', suffix: 'd', color: 'orange' },
+  DURATION_HOURS: { title: 'Horas', icon: 'mdi-clock-outline', suffix: 'h', color: 'indigo' },
+  DURATION_MINUTES: { title: 'Minutos', icon: 'mdi-timer-outline', suffix: 'min', color: 'deep-orange' },
 };
 
-const EVALUATION_TYPE_LABELS: Record<string, string> = {
-  SELF: 'Autoavaliação',
-  LEADER: 'Líder',
-  PEER: 'Par',
+const EVALUATION_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
+  SELF: { label: 'Auto', color: 'indigo' },
+  LEADER: { label: 'Líder', color: 'amber-darken-2' },
+  PEER: { label: 'Par', color: 'green' },
 };
 
 const props = defineProps<{
   user: UserPanel | null;
 }>();
 
-/** Abas: um cargo por aba. Se não tiver plano de carreira, uma aba "Cargo atual". */
+const selectedTab = ref(0);
+
+/** Mapeamento de abas com tratamento de dados */
 const tabItems = computed(() => {
   const plan = props.user?.careerPlan?.careerPlanJobPositions;
   if (plan?.length) {
@@ -43,16 +45,13 @@ const tabItems = computed(() => {
       isCurrent: isCurrentJob(item),
     }));
   }
-  const currentRef = props.user?.jobPosition;
-  return [
-    {
-      key: 'current',
-      title: currentRef?.title ?? 'Cargo atual',
-      jobPosition: null,
-      drd: undefined as UserPanelDrd | undefined,
-      isCurrent: true,
-    },
-  ];
+  return [{
+    key: 'current',
+    title: props.user?.jobPosition?.title ?? 'Cargo atual',
+    jobPosition: null,
+    drd: props.user?.jobPosition?.drd as UserPanelDrd | undefined,
+    isCurrent: true,
+  }];
 });
 
 function isCurrentJob(item: UserPanelCareerPlanJobPosition | null): boolean {
@@ -61,65 +60,40 @@ function isCurrentJob(item: UserPanelCareerPlanJobPosition | null): boolean {
   return item.job_position_uuid === currentUuid || item.jobPosition?.uuid === currentUuid;
 }
 
-const selectedTab = ref(0);
-const currentTab = computed(() => tabItems.value[selectedTab.value] ?? null);
-
-/** Nível atual do usuário (order). Usado para "próximo nível" = currentLevelOrder + 1. */
 const currentLevelOrder = computed(() => props.user?.jobPositionCurrentLevel?.order ?? 0);
 
-/** Para o cargo da aba, retorna o order do nível alvo do checklist (próximo nível no cargo atual, ou nível 1 em outros cargos). */
-function getTargetLevelOrder(isCurrent: boolean): number {
-  if (isCurrent) return currentLevelOrder.value + 1;
-  return 1;
+function getTargetLevel(drd: UserPanelDrd | undefined, isCurrent: boolean) {
+  const targetOrder = isCurrent ? currentLevelOrder.value + 1 : 1;
+  return drd?.drdLevels?.find(l => l.order === targetOrder) || drd?.drdLevels?.[0];
 }
 
-/** min_score do item para o nível alvo (próximo nível do cargo atual ou nível 1). */
-function getMinScoreForTargetLevel(
-  item: UserPanelDrdTopicItem,
-  targetLevelOrder: number
-): number | null {
-  const entry = item.scoresByLevel?.find(
-    (s: UserPanelDrdTopicItemScore) => s.drd_level_order === targetLevelOrder
-  );
-  if (!entry?.min_score) return null;
-  const n = parseFloat(String(entry.min_score));
-  return isNaN(n) ? null : n;
+function getMinScore(item: UserPanelDrdTopicItem, targetLevelOrder: number): number | null {
+  const entry = item.scoresByLevel?.find(s => s.drd_level_order === targetLevelOrder);
+  return entry?.min_score ? parseFloat(String(entry.min_score)) : null;
 }
 
-/** Última avaliação por tipo (SELF, LEADER, PEER) finalizada. */
 const latestEvaluationsByType = computed(() => {
-  const list = (props.user?.evaluationsReceived ?? []).filter(
-    (e) => e.status === 'FINISHED' && e.finished_at
-  ) as UserPanelEvaluationReceived[];
+  const list = (props.user?.evaluationsReceived ?? []).filter(e => e.status === 'FINISHED' && e.finished_at);
   const byType = new Map<string, UserPanelEvaluationReceived>();
-  const sorted = [...list].sort(
-    (a, b) => new Date(b.finished_at!).getTime() - new Date(a.finished_at!).getTime()
-  );
-  for (const ev of sorted) {
-    if (ev.type && !byType.has(ev.type)) byType.set(ev.type, ev);
-  }
+  const sorted = [...list].sort((a, b) => new Date(b.finished_at!).getTime() - new Date(a.finished_at!).getTime());
+  for (const ev of sorted) { if (ev.type && !byType.has(ev.type)) byType.set(ev.type, ev); }
   return byType;
 });
 
-/** Média das notas das últimas avaliações por tipo para um item (por drd_topic_item_uuid ou por título da pergunta). */
-function getAverageScoreForItem(
-  item: UserPanelDrdTopicItem,
-  _topic: UserPanelDrdTopic
-): { average: number; byType: Record<string, number> } {
+function getPerformance(item: UserPanelDrdTopicItem) {
   const byType: Record<string, number> = {};
   const itemUuid = item.uuid;
-  const itemNameNorm = item.name?.toLowerCase().replace(/\s+/g, ' ').trim() ?? '';
+  const itemNameNorm = item.name?.toLowerCase().trim();
 
   for (const [type, ev] of latestEvaluationsByType.value) {
-    const response = ev.responses?.find((r) => r.is_completed && r.answers?.length);
+    const response = ev.responses?.find((r) => r.is_completed);
     let score: number | null = null;
     for (const answer of response?.answers ?? []) {
       const numVal = parseFloat(answer.number_value ?? '');
       if (isNaN(numVal)) continue;
-      const topic = answer.question?.applicationTopic;
-      const questionItemUuid = topic?.drd_topic_item_uuid;
-      const questionTitleNorm = answer.question?.title?.toLowerCase().replace(/\s+/g, ' ').trim() ?? '';
-      if (questionItemUuid === itemUuid || questionTitleNorm === itemNameNorm) {
+      const qUuid = answer.question?.applicationTopic?.drd_topic_item_uuid;
+      const qTitle = answer.question?.title?.toLowerCase().trim();
+      if (qUuid === itemUuid || qTitle === itemNameNorm) {
         if (score === null || numVal > score) score = numVal;
       }
     }
@@ -127,182 +101,246 @@ function getAverageScoreForItem(
   }
 
   const values = Object.values(byType);
-  const average =
-    values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
+  const average = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
   return { average, byType };
 }
 
-/** Rate máximo do DRD (escala 1–5 normalmente). */
-function getDrdRate(drd: UserPanelDrd | undefined): number {
-  return drd?.rate ?? 5;
+function getProgressColor(current: number, target: number | null) {
+  if (target === null) return 'grey';
+  const ratio = current / target;
+  if (ratio >= 1) return 'success';
+  if (ratio >= 0.7) return 'warning';
+  return 'error';
 }
 
-/** Totalizador por métrica: valor atual não vem no painel; exibimos placeholder. Formatação por tipo. */
-function formatMetricValue(metric: UserPanelDrdMetric, value: number | null): string {
-  if (value === null || value === undefined) return '–';
-  const opt = METRIC_TYPE_OPTIONS[metric.type];
-  const suffix = opt?.suffix ?? '';
-  if (metric.type === 'PERCENTAGE') return `${Math.round(value)}%`;
-  if (metric.type === 'QUANTITY') return String(Math.round(value));
-  return `${value} ${suffix}`.trim();
-}
-
-/** Valor atual da métrica: não existe no UserPanel; placeholder 0 ou valor futuro da API. */
-function getMetricCurrentValue(_metric: UserPanelDrdMetric): number | null {
-  return null;
-}
-
-const hasAnyDrd = computed(() =>
-  tabItems.value.some((t) => t.drd?.drdTopics?.length || t.drd?.drdMetrics?.length)
-);
+const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.length || t.drd?.drdMetrics?.length));
 </script>
 
 <template>
-  <v-card v-if="user" elevation="2" class="pa-4">
-    <v-card-title class="text-h6 d-flex align-center">
-      <v-icon class="mr-2" color="primary">mdi-chart-bar</v-icon>
-      Desempenho e requisitos para o próximo nível
-    </v-card-title>
-    <v-divider class="mb-4" />
+  <v-card v-if="user" elevation="0" border class="rounded-xl overflow-hidden">
+    <!-- Header Minimalista -->
+    <v-toolbar color="white" flat border="bottom">
+      <v-toolbar-title class="text-subtitle-1 font-weight-black d-flex align-center">
+        <v-icon start color="primary" icon="mdi-shield-check-outline" />
+        REQUISITOS DE EVOLUÇÃO
+      </v-toolbar-title>
+      <v-spacer />
+      <v-chip size="small" variant="flat" color="grey-lighten-4" class="mr-4">
+        Nível Atual: <b>{{ user.jobPositionCurrentLevel?.name || 'Iniciante' }}</b>
+      </v-chip>
+    </v-toolbar>
 
-    <template v-if="!hasAnyDrd">
-      <v-alert type="info" variant="tonal" density="compact" class="mb-0">
-        Não há dados de DRD disponíveis para exibir métricas e checklist. Associe um plano de
-        carreira ao cargo ou configure o DRD do cargo.
-      </v-alert>
-    </template>
+    <v-card-text class="pa-0">
+      <template v-if="!hasAnyDrd">
+        <div class="pa-12 text-center">
+          <v-icon size="64" color="grey-lighten-2" icon="mdi-file-search-outline" class="mb-4" />
+          <h3 class="text-h6 text-medium-emphasis">Nenhum requisito configurado</h3>
+          <p class="text-body-2 text-disabled">Configure o DRD ou plano de carreira para visualizar o progresso.</p>
+        </div>
+      </template>
 
-    <template v-else>
-      <v-tabs v-model="selectedTab" density="compact" class="mb-4" show-arrows>
-        <v-tab v-for="(tab, idx) in tabItems" :key="tab.key" :value="idx">
-          {{ tab.title }}
-          <v-icon v-if="tab.isCurrent" size="small" class="ml-1" color="primary"
-            >mdi-account-star</v-icon
-          >
-        </v-tab>
-      </v-tabs>
+      <template v-else>
+        <!-- Tabs Customizadas -->
+        <v-tabs v-model="selectedTab" color="primary" align-tabs="start" class="px-4 pt-2">
+          <v-tab v-for="(tab, idx) in tabItems" :key="tab.key" :value="idx" class="text-none">
+            <v-icon v-if="tab.isCurrent" start icon="mdi-star" size="small" />
+            {{ tab.title }}
+          </v-tab>
+        </v-tabs>
 
-      <v-window v-model="selectedTab" class="transparent">
-        <v-window-item v-for="(tab, idx) in tabItems" :key="tab.key" :value="idx">
-          <div v-if="!tab.drd" class="text-medium-emphasis py-4">
-            DRD não disponível para este cargo.
-          </div>
-
-          <template v-else>
-            <!-- Totalizadores por métrica -->
-            <div v-if="tab.drd.drdMetrics?.length" class="mb-6">
-              <div class="text-subtitle-1 font-weight-bold mb-3">Métricas de desempenho</div>
-              <v-row dense>
-                <v-col
-                  v-for="metric in tab.drd.drdMetrics"
-                  :key="metric.uuid"
-                  cols="12"
-                  sm="6"
-                  md="4"
-                >
-                  <v-card variant="outlined" class="pa-3" rounded="lg">
-                    <div class="d-flex align-center mb-1">
-                      <v-icon size="small" class="mr-2" :icon="METRIC_TYPE_OPTIONS[metric.type]?.icon ?? 'mdi-chart-box'" />
-                      <span class="text-body2 text-medium-emphasis">{{ metric.name }}</span>
-                    </div>
-                    <div class="text-h6 font-weight-bold">
-                      {{ formatMetricValue(metric, getMetricCurrentValue(metric)) }}
-                    </div>
-                    <div class="text-caption text-medium-emphasis">
-                      {{ metric.prefix }}
-                      {{ (metric.scoresByLevel as { min_score?: string }[])?.[0]?.min_score ?? '–' }}
-                      (mín. nível alvo)
-                    </div>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </div>
-
-            <!-- Checklist por tópico / item -->
-            <div v-if="tab.drd.drdTopics?.length">
-              <div class="text-subtitle-1 font-weight-bold mb-3">Requisitos por avaliação</div>
-              <p class="text-caption text-medium-emphasis mb-3">
-                Média das últimas avaliações (por tipo) em cada item. Completo quando a média
-                &ge; nota mínima do nível alvo.
-              </p>
-
-              <div
-                v-for="topic in tab.drd.drdTopics"
-                :key="topic.uuid"
-                class="mb-6"
-              >
-                <v-list-subheader class="font-weight-bold text-subtitle-2 px-0">
-                  {{ topic.name }}
-                </v-list-subheader>
-                <v-list density="compact" class="pt-2">
-                  <v-list-item
-                    v-for="item in topic.drdTopicItems"
-                    :key="item.uuid"
-                    class="align-start"
-                  >
-                    <template #prepend>
-                      <v-icon
-                        :color="
-                          getAverageScoreForItem(item, topic).average >=
-                          (getMinScoreForTargetLevel(
-                            item,
-                            getTargetLevelOrder(tab.isCurrent)
-                          ) ?? 0)
-                            ? 'success'
-                            : 'grey-lighten-1'
-                        "
-                        :icon="
-                          getAverageScoreForItem(item, topic).average >=
-                          (getMinScoreForTargetLevel(
-                            item,
-                            getTargetLevelOrder(tab.isCurrent)
-                          ) ?? 0)
-                            ? 'mdi-check-circle'
-                            : 'mdi-circle-outline'
-                        "
-                        class="mt-1"
-                      />
-                    </template>
-                    <v-list-item-title class="text-wrap mb-2">{{ item.name }}</v-list-item-title>
-                    <div class="d-flex align-center flex-wrap gap-2 mb-1">
-                      <v-slider
-                        :model-value="getAverageScoreForItem(item, topic).average"
-                        :min="0"
-                        :max="getDrdRate(tab.drd)"
-                        :step="0.1"
-                        thumb-label="always"
-                        density="compact"
-                        hide-details
-                        class="mt-0 flex-grow-1"
-                        style="max-width: 280px;"
-                        readonly
-                        color="primary"
-                      />
-                      <span class="text-caption text-medium-emphasis">
-                        Média: {{ getAverageScoreForItem(item, topic).average.toFixed(1) }} /
-                        {{ getDrdRate(tab.drd) }}
-                        <template v-if="getMinScoreForTargetLevel(item, getTargetLevelOrder(tab.isCurrent)) != null">
-                          (mín. {{ getMinScoreForTargetLevel(item, getTargetLevelOrder(tab.isCurrent)) }})
-                        </template>
-                      </span>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2 mt-1">
-                      <v-chip
-                        v-for="(score, type) in getAverageScoreForItem(item, topic).byType"
-                        :key="type"
-                        size="x-small"
-                        variant="tonal"
-                      >
-                        {{ EVALUATION_TYPE_LABELS[type] ?? type }}: {{ score.toFixed(1) }}
-                      </v-chip>
-                    </div>
-                  </v-list-item>
-                </v-list>
+        <v-window v-model="selectedTab">
+          <v-window-item v-for="(tab, idx) in tabItems" :key="tab.key" :value="idx">
+            <div class="pa-6">
+              <div v-if="!tab.drd" class="py-12 text-center text-disabled">
+                Sem dados de desempenho para este cargo.
               </div>
+
+              <template v-else>
+                <!-- Info do Nível Alvo -->
+                <v-alert
+                  variant="tonal"
+                  color="primary"
+                  rounded="lg"
+                  class="mb-8"
+                  icon="mdi-arrow-up-bold-circle"
+                >
+                  <template #title>
+                    Foco no Próximo Passo: 
+                    <span class="font-weight-black text-uppercase ml-1">
+                      {{ getTargetLevel(tab.drd, tab.isCurrent)?.name || 'Próximo Nível' }}
+                    </span>
+                  </template>
+                  <span class="text-caption">
+                    Abaixo estão os requisitos de competência e métricas baseados nas últimas avaliações e dados do cargo.
+                  </span>
+                </v-alert>
+
+                <!-- Seção: Métricas (Cards Estilizados) -->
+                <div v-if="tab.drd.drdMetrics?.length" class="mb-8">
+                  <h4 class="text-overline font-weight-bold mb-4 d-flex align-center">
+                    Métricas de Performance
+                    <v-divider class="ml-4" />
+                  </h4>
+                  <v-row dense>
+                    <v-col v-for="metric in tab.drd.drdMetrics" :key="metric.uuid" cols="12" sm="6" md="4">
+                      <v-hover v-slot="{ isHovering, props: hoverProps }">
+                        <v-card
+                          v-bind="hoverProps"
+                          :elevation="isHovering ? 4 : 0"
+                          border
+                          rounded="lg"
+                          class="pa-4 transition-swing"
+                        >
+                          <div class="d-flex justify-space-between align-start">
+                            <div>
+                              <div class="text-caption text-disabled text-uppercase font-weight-bold">{{ metric.name }}</div>
+                              <div class="text-h4 font-weight-black my-1">
+                                {{ (metric.scoresByLevel as any)?.[0]?.min_score || '0' }}
+                                <span class="text-subtitle-2 text-medium-emphasis">{{ METRIC_TYPE_OPTIONS[metric.type]?.suffix }}</span>
+                              </div>
+                            </div>
+                            <v-icon 
+                              :icon="METRIC_TYPE_OPTIONS[metric.type]?.icon" 
+                              :color="METRIC_TYPE_OPTIONS[metric.type]?.color"
+                              size="large"
+                              class="opacity-60"
+                            />
+                          </div>
+                          <v-progress-linear 
+                            indeterminate 
+                            height="4" 
+                            rounded 
+                            :color="METRIC_TYPE_OPTIONS[metric.type]?.color" 
+                            class="mt-2 opacity-20"
+                          />
+                          <div class="text-caption mt-2 text-disabled">Meta para o nível alvo</div>
+                        </v-card>
+                      </v-hover>
+                    </v-col>
+                  </v-row>
+                </div>
+
+                <!-- Seção: Checklist de Tópicos -->
+                <div v-if="tab.drd.drdTopics?.length">
+                  <h4 class="text-overline font-weight-bold mb-4 d-flex align-center">
+                    Competências Avaliadas
+                    <v-divider class="ml-4" />
+                  </h4>
+
+                  <div v-for="topic in tab.drd.drdTopics" :key="topic.uuid" class="mb-8">
+                    <div class="d-flex align-center mb-4">
+                      <v-icon size="small" icon="mdi-folder-outline" class="mr-2" color="primary" />
+                      <span class="text-subtitle-2 font-weight-black">{{ topic.name }}</span>
+                    </div>
+
+                    <v-list class="pa-0 bg-transparent rounded-lg border overflow-hidden">
+                      <v-list-item
+                        v-for="item in topic.drdTopicItems"
+                        :key="item.uuid"
+                        class="px-4 py-4 border-bottom-light"
+                      >
+                        <v-row align="center" no-gutters>
+                          <v-col cols="12" md="5" class="pr-md-4 mb-2 mb-md-0">
+                            <div class="d-flex align-center">
+                              <v-icon
+                                :icon="getPerformance(item).average >= (getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) ?? 0) ? 'mdi-check-decagram' : 'mdi-circle-outline'"
+                                :color="getPerformance(item).average >= (getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) ?? 0) ? 'success' : 'grey-lighten-1'"
+                                class="mr-3"
+                              />
+                              <span class="text-body-2 font-weight-medium">{{ item.name }}</span>
+                            </div>
+                          </v-col>
+
+                          <v-col cols="12" md="7">
+                            <div class="d-flex align-center gap-4">
+                              <div class="flex-grow-1">
+                                <div class="d-flex justify-space-between text-caption mb-1">
+                                  <span class="text-medium-emphasis">Sua Média: <b>{{ getPerformance(item).average.toFixed(1) }}</b></span>
+                                  <span v-if="getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0)" class="font-weight-bold">
+                                    Meta: {{ getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) }}
+                                  </span>
+                                </div>
+                                <v-progress-linear
+                                  :model-value="(getPerformance(item).average / (tab.drd?.rate || 5)) * 100"
+                                  height="10"
+                                  rounded
+                                  :color="getProgressColor(getPerformance(item).average, getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0))"
+                                >
+                                  <template #default="{ value }">
+                                    <div class="target-marker" :style="{ left: `${( (getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) ?? 0) / (tab.drd?.rate || 5) ) * 100}%` }"></div>
+                                  </template>
+                                </v-progress-linear>
+                              </div>
+
+                              <!-- Chips de Fontes -->
+                              <div class="d-none d-sm-flex gap-1 ml-4" style="min-width: 140px; justify-content: flex-end;">
+                                <v-tooltip v-for="(score, type) in getPerformance(item).byType" :key="type" location="top">
+                                  <template #activator="{ props }">
+                                    <v-chip
+                                      v-bind="props"
+                                      size="x-small"
+                                      variant="flat"
+                                      :color="EVALUATION_TYPE_CONFIG[type]?.color || 'grey'"
+                                      class="font-weight-bold"
+                                    >
+                                      {{ EVALUATION_TYPE_CONFIG[type]?.label[0] }}
+                                    </v-chip>
+                                  </template>
+                                  {{ EVALUATION_TYPE_CONFIG[type]?.label }}: {{ score.toFixed(1) }}
+                                </v-tooltip>
+                              </div>
+                            </div>
+                          </v-col>
+                        </v-row>
+                      </v-list-item>
+                    </v-list>
+                  </div>
+                </div>
+              </template>
             </div>
-          </template>
-        </v-window-item>
-      </v-window>
-    </template>
+          </v-window-item>
+        </v-window>
+      </template>
+    </v-card-text>
   </v-card>
 </template>
+
+<style scoped>
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-4 { gap: 16px; }
+
+.border-bottom-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+.border-bottom-light:last-child {
+  border-bottom: none;
+}
+
+.transition-swing {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Marcador de meta na barra de progresso */
+.target-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+:deep(.v-window__container) {
+  height: auto !important;
+}
+
+/* Estilização das abas */
+:deep(.v-tab) {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 600;
+}
+</style>
