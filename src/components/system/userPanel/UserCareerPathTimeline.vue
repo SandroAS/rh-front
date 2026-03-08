@@ -54,16 +54,17 @@ function calculateProgress(levelUuid: string | null, jobTitleFilter?: string): n
   
   if (filteredEvals.length === 0) return 0;
 
-  const itemsWithMinScore: { name: string; minScore: number }[] = [];
-  
+  const itemsWithMinScore: { name: string; minScore: number; itemUuid?: string }[] = [];
+
   if (drd?.drdTopics) {
     for (const topic of drd.drdTopics) {
       for (const item of topic.drdTopicItems ?? []) {
         const scoreEntry = item.scoresByLevel?.find(s => s.drd_level_uuid === levelUuid);
         if (scoreEntry?.min_score) {
-          itemsWithMinScore.push({ 
-            name: item.name.trim(), 
-            minScore: parseFloat(scoreEntry.min_score) 
+          itemsWithMinScore.push({
+            name: item.name.trim(),
+            minScore: parseFloat(scoreEntry.min_score),
+            itemUuid: item.uuid,
           });
         }
       }
@@ -75,32 +76,35 @@ function calculateProgress(levelUuid: string | null, jobTitleFilter?: string): n
   const byType = new Map<string, UserPanelEvaluationReceived>();
   const sorted = [...filteredEvals].sort((a, b) => new Date(b.finished_at!).getTime() - new Date(a.finished_at!).getTime());
   for (const ev of sorted) {
-    if (!byType.has(ev.type)) {
+    if (ev.type && !byType.has(ev.type)) {
       byType.set(ev.type, ev);
     }
   }
 
-  const answersByItemName = new Map<string, number>();
-  for (const ev of byType.values()) {
-    const response = ev.responses?.find(r => r.is_completed && r.answers?.length);
-    for (const answer of response?.answers ?? []) {
-      const title = answer.question?.title?.trim();
-      const val = parseFloat(answer.number_value ?? '');
-      if (!title || isNaN(val)) continue;
-      if (!answersByItemName.has(title) || val > answersByItemName.get(title)!) answersByItemName.set(title, val);
-    }
-  }
-
   const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+
   let achieved = 0;
-  for (const { name, minScore } of itemsWithMinScore) {
-    const key = normalize(name);
-    for (const [answerTitle, score] of answersByItemName) {
-      if (normalize(answerTitle) === key && score >= minScore) {
-        achieved++;
-        break;
+  for (const { name, minScore, itemUuid } of itemsWithMinScore) {
+    const nameNorm = normalize(name);
+    const scoresByType: number[] = [];
+    for (const ev of byType.values()) {
+      const response = ev.responses?.find(r => r.is_completed && r.answers?.length);
+      let score: number | null = null;
+      for (const answer of response?.answers ?? []) {
+        const val = parseFloat(answer.number_value ?? '');
+        if (isNaN(val)) continue;
+        const qUuid = (answer.question?.applicationTopic as { drd_topic_item_uuid?: string } | undefined)?.drd_topic_item_uuid;
+        const qTitle = answer.question?.title?.trim();
+        const matchByUuid = itemUuid && qUuid === itemUuid;
+        const matchByTitle = qTitle && normalize(qTitle) === nameNorm;
+        if (matchByUuid || matchByTitle) {
+          if (score === null || val > score) score = val;
+        }
       }
+      if (score !== null) scoresByType.push(score);
     }
+    const average = scoresByType.length ? scoresByType.reduce((a, b) => a + b, 0) / scoresByType.length : 0;
+    if (average >= minScore) achieved++;
   }
   return Math.round((achieved / itemsWithMinScore.length) * 100);
 }
@@ -108,11 +112,18 @@ function calculateProgress(levelUuid: string | null, jobTitleFilter?: string): n
 /** 3. Nível Atual (Vertical) */
 const currentLevelDrdOrder = computed(() => (props.user.jobPositionCurrentLevel?.order ?? 0));
 
-const currentLevelDrdUuid = computed(() => 
-  currentCareerItem.value?.jobPosition?.drd?.drdLevels?.find(l => (l.order) === currentLevelDrdOrder.value)?.uuid ?? null
+/** UUID do nível atual (para referência). */
+const currentLevelDrdUuid = computed(() =>
+  currentCareerItem.value?.jobPosition?.drd?.drdLevels?.find(l => l.order === currentLevelDrdOrder.value)?.uuid ?? null
 );
 
-const currentLevelProgressPercentage = computed(() => calculateProgress(currentLevelDrdUuid.value));
+/** UUID do próximo nível: progresso é em relação a esse nível (min_scores dele). */
+const nextLevelDrdUuid = computed(() => {
+  const nextOrder = currentLevelDrdOrder.value + 1;
+  return currentCareerItem.value?.jobPosition?.drd?.drdLevels?.find(l => l.order === nextOrder)?.uuid ?? null;
+});
+
+const currentLevelProgressPercentage = computed(() => calculateProgress(nextLevelDrdUuid.value));
 
 const getLevelProgressBarPercentage = (order: number, isCurrentJob: boolean) => {
   if (!isCurrentJob) return 0;

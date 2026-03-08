@@ -157,40 +157,42 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                   </div>
                   <v-row dense align="stretch">
                     <v-col v-for="metric in tab.drd.drdMetrics" :key="metric.uuid" cols="12" sm="6" md="4" class="d-flex">
-                      <v-hover v-slot="{ isHovering, props: hoverProps }" class="d-flex flex-grow-1">
-                        <v-card
-                          v-bind="hoverProps"
-                          :elevation="isHovering ? 4 : 0"
-                          border
-                          rounded="lg"
-                          class="pa-4 transition-swing d-flex flex-column flex-grow-1"
-                        >
-                          <div class="d-flex justify-space-between align-start">
-                            <div>
-                              <div class="text-caption text-disabled text-uppercase font-weight-bold">{{ metric.name }}</div>
-                              <div class="text-h4 font-weight-black my-1">
-                                {{ (metric.scoresByLevel as any)?.[0]?.min_score || '0' }}
-                                <span class="text-subtitle-2 text-medium-emphasis">{{ getMetricTypeOption(metric.type)?.suffix }}</span>
+                      <v-hover v-slot="{ isHovering, props: hoverProps }">
+                        <div class="d-flex flex-grow-1">
+                          <v-card
+                            v-bind="hoverProps"
+                            :elevation="isHovering ? 4 : 0"
+                            border
+                            rounded="lg"
+                            class="pa-4 transition-swing d-flex flex-column flex-grow-1"
+                          >
+                            <div class="d-flex justify-space-between align-start">
+                              <div>
+                                <div class="text-caption text-disabled text-uppercase font-weight-bold">{{ metric.name }}</div>
+                                <div class="text-h4 font-weight-black my-1">
+                                  {{ (metric.scoresByLevel as any)?.[0]?.min_score || '0' }}
+                                  <span class="text-subtitle-2 text-medium-emphasis">{{ getMetricTypeOption(metric.type)?.suffix }}</span>
+                                </div>
                               </div>
+                              <v-icon 
+                                :icon="getMetricTypeOption(metric.type)?.icon"
+                                :color="getMetricTypeOption(metric.type)?.color"
+                                size="large"
+                                class="opacity-60"
+                              />
                             </div>
-                            <v-icon 
-                              :icon="getMetricTypeOption(metric.type)?.icon"
-                              :color="getMetricTypeOption(metric.type)?.color"
-                              size="large"
-                              class="opacity-60"
-                            />
-                          </div>
-                          <div class="flex-grow-1 mt-2">
-                            <v-progress-linear 
-                              :indeterminate="userPanel.loading"
-                              height="4" 
-                              rounded 
-                              :color="getMetricTypeOption(metric.type)?.color" 
-                              class="opacity-20"
-                            />
-                          </div>
-                          <div class="text-caption mt-2 text-disabled">Meta para o nível alvo</div>
-                        </v-card>
+                            <div class="flex-grow-1 mt-2">
+                              <v-progress-linear 
+                                :indeterminate="userPanel.loading"
+                                height="4" 
+                                rounded 
+                                :color="getMetricTypeOption(metric.type)?.color" 
+                                class="opacity-20"
+                              />
+                            </div>
+                            <div class="text-caption mt-2 text-disabled">Meta para o nível alvo</div>
+                          </v-card>
+                        </div>
                       </v-hover>
                     </v-col>
                   </v-row>
