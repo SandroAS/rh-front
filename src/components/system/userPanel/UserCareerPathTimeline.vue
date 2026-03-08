@@ -19,7 +19,7 @@ const currentCareerItem = computed(() => {
 /** 1. Lógica de Níveis (Vertical) */
 const userLevels = computed(() => {
   const levels = currentCareerItem.value?.jobPosition?.drd?.drdLevels ?? [];
-  return [...levels].sort((a, b) => b.order - a.order);
+  return [...levels].sort((a, b) => a.order - b.order);
 });
 
 /** 2. Lógica de Cargos (Horizontal) */
@@ -184,7 +184,21 @@ onMounted(() => {
           <div v-for="(step, index) in progression" :key="index" class="d-flex">
             
             <div class="d-flex flex-column align-center" style="min-width: 140px;">
-              <div class="levels-stack mb-4">
+              <!-- Cargos: avatar + título em cima -->
+              <v-avatar size="32" :color="step.isCurrent ? 'primary' : 'grey-lighten-2'" class="elevation-2">
+                <v-icon v-if="index < currentStepIndex" color="white" size="20">mdi-check</v-icon>
+                <v-icon v-else color="white" size="20">{{ step.isCurrent ? 'mdi-account-star' : 'mdi-lock' }}</v-icon>
+              </v-avatar>
+
+              <div class="mt-3 text-center">
+                <div class="text-subtitle-2 font-weight-bold text-truncate" style="max-width: 130px;">{{ step.title }}</div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ step.isCurrent ? 'Cargo Atual' : (index < currentStepIndex ? 'Concluído' : 'Próximo objetivo') }}
+                </div>
+              </div>
+
+              <!-- Níveis: embaixo -->
+              <div class="levels-stack mt-4">
                 <div v-for="userLevel in userLevels" :key="userLevel.uuid" class="level-item">
                   <div class="d-flex align-center mb-1">
                     <v-avatar size="18" :color="getLevelColor(userLevel.order, step.isCurrent)" class="mr-2">
@@ -193,7 +207,6 @@ onMounted(() => {
                     </v-avatar>
                     <span class="text-caption font-weight-bold text-truncate" style="max-width: 80px;">{{ userLevel.name }}</span>
                   </div>
-                  
                   <div class="vertical-bar-wrapper">
                     <v-progress-linear
                       vertical
@@ -208,24 +221,15 @@ onMounted(() => {
                   </div>
                 </div>
               </div>
-
-              <v-avatar size="32" :color="step.isCurrent ? 'primary' : 'grey-lighten-2'" class="elevation-2">
-                <v-icon v-if="index < currentStepIndex" color="white" size="20">mdi-check</v-icon>
-                <v-icon v-else color="white" size="20">{{ step.isCurrent ? 'mdi-account-star' : 'mdi-lock' }}</v-icon>
-              </v-avatar>
-
-              <div class="mt-3 text-center">
-                <div class="text-subtitle-2 font-weight-bold text-truncate" style="max-width: 130px;">{{ step.title }}</div>
-                <div class="text-caption text-medium-emphasis">
-                  {{ step.isCurrent ? 'Cargo Atual' : (index < currentStepIndex ? 'Concluído' : 'Próximo objetivo') }}
-                </div>
-              </div>
             </div>
 
             <div v-if="index < progression.length - 1" class="connector-wrapper">
               <div class="connector-content">
                 <div v-if="stepConnectorProgressList[index].showLabel" class="text-caption font-weight-black mb-1" :class="`text-${progressBarColor(stepConnectorProgressList[index].value)}`">
                   {{ stepConnectorProgressList[index].value }}% para próximo cargo
+                </div>
+                <div v-else class="text-caption font-weight-black mb-1 text-disabled" style="visibility: hidden;">
+                  0% para próximo cargo
                 </div>
                 <v-progress-linear
                   :model-value="stepConnectorProgressList[index].value"
@@ -276,7 +280,7 @@ onMounted(() => {
 .connector-wrapper {
   min-width: 120px;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   padding-bottom: 58px;
   flex-grow: 1;
 }

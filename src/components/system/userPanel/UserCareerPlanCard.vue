@@ -144,31 +144,14 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
               </div>
 
               <template v-else>
-                <!-- Info do Nível Alvo -->
-                <v-alert
-                  variant="tonal"
-                  color="primary"
-                  rounded="lg"
-                  class="mb-8"
-                  icon="mdi-arrow-up-bold-circle"
-                >
-                  <template #title>
-                    Foco no Próximo Passo: 
-                    <span class="font-weight-black text-uppercase ml-1">
-                      {{ getTargetLevel(tab.drd, tab.isCurrent)?.name || 'Próximo Nível' }}
-                    </span>
-                  </template>
-                  <span class="text-caption">
-                    Abaixo estão os requisitos de competência e métricas baseados nas últimas avaliações e dados do cargo.
-                  </span>
-                </v-alert>
-
                 <!-- Seção: Métricas (Cards Estilizados) -->
                 <div v-if="tab.drd.drdMetrics?.length" class="mb-8">
-                  <h4 class="text-overline font-weight-bold mb-4 d-flex align-center">
-                    Métricas de Performance
+                  <div class="d-flex align-center mb-4">
+                    <h4 class="text-overline font-weight-bold" style="min-width: fit-content;">
+                      Métricas de Performance
+                    </h4>
                     <v-divider class="ml-4" />
-                  </h4>
+                  </div>
                   <v-row dense>
                     <v-col v-for="metric in tab.drd.drdMetrics" :key="metric.uuid" cols="12" sm="6" md="4">
                       <v-hover v-slot="{ isHovering, props: hoverProps }">
@@ -210,10 +193,12 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
 
                 <!-- Seção: Checklist de Tópicos -->
                 <div v-if="tab.drd.drdTopics?.length">
-                  <h4 class="text-overline font-weight-bold mb-4 d-flex align-center">
-                    Competências Avaliadas
+                  <div class="d-flex align-center mb-4">
+                    <h4 class="text-overline font-weight-bold" style="min-width: fit-content;">
+                      Competências Avaliadas
+                    </h4>
                     <v-divider class="ml-4" />
-                  </h4>
+                  </div>
 
                   <div v-for="topic in tab.drd.drdTopics" :key="topic.uuid" class="mb-8">
                     <div class="d-flex align-center mb-4">
