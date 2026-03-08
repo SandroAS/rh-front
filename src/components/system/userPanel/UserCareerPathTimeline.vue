@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import type { UserPanel, UserPanelEvaluationReceived } from '@/types/user/user-panel.type';
+import type { UserPanel, UserPanelDrd, UserPanelEvaluationReceived } from '@/types/user/user-panel.type';
 
 const props = defineProps<{
   user: UserPanel;
@@ -39,10 +39,13 @@ const progression = computed(() => {
 
 const currentStepIndex = computed(() => progression.value.findIndex((s) => s.isCurrent));
 
-/** * FUNÇÃO CORE: Calcula progresso baseado em DRD e Avaliações */
-function calculateProgress(levelUuid: string | null, jobTitleFilter?: string): number {
-  // Busca o DRD do cargo atual (via plano de carreira)
-  const drd = currentCareerItem.value?.jobPosition?.drd;
+/** FUNÇÃO CORE: Calcula progresso baseado em DRD e Avaliações. drdOverride = DRD do cargo alvo (ex.: próximo cargo). */
+function calculateProgress(
+  levelUuid: string | null,
+  jobTitleFilter?: string,
+  drdOverride?: UserPanelDrd
+): number {
+  const drd = drdOverride ?? currentCareerItem.value?.jobPosition?.drd;
   const evaluations = props.user.evaluationsReceived ?? [];
   if (!levelUuid || !evaluations.length) return 0;
 
@@ -51,7 +54,19 @@ function calculateProgress(levelUuid: string | null, jobTitleFilter?: string): n
     const filterLower = jobTitleFilter.toLowerCase().trim();
     filteredEvals = filteredEvals.filter(e => e.name?.toLowerCase().includes(filterLower));
   }
-  
+  if (filteredEvals.length === 0 && drdOverride) {
+    const itemUuids = new Set<string>();
+    for (const topic of drdOverride?.drdTopics ?? []) {
+      for (const item of topic.drdTopicItems ?? []) {
+        if (item.uuid) itemUuids.add(item.uuid);
+      }
+    }
+    filteredEvals = evaluations.filter(e => e.status === 'FINISHED' && e.finished_at && e.responses?.some(r =>
+      r.is_completed && r.answers?.some(a =>
+        itemUuids.has((a.question?.applicationTopic as { drd_topic_item_uuid?: string } | undefined)?.drd_topic_item_uuid ?? '')
+      )
+    ));
+  }
   if (filteredEvals.length === 0) return 0;
 
   const itemsWithMinScore: { name: string; minScore: number; itemUuid?: string }[] = [];
@@ -138,14 +153,19 @@ const nextStepTitle = computed(() => {
   return (idx >= 0 && idx < progression.value.length - 1) ? progression.value[idx + 1].title : '';
 });
 
-const firstLevelDrdUuid = computed(() => {
-  const levels = currentCareerItem.value?.jobPosition?.drd?.drdLevels ?? [];
+/** Primeiro nível do DRD do próximo cargo (para progresso "para próximo cargo"). */
+const nextStepFirstLevelUuid = computed(() => {
+  const idx = currentStepIndex.value;
+  const nextStep = idx >= 0 && idx < progression.value.length - 1 ? progression.value[idx + 1] : null;
+  const levels = nextStep?.drd?.drdLevels ?? [];
   return [...levels].sort((a, b) => a.order - b.order)[0]?.uuid ?? null;
 });
 
 const nextJobProgressPercentage = computed(() => {
-  if (!nextStepTitle.value) return 0;
-  return calculateProgress(firstLevelDrdUuid.value, nextStepTitle.value);
+  const idx = currentStepIndex.value;
+  const nextStep = idx >= 0 && idx < progression.value.length - 1 ? progression.value[idx + 1] : null;
+  if (!nextStep?.title) return 0;
+  return calculateProgress(nextStepFirstLevelUuid.value, nextStep.title, nextStep.drd);
 });
 
 function getStepConnectorProgress(index: number): { value: number; showLabel: boolean } {
@@ -162,7 +182,7 @@ const stepConnectorProgressList = computed(() => progression.value.map((_, i) =>
 const progressBarColor = (percentage: number, isInactive = false) => {
   if (isInactive) return 'blue-grey-lighten-4';
   if (percentage >= 90) return 'success';
-  if (percentage >= 50) return 'yellow-darken-1';
+  if (percentage >= 50) return 'yellow-darken-2';
   return 'warning';
 };
 
@@ -236,11 +256,11 @@ onMounted(() => {
 
             <div v-if="index < progression.length - 1" class="connector-wrapper">
               <div class="connector-content">
-                <div v-if="stepConnectorProgressList[index].showLabel" class="text-caption font-weight-black mb-1" :class="`text-${progressBarColor(stepConnectorProgressList[index].value)}`">
-                  {{ stepConnectorProgressList[index].value }}% para próximo cargo
+                <div v-if="stepConnectorProgressList[index].showLabel" class="text-caption font-weight-black mb-1">
+                  {{ stepConnectorProgressList[index].value }}%
                 </div>
                 <div v-else class="text-caption font-weight-black mb-1 text-disabled" style="visibility: hidden;">
-                  0% para próximo cargo
+                  0%
                 </div>
                 <v-progress-linear
                   :model-value="stepConnectorProgressList[index].value"

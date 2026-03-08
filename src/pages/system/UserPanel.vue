@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import UserProfileCard from '../../components/system/userPanel/UserProfileCard.vue';
-import UserTimelineCard from '../../components/system/userPanel/UserTimelineCard.vue';
+import UserEvaluationOverviewCard from '../../components/system/userPanel/UserEvaluationOverviewCard.vue';
 import UserCareerPlanCard from '../../components/system/userPanel/UserCareerPlanCard.vue';
 import UserCareerPathTimeline from '../../components/system/userPanel/UserCareerPathTimeline.vue'; // Importe o novo componente
 import { useUserPanelStore } from '@/stores/user-panel.store';
@@ -44,7 +44,7 @@ const panelTitle = computed(() => {
         <UserProfileCard :user="currentUser" />
       </v-col>
       <v-col cols="12" md="8">
-        <UserTimelineCard :user="currentUser" />
+        <UserEvaluationOverviewCard :user="currentUser" />
       </v-col>
     </v-row>
 
