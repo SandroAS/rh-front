@@ -43,9 +43,9 @@ export interface UserPanelDrdMetric {
 export interface UserPanelDrd {
   uuid: string;
   rate: number;
-  topics: UserPanelDrdTopic[];
-  levels: UserPanelDrdLevel[];
-  metrics: UserPanelDrdMetric[];
+  drdTopics: UserPanelDrdTopic[];
+  drdLevels: UserPanelDrdLevel[];
+  drdMetrics: UserPanelDrdMetric[];
 }
 
 /** Grupo de níveis no painel (resumido) */
@@ -58,6 +58,9 @@ export interface UserPanelLevelsGroup {
 export interface UserPanelJobPosition {
   uuid: string;
   title: string;
+  cbo_code?: string;
+  base_salary?: number;
+  description?: string;
   levelsGroup?: UserPanelLevelsGroup;
   drd?: UserPanelDrd;
 }
@@ -90,7 +93,7 @@ export interface UserPanelCareerPlanJobPosition {
   job_position_uuid: string;
   order: number;
   career_plan_y_uuid: string | null;
-  jobPosition: UserPanelCareerPlanJobPositionRef | null;
+  jobPosition: UserPanelJobPosition;
   careerPlanY: UserPanelCareerPlanY | null;
 }
 
@@ -171,7 +174,7 @@ export interface UserPanel {
   uuid: string;
   name: string;
   profile_img_url: string | null;
-  jobPosition?: UserPanelJobPosition;
+  jobPosition?: UserPanelCareerPlanJobPositionRef;
   jobPositionCurrentLevel?: UserPanelJobPositionCurrentLevel;
   careerPlan?: UserPanelCareerPlan;
   evaluationsReceived: UserPanelEvaluationReceived[];
