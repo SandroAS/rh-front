@@ -63,20 +63,51 @@ function getMinScore(item: UserPanelDrdTopicItem, targetLevelOrder: number): num
   return entry?.min_score ? parseFloat(String(entry.min_score)) : null;
 }
 
-const latestEvaluationsByType = computed(() => {
-  const list = (props.user?.evaluationsReceived ?? []).filter(e => e.status === 'FINISHED' && e.finished_at);
-  const byType = new Map<string, UserPanelEvaluationReceived>();
-  const sorted = [...list].sort((a, b) => new Date(b.finished_at!).getTime() - new Date(a.finished_at!).getTime());
-  for (const ev of sorted) { if (ev.type && !byType.has(ev.type)) byType.set(ev.type, ev); }
-  return byType;
-});
+/** Conjunto de UUIDs dos itens de tópico do DRD da aba. */
+function getTabDrdItemUuids(tab: { drd?: UserPanelDrd }): Set<string> {
+  const uuids = new Set<string>();
+  for (const topic of tab.drd?.drdTopics ?? []) {
+    for (const item of topic.drdTopicItems ?? []) {
+      if (item.uuid) uuids.add(item.uuid);
+    }
+  }
+  return uuids;
+}
 
-function getPerformance(item: UserPanelDrdTopicItem) {
+/** Avaliações concluídas filtradas por cargo da aba: por nome (contém título do cargo) ou por respostas que referenciam itens do DRD da aba. */
+function getLatestEvaluationsByTypeForTab(tab: { title: string; drd?: UserPanelDrd }): Map<string, UserPanelEvaluationReceived> {
+  const list = (props.user?.evaluationsReceived ?? []).filter(e => e.status === 'FINISHED' && e.finished_at);
+  const titleLower = tab.title?.toLowerCase().trim() ?? '';
+  let forThisPosition = titleLower
+    ? list.filter(e => e.name?.toLowerCase().includes(titleLower))
+    : list;
+  if (forThisPosition.length === 0 && tab.drd) {
+    const itemUuids = getTabDrdItemUuids(tab);
+    forThisPosition = list.filter(ev => {
+      const response = ev.responses?.find(r => r.is_completed && r.answers?.length);
+      return response?.answers?.some(a =>
+        itemUuids.has((a.question?.applicationTopic as { drd_topic_item_uuid?: string } | undefined)?.drd_topic_item_uuid ?? '')
+      ) ?? false;
+    });
+  }
+  const byType = new Map<string, UserPanelEvaluationReceived>();
+  const sorted = [...forThisPosition].sort((a, b) => new Date(b.finished_at!).getTime() - new Date(a.finished_at!).getTime());
+  for (const ev of sorted) {
+    if (ev.type && !byType.has(ev.type)) byType.set(ev.type, ev);
+  }
+  return byType;
+}
+
+function getPerformance(
+  item: UserPanelDrdTopicItem,
+  tab: { title: string; drd?: UserPanelDrd }
+): { average: number; byType: Record<string, number> } {
   const byType: Record<string, number> = {};
   const itemUuid = item.uuid;
   const itemNameNorm = item.name?.toLowerCase().trim();
+  const latestForTab = getLatestEvaluationsByTypeForTab(tab);
 
-  for (const [type, ev] of latestEvaluationsByType.value) {
+  for (const [type, ev] of latestForTab) {
     const response = ev.responses?.find((r) => r.is_completed);
     let score: number | null = null;
     for (const answer of response?.answers ?? []) {
@@ -223,8 +254,8 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                           <v-col cols="12" md="5" class="pr-md-4 mb-2 mb-md-0">
                             <div class="d-flex align-center">
                               <v-icon
-                                :icon="getPerformance(item).average >= (getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) ?? 0) ? 'mdi-check-decagram' : 'mdi-circle-outline'"
-                                :color="getPerformance(item).average >= (getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) ?? 0) ? 'success' : 'grey-lighten-1'"
+                                :icon="getPerformance(item, tab).average >= (getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) ?? 0) ? 'mdi-check-decagram' : 'mdi-circle-outline'"
+                                :color="getPerformance(item, tab).average >= (getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) ?? 0) ? 'success' : 'grey-lighten-1'"
                                 class="mr-3"
                               />
                               <span class="text-body-2 font-weight-medium">{{ item.name }}</span>
@@ -235,16 +266,16 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                             <div class="d-flex align-center gap-4">
                               <div class="flex-grow-1">
                                 <div class="d-flex justify-space-between text-caption mb-1">
-                                  <span class="text-medium-emphasis">Sua Média: <b>{{ getPerformance(item).average.toFixed(1) }}</b></span>
+                                  <span class="text-medium-emphasis">Sua Média: <b>{{ getPerformance(item, tab).average.toFixed(1) }}</b></span>
                                   <span v-if="getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0)" class="font-weight-bold">
                                     Meta: {{ getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) }}
                                   </span>
                                 </div>
                                 <v-progress-linear
-                                  :model-value="(getPerformance(item).average / (tab.drd?.rate || 5)) * 100"
+                                  :model-value="(getPerformance(item, tab).average / (tab.drd?.rate || 5)) * 100"
                                   height="10"
                                   rounded
-                                  :color="getProgressColor(getPerformance(item).average, getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0))"
+                                  :color="getProgressColor(getPerformance(item, tab).average, getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0))"
                                 >
                                   <template #default="{ value }">
                                     <div class="target-marker" :style="{ left: `${( (getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) ?? 0) / (tab.drd?.rate || 5) ) * 100}%` }"></div>
@@ -254,7 +285,7 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
 
                               <!-- Chips de Fontes -->
                               <div class="d-none d-sm-flex gap-1 ml-4" style="min-width: 140px; justify-content: flex-end;">
-                                <v-tooltip v-for="(score, type) in getPerformance(item).byType" :key="type" location="top">
+                                <v-tooltip v-for="(score, type) in getPerformance(item, tab).byType" :key="type" location="top">
                                   <template #activator="{ props }">
                                     <v-chip
                                       v-bind="props"
