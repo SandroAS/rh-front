@@ -189,7 +189,7 @@ onMounted(() => {
                   <div class="d-flex align-center mb-1">
                     <v-avatar size="18" :color="getLevelColor(userLevel.order, step.isCurrent)" class="mr-2">
                       <v-icon v-if="userLevel.order < currentLevelDrdOrder && step.isCurrent" size="12" color="white">mdi-check</v-icon>
-                      <span v-else class="text-caption text-white" style="font-size: 10px !important;">{{ userLevel.order - 1 }}</span>
+                      <span v-else class="text-caption text-white" style="font-size: 10px !important;">{{ userLevel.order }}</span>
                     </v-avatar>
                     <span class="text-caption font-weight-bold text-truncate" style="max-width: 80px;">{{ userLevel.name }}</span>
                   </div>

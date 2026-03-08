@@ -19,7 +19,16 @@ const avatarInitial = computed(() => {
 
 const jobTitle = computed(() => props.user.jobPosition?.title ?? '-');
 
-const levelsGroupName = computed(() => props.user.jobPosition?.levelsGroup?.name ?? null);
+/** Cargo completo do usuário (do plano de carreira), quando existir. */
+const currentJobPosition = computed(() => {
+  const currentJobUuid = props.user?.jobPosition?.uuid;
+  if (!currentJobUuid) return null;
+  return props.user?.careerPlan?.careerPlanJobPositions?.find(
+    (item) => item.job_position_uuid === currentJobUuid || item.jobPosition?.uuid === currentJobUuid
+  )?.jobPosition ?? null;
+});
+
+const levelsGroupName = computed(() => currentJobPosition.value?.levelsGroup?.name ?? null);
 </script>
 
 <template>
@@ -45,9 +54,9 @@ const levelsGroupName = computed(() => props.user.jobPosition?.levelsGroup?.name
 
     <v-divider class="mb-4"></v-divider>
 
-    <div v-if="user.jobPosition?.drd" class="d-flex align-center mb-2">
+    <div v-if="currentJobPosition?.drd" class="d-flex align-center mb-2">
       <v-icon start icon="mdi-star-outline"></v-icon>
-      <div class="text-body-2">Escala de avaliação: {{ user.jobPosition.drd.rate }}</div>
+      <div class="text-body-2">Escala de avaliação: {{ currentJobPosition.drd.rate }}</div>
     </div>
     <div v-if="user.evaluationsReceived?.length !== undefined" class="d-flex align-center">
       <v-icon start icon="mdi-clipboard-list-outline"></v-icon>

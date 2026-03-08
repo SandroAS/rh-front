@@ -120,6 +120,15 @@ export interface UserPanelQuestionOption {
   [key: string]: unknown;
 }
 
+/** Tópico da aplicação (vinculado ao DRD) */
+export interface UserPanelApplicationTopic {
+  uuid?: string;
+  title?: string;
+  base_form_topic_uuid?: string;
+  drd_topic_item_uuid?: string;
+  [key: string]: unknown;
+}
+
 /** Pergunta na resposta da avaliação */
 export interface UserPanelApplicationQuestion {
   uuid: string;
@@ -130,7 +139,7 @@ export interface UserPanelApplicationQuestion {
   is_required: boolean;
   order: number;
   options: UserPanelQuestionOption[];
-  applicationTopic: unknown | null;
+  applicationTopic: UserPanelApplicationTopic | null;
 }
 
 /** Resposta (answer) de uma pergunta */

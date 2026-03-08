@@ -15,8 +15,6 @@ const userPanelStore = useUserPanelStore();
 const userUuid = ref<string | string[] | null>(null);
 const currentUser = ref<UserPanel | null>(null);
 
-const showDRDCard = ref(false);
-
 const loadUser = async () => {
   currentUser.value = await userPanelStore.getUserPanel(userUuid.value as string);
 };
@@ -35,22 +33,6 @@ watch(
 const panelTitle = computed(() => {
   return currentUser.value ? currentUser.value.name : 'Colaborador';
 });
-
-const drdCardRef = ref<HTMLElement | null>(null);
-
-function clickProgressBar(step: any) {
-  showDRDCard.value = true;
-
-  setTimeout(() => {
-    if (drdCardRef.value) {
-      window.scrollTo({
-        top: 800,
-        left: 0,
-        behavior: 'smooth'
-      });
-    }
-  }, 200);
-}
 </script>
 
 <template>
@@ -68,12 +50,12 @@ function clickProgressBar(step: any) {
 
     <v-row v-if="currentUser">
       <v-col cols="12">
-        <UserCareerPathTimeline :user="currentUser" @progressbar="clickProgressBar"/>
+        <UserCareerPathTimeline :user="currentUser" />
       </v-col>
     </v-row>
 
     <Transition name="expand">
-      <v-row v-if="currentUser && showDRDCard" ref="drdCardRef">
+      <v-row ref="drdCardRef">
         <v-col cols="12">
           <UserCareerPlanCard :user="currentUser" />
         </v-col>
