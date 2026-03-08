@@ -189,7 +189,7 @@ onMounted(() => {
                   <div class="d-flex align-center mb-1">
                     <v-avatar size="18" :color="getLevelColor(userLevel.order, step.isCurrent)" class="mr-2">
                       <v-icon v-if="userLevel.order < currentLevelDrdOrder && step.isCurrent" size="12" color="white">mdi-check</v-icon>
-                      <span v-else class="text-caption text-white" style="font-size: 10px !important;">{{ userLevel.order }}</span>
+                      <span v-else class="text-caption text-white" style="font-size: 10px !important;">{{ userLevel.order - 1 }}</span>
                     </v-avatar>
                     <span class="text-caption font-weight-bold text-truncate" style="max-width: 80px;">{{ userLevel.name }}</span>
                   </div>
@@ -197,12 +197,12 @@ onMounted(() => {
                   <div class="vertical-bar-wrapper">
                     <v-progress-linear
                       vertical
-                      :model-value="getLevelProgressBarPercentage(userLevel.order, step.isCurrent)"
-                      :color="progressBarColor(getLevelProgressBarPercentage(userLevel.order, step.isCurrent), !step.isCurrent)"
+                      :model-value="getLevelProgressBarPercentage(userLevel.order - 1, step.isCurrent)"
+                      :color="progressBarColor(getLevelProgressBarPercentage(userLevel.order - 1, step.isCurrent), !step.isCurrent)"
                       height="6"
                       rounded
                     ></v-progress-linear>
-                    <div v-if="step.isCurrent && userLevel.order === currentLevelDrdOrder" class="percentage-label">
+                    <div v-if="step.isCurrent && userLevel.order - 1 === currentLevelDrdOrder" class="percentage-label">
                       {{ currentLevelProgressPercentage }}%
                     </div>
                   </div>
