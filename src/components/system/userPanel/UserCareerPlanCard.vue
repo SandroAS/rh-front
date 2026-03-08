@@ -117,7 +117,7 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
       </v-toolbar-title>
       <v-spacer />
       <v-chip size="small" variant="flat" color="grey-lighten-4" class="mr-4">
-        Nível Atual: <b>{{ user.jobPositionCurrentLevel?.name || 'Iniciante' }}</b>
+        Nível Atual:&nbsp;<b>{{ user.jobPositionCurrentLevel?.name || 'Iniciante' }}</b>
       </v-chip>
     </v-toolbar>
 

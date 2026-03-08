@@ -173,7 +173,7 @@ onMounted(() => {
   <v-card v-if="user.careerPlan?.uuid" elevation="0" border>
     <v-card-title class="text-h6 d-flex align-center pa-4">
       <v-icon class="mr-2" color="primary">mdi-chart-line</v-icon>
-      Jornada de Carreira - <b>{{ user.careerPlan.name }}</b>
+      Jornada de Carreira -&nbsp;<b>{{ user.careerPlan.name }}</b>
     </v-card-title>
 
     <v-divider></v-divider>
