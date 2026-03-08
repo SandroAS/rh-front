@@ -1,25 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { getMetricTypeOption } from '@/types/drd/drd-metric.type';
 import type {
   UserPanel,
   UserPanelCareerPlanJobPosition,
   UserPanelDrd,
-  UserPanelDrdMetric,
-  UserPanelDrdTopic,
   UserPanelDrdTopicItem,
-  UserPanelDrdTopicItemScore,
   UserPanelEvaluationReceived,
 } from '@/types/user/user-panel.type';
-
-const METRIC_TYPE_OPTIONS: Record<string, { title: string; icon: string; suffix?: string; color: string }> = {
-  PERCENTAGE: { title: 'Percentual', icon: 'mdi-percent', suffix: '%', color: 'blue' },
-  QUANTITY: { title: 'Quantidade', icon: 'mdi-numeric', suffix: '', color: 'purple' },
-  DURATION_MONTHS: { title: 'Meses', icon: 'mdi-calendar-month', suffix: 'm', color: 'teal' },
-  DURATION_WEEKS: { title: 'Semanas', icon: 'mdi-calendar-range', suffix: 'sem', color: 'cyan' },
-  DURATION_DAYS: { title: 'Dias', icon: 'mdi-calendar', suffix: 'd', color: 'orange' },
-  DURATION_HOURS: { title: 'Horas', icon: 'mdi-clock-outline', suffix: 'h', color: 'indigo' },
-  DURATION_MINUTES: { title: 'Minutos', icon: 'mdi-timer-outline', suffix: 'min', color: 'deep-orange' },
-};
 
 const EVALUATION_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   SELF: { label: 'Auto', color: 'indigo' },
@@ -196,12 +184,12 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                               <div class="text-caption text-disabled text-uppercase font-weight-bold">{{ metric.name }}</div>
                               <div class="text-h4 font-weight-black my-1">
                                 {{ (metric.scoresByLevel as any)?.[0]?.min_score || '0' }}
-                                <span class="text-subtitle-2 text-medium-emphasis">{{ METRIC_TYPE_OPTIONS[metric.type]?.suffix }}</span>
+                                <span class="text-subtitle-2 text-medium-emphasis">{{ getMetricTypeOption(metric.type)?.suffix }}</span>
                               </div>
                             </div>
                             <v-icon 
-                              :icon="METRIC_TYPE_OPTIONS[metric.type]?.icon" 
-                              :color="METRIC_TYPE_OPTIONS[metric.type]?.color"
+:icon="getMetricTypeOption(metric.type)?.icon"
+                              :color="getMetricTypeOption(metric.type)?.color"
                               size="large"
                               class="opacity-60"
                             />
@@ -210,7 +198,7 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                             indeterminate 
                             height="4" 
                             rounded 
-                            :color="METRIC_TYPE_OPTIONS[metric.type]?.color" 
+                            :color="getMetricTypeOption(metric.type)?.color" 
                             class="mt-2 opacity-20"
                           />
                           <div class="text-caption mt-2 text-disabled">Meta para o nível alvo</div>

@@ -7,7 +7,7 @@ import type DRDPayload from '@/types/drd/drd-payload.type';
 import type DRD from '@/types/drd/drd.type';
 import { useJobPositionStore } from '@/stores/job-position.store';
 import { useUserStore } from '@/stores/auth.store';
-import { MetricPrefix } from '@/types/drd/drd-metric.type';
+import { MetricPrefix, MetricType, METRIC_TYPE_OPTIONS } from '@/types/drd/drd-metric.type';
 import type DRDSimple from '@/types/drd/drd-simple.type';
 
 const drdStore = useDRDStore();
@@ -228,15 +228,14 @@ const minScoreOptions = computed(() => {
   }
 });
 
-const metricTypeOptions = [
-  { value: 'PERCENTAGE', title: 'Pct.', icon: 'mdi-percent-outline', classification: 'NUMBER' },
-  { value: 'QUANTITY', title: 'Qtd.', icon: 'mdi-tune-variant', classification: 'NUMBER' },
-  { value: 'DURATION_MONTHS', title: 'Mês', icon: 'mdi-calendar-month', classification: 'DURATION' },
-  { value: 'DURATION_WEEKS', title: 'Sem.', icon: 'mdi-calendar-range', classification: 'DURATION' },
-  { value: 'DURATION_DAYS', title: 'Dia', icon: 'mdi-calendar', classification: 'DURATION' },
-  { value: 'DURATION_HOURS', title: 'Hrs.', icon: 'mdi-clock-outline', classification: 'DURATION' },
-  { value: 'DURATION_MINUTES', title: 'Min.', icon: 'mdi-timer-outline', classification: 'DURATION' },
-];
+const metricTypeOptions = computed(() =>
+  (Object.entries(METRIC_TYPE_OPTIONS) as [MetricType, (typeof METRIC_TYPE_OPTIONS)[MetricType]][]).map(([value, opt]) => ({
+    value,
+    title: opt.shortTitle,
+    icon: opt.icon,
+    classification: opt.classification,
+  }))
+);
 
 const prefixOptions = [MetricPrefix.MAIOR_OU_IGUAL, MetricPrefix.MENOR_OU_IGUAL];
 
@@ -253,16 +252,8 @@ const createMinScoresByLevel = (entity: string, order: number) => {
 };
 
 function getMetricMinScoreAppendIcon(metricType: string) {
-  switch (metricType) {
-    case 'PERCENTAGE': return 'mdi-percent-outline';
-    case 'QUANTITY': return 'mdi-tune-variant';
-    case 'DURATION_MONTHS': return 'mdi-calendar-month';
-    case 'DURATION_WEEKS': return 'mdi-calendar-range';
-    case 'DURATION_DAYS': return 'mdi-calendar';
-    case 'DURATION_HOURS': return 'mdi-clock-outline';
-    case 'DURATION_MINUTES': return 'mdi-timer-outline';
-  }
-};
+  return METRIC_TYPE_OPTIONS[metricType as MetricType]?.icon;
+}
 
 watch(() => drd, (newVal) => {
   drd.drdTopics.forEach(topic => {
