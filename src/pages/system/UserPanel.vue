@@ -2,9 +2,9 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import UserProfileCard from '../../components/system/userPanel/UserProfileCard.vue';
-import UserEvaluationOverviewCard from '../../components/system/userPanel/UserEvaluationOverviewCard.vue';
+import UserPerformanceMetricsCard from '../../components/system/userPanel/UserPerformanceMetricsCard.vue';
 import UserCareerPlanCard from '../../components/system/userPanel/UserCareerPlanCard.vue';
-import UserCareerPathTimeline from '../../components/system/userPanel/UserCareerPathTimeline.vue'; // Importe o novo componente
+import UserCareerPathTimeline from '../../components/system/userPanel/UserCareerPathTimeline.vue';
 import { useUserPanelStore } from '@/stores/user-panel.store';
 import type { UserPanel } from '@/types/user/user-panel.type';
 
@@ -44,7 +44,7 @@ const panelTitle = computed(() => {
         <UserProfileCard :user="currentUser" />
       </v-col>
       <v-col cols="12" md="8">
-        <UserEvaluationOverviewCard :user="currentUser" />
+        <UserPerformanceMetricsCard :user="currentUser" />
       </v-col>
     </v-row>
 
@@ -63,24 +63,3 @@ const panelTitle = computed(() => {
     </Transition>
   </v-container>
 </template>
-
-<style scoped>
-/* Estilos para a animação de expansão */
-.expand-enter-active,
-.expand-leave-active {
-  transition: max-height 0.5s ease-in-out;
-  overflow: hidden;
-}
-
-.expand-enter-from,
-.expand-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-.expand-enter-to,
-.expand-leave-from {
-  max-height: 500px;
-  opacity: 1;
-}
-</style>
