@@ -39,7 +39,7 @@ const panelTitle = computed(() => {
   <v-container fluid>
     <h2 class="mb-3">Painel do Colaborador: <span style="font-weight: 500;">{{ panelTitle }}</span></h2>
 
-    <v-row dense class="mb-6" v-if="currentUser">
+    <v-row dense class="mb-2" v-if="currentUser">
       <v-col cols="12" md="4">
         <UserProfileCard :user="currentUser" />
       </v-col>

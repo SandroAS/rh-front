@@ -139,7 +139,7 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
 </script>
 
 <template>
-  <v-card v-if="user" elevation="0" border class="rounded-xl overflow-hidden">
+  <v-card v-if="user" elevation="2" class="overflow-hidden">
     <!-- Header Minimalista -->
     <v-toolbar color="white" flat border="bottom">
       <v-toolbar-title class="text-subtitle-1 font-weight-black d-flex align-center">
