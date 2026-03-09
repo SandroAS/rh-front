@@ -107,8 +107,8 @@ const hasDrd = computed(() => !!currentDrd.value?.drdTopics?.length || !!current
                     {{ getMetricAverage(metric) != null ? getMetricAverage(metric)!.toFixed(2) : '–' }}
                     <span class="text-subtitle-2 text-medium-emphasis">{{ getMetricTypeOption(metric.type)?.suffix }}</span>
                   </div>
-                  <div v-if="(metric.scoresByLevel as any)?.[0]?.min_score != null" class="text-caption text-disabled">
-                    Meta: {{ (metric.scoresByLevel as any)?.[0]?.min_score }}{{ getMetricTypeOption(metric.type)?.suffix }}
+                  <div v-if="metric.scoresByLevel?.[0]?.min_score != null" class="text-caption text-disabled">
+                    Meta: {{ metric.scoresByLevel[0]?.min_score }}{{ getMetricTypeOption(metric.type)?.suffix }}
                   </div>
                 </div>
                 <v-icon
@@ -120,8 +120,8 @@ const hasDrd = computed(() => !!currentDrd.value?.drdTopics?.length || !!current
               <div class="flex-grow-1 mt-2">
                 <v-progress-linear
                   :indeterminate="userMetricsLoading"
-                  :model-value="getMetricAverage(metric) != null && (metric.scoresByLevel as any)?.[0]?.min_score != null
-                    ? Math.min(100, (getMetricAverage(metric)! / Number((metric.scoresByLevel as any)?.[0]?.min_score)) * 100)
+                  :model-value="getMetricAverage(metric) != null && metric.scoresByLevel?.[0]?.min_score != null
+                    ? Math.min(100, (getMetricAverage(metric)! / Number(metric.scoresByLevel[0]?.min_score)) * 100)
                     : 0"
                   height="4"
                   rounded

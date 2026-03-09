@@ -29,6 +29,12 @@ export interface UserPanelDrdTopic {
   drdTopicItems: UserPanelDrdTopicItem[];
 }
 
+/** Score por nível em uma métrica do DRD no painel */
+export interface UserPanelDrdMetricScoreByLevel {
+  uuid: string;
+  min_score: string;
+}
+
 /** Métricas do DRD no painel do usuário */
 export interface UserPanelDrdMetric {
   uuid: string;
@@ -36,7 +42,7 @@ export interface UserPanelDrdMetric {
   type: string;
   prefix: string;
   classification: string;
-  scoresByLevel: unknown[];
+  scoresByLevel: UserPanelDrdMetricScoreByLevel[];
 }
 
 /** DRD aninhado no job position do painel */

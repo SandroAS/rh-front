@@ -201,7 +201,7 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                               <div>
                                 <div class="text-caption text-disabled text-uppercase font-weight-bold">{{ metric.name }}</div>
                                 <div class="text-h4 font-weight-black my-1">
-                                  {{ (metric.scoresByLevel as any)?.[0]?.min_score || '0' }}
+                                  {{ metric.scoresByLevel?.[0]?.min_score || '0' }}
                                   <span class="text-subtitle-2 text-medium-emphasis">{{ getMetricTypeOption(metric.type)?.suffix }}</span>
                                 </div>
                               </div>
