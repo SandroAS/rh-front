@@ -1,14 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useUserPanelStore } from '@/stores/user-panel.store';
 import { getMetricTypeOption } from '@/types/drd/drd-metric.type';
-import type { UserPanel } from '@/types/user/user-panel.type';
+import type { UserPanel, UserPanelDrdMetric } from '@/types/user/user-panel.type';
+import UserMetricHistoryModal from './UserMetricHistoryModal.vue';
 
 const userPanel = useUserPanelStore();
 
 const props = defineProps<{
   user: UserPanel | null;
 }>();
+
+const emit = defineEmits<{ (e: 'saved'): void }>();
+
+const historyModalOpen = ref(false);
+const selectedMetric = ref<UserPanelDrdMetric | null>(null);
+
+function openHistoryModal(metric: UserPanelDrdMetric) {
+  selectedMetric.value = metric;
+  historyModalOpen.value = true;
+}
+
+function onHistorySaved() {
+  emit('saved');
+}
 
 /** Cargo completo do usuário (do plano de carreira), quando existir. */
 const currentJobPosition = computed(() => {
@@ -74,11 +89,31 @@ const hasDrd = computed(() => !!currentDrd.value?.drdTopics?.length || !!current
                   class="opacity-20"
                 />
               </div>
-              <div class="text-caption mt-2 text-disabled">Meta para o nível alvo</div>
+              <div class="d-flex align-center justify-space-between mt-2">
+                <span class="text-caption text-disabled">Meta para o nível alvo</span>
+                <v-btn
+                  size="small"
+                  variant="text"
+                  color="primary"
+                  density="compact"
+                  class="text-none"
+                  @click="openHistoryModal(metric)"
+                >
+                  <v-icon start size="small">mdi-plus</v-icon>
+                  histórico
+                </v-btn>
+              </div>
             </v-card>
           </v-col>
         </v-row>
       </div>
     </template>
+
+    <UserMetricHistoryModal
+      v-model="historyModalOpen"
+      :user-uuid="user?.uuid ?? ''"
+      :metric="selectedMetric"
+      @saved="onHistorySaved"
+    />
   </v-card>
 </template>

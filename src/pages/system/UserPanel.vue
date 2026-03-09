@@ -44,7 +44,7 @@ const panelTitle = computed(() => {
         <UserProfileCard :user="currentUser" />
       </v-col>
       <v-col cols="12" md="8">
-        <UserPerformanceMetricsCard :user="currentUser" />
+        <UserPerformanceMetricsCard :user="currentUser" @saved="loadUser" />
       </v-col>
     </v-row>
 
