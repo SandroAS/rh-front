@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { useUserPanelStore } from '@/stores/user-panel.store';
 import { getMetricTypeOption } from '@/types/drd/drd-metric.type';
 import type { UserPanel, UserPanelDrdMetric } from '@/types/user/user-panel.type';
+import type { UserMetricResponseDto } from '@/types/user/user-metric.type';
+import { getUserMetricsByUserUuid } from '@/services/user-metric.service';
 import UserMetricHistoryModal from './UserMetricHistoryModal.vue';
 
 const userPanel = useUserPanelStore();
@@ -15,6 +17,35 @@ const emit = defineEmits<{ (e: 'saved'): void }>();
 
 const historyModalOpen = ref(false);
 const selectedMetric = ref<UserPanelDrdMetric | null>(null);
+const userMetricsList = ref<UserMetricResponseDto[]>([]);
+const userMetricsLoading = ref(false);
+
+async function loadUserMetrics() {
+  const uuid = props.user?.uuid;
+  if (!uuid) {
+    userMetricsList.value = [];
+    return;
+  }
+  userMetricsLoading.value = true;
+  try {
+    userMetricsList.value = await getUserMetricsByUserUuid(uuid);
+  } catch {
+    userMetricsList.value = [];
+  } finally {
+    userMetricsLoading.value = false;
+  }
+}
+
+/** Média dos valores da API para a métrica (drd_metric_uuid ou drdMetric.uuid). */
+function getMetricAverage(metric: UserPanelDrdMetric): number | null {
+  const metricUuid = metric.uuid;
+  const items = userMetricsList.value.filter(
+    (m) => m.drdMetric?.uuid === metricUuid
+  );
+  if (!items.length) return null;
+  const sum = items.reduce((acc, m) => acc + Number(m.value), 0);
+  return sum / items.length;
+}
 
 function openHistoryModal(metric: UserPanelDrdMetric) {
   selectedMetric.value = metric;
@@ -22,8 +53,12 @@ function openHistoryModal(metric: UserPanelDrdMetric) {
 }
 
 function onHistorySaved() {
+  loadUserMetrics();
   emit('saved');
 }
+
+onMounted(() => loadUserMetrics());
+watch(() => props.user?.uuid, () => loadUserMetrics());
 
 /** Cargo completo do usuário (do plano de carreira), quando existir. */
 const currentJobPosition = computed(() => {
@@ -67,26 +102,31 @@ const hasDrd = computed(() => !!currentDrd.value?.drdTopics?.length || !!current
             <v-card border rounded="lg" class="pa-4 transition-swing d-flex flex-column flex-grow-1">
               <div class="d-flex justify-space-between align-start">
                 <div>
-                  <div class="text-caption text-disabled text-uppercase font-weight-bold">{{ metric.name }}</div>
+                  <div class="text-caption text-disabled text-uppercase font-weight-bold" style="min-height: 40px;">{{ metric.name }}</div>
                   <div class="text-h4 font-weight-black my-1">
-                    {{ (metric.scoresByLevel as any)?.[0]?.min_score || '0' }}
+                    {{ getMetricAverage(metric) != null ? getMetricAverage(metric)!.toFixed(2) : '–' }}
                     <span class="text-subtitle-2 text-medium-emphasis">{{ getMetricTypeOption(metric.type)?.suffix }}</span>
+                  </div>
+                  <div v-if="(metric.scoresByLevel as any)?.[0]?.min_score != null" class="text-caption text-disabled">
+                    Meta: {{ (metric.scoresByLevel as any)?.[0]?.min_score }}{{ getMetricTypeOption(metric.type)?.suffix }}
                   </div>
                 </div>
                 <v-icon
                   :icon="getMetricTypeOption(metric.type)?.icon ?? 'mdi-chart-box'"
                   :color="getMetricTypeOption(metric.type)?.color"
                   size="large"
-                  class="opacity-60"
                 />
               </div>
               <div class="flex-grow-1 mt-2">
                 <v-progress-linear
-                  :indeterminate="userPanel.loading"
+                  :indeterminate="userMetricsLoading"
+                  :model-value="getMetricAverage(metric) != null && (metric.scoresByLevel as any)?.[0]?.min_score != null
+                    ? Math.min(100, (getMetricAverage(metric)! / Number((metric.scoresByLevel as any)?.[0]?.min_score)) * 100)
+                    : 0"
                   height="4"
                   rounded
                   :color="getMetricTypeOption(metric.type)?.color"
-                  class="opacity-20"
+                  :class="{ 'opacity-20': userMetricsLoading }"
                 />
               </div>
               <div class="d-flex align-center justify-space-between mt-2">
