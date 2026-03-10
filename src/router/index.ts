@@ -17,6 +17,7 @@ import CareerPlans from '@/pages/system/CareerPlans.vue'
 import TeamPanel from '@/pages/system/TeamPanel.vue'
 import UserPanel from '@/pages/system/UserPanel.vue'
 import Evaluations from '@/pages/system/Evaluations.vue'
+import PDIs from '@/pages/system/PDIs.vue'
 import LayoutForms from '@/layouts/LayoutForms.vue'
 import EvaluationApplicationForm from '@/pages/forms/EvaluationApplicationForm.vue'
 
@@ -112,6 +113,12 @@ const routes: RouteRecordRaw[] = [
         name: 'evaluations',
         component: Evaluations,
         meta: { isPublic: false, title: 'Avaliações - '+SISTEM_NAME }
+      },
+      {
+        path: 'pdis',
+        name: 'pdis',
+        component: PDIs,
+        meta: { isPublic: false, title: 'PDIs - '+SISTEM_NAME }
       }
     ]
   },
