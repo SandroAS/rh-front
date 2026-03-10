@@ -2,8 +2,18 @@
 import { onMounted, ref, watch } from 'vue';
 import { usePdiCategoryStore } from '@/stores/pdi-category.store';
 import loadItems from '@/utils/loadItems.util';
+import type PdiCategory from '@/types/pdi/pdi-category.type';
+import PdiCategoryModal from '../PdiCategoryModal.vue';
 
 const pdiCategoryStore = usePdiCategoryStore();
+
+const dialog = ref(false);
+const selectedPdiCategory = ref<PdiCategory | null>(null);
+
+const openDialog = (item?: PdiCategory) => {
+  selectedPdiCategory.value = item ?? null;
+  dialog.value = true;
+};
 
 const currentPage = ref(pdiCategoryStore.page);
 const itemsPerPage = ref(pdiCategoryStore.limit);
@@ -79,7 +89,7 @@ onMounted(() => {
         style="max-width: 300px;"
       />
 
-      <v-btn color="primary" class="w-md-auto w-100" disabled>
+      <v-btn color="primary" class="w-md-auto w-100" @click="openDialog()">
         <v-icon start>mdi-plus</v-icon>
         Adicionar Categoria
       </v-btn>
@@ -105,11 +115,21 @@ onMounted(() => {
       mobile-breakpoint="md"
       @update:options="loadPdiCategories"
     >
-      <template #item.actions>
-        <v-btn icon size="small" disabled>
+      <template #item.actions="{ item }">
+        <v-btn icon size="small" @click="openDialog(item)">
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
       </template>
     </v-data-table-server>
+
+    <PdiCategoryModal
+      v-model="dialog"
+      :selected-pdi-category="selectedPdiCategory"
+      @saved="loadPdiCategories({
+        page: pdiCategoryStore.page,
+        itemsPerPage: pdiCategoryStore.limit,
+        sortBy: pdiCategoryStore.sort_column ? [{ key: pdiCategoryStore.sort_column, order: pdiCategoryStore.sort_order || 'asc' }] : [],
+      })"
+    />
   </v-container>
 </template>

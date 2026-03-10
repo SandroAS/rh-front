@@ -98,7 +98,7 @@ export const useJobPositionStore = defineStore('jobPosition', {
         this.sort_order = params.sort_order;
         this.search_term = params.search_term;
       } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar buscar serviços.';
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar cargos.';
         throw err;
       } finally {
         this.loading = false;

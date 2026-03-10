@@ -21,7 +21,7 @@ watch(selectedTab, (newTab) => {
 
 <template>
   <v-container fluid>
-    <h2 class="mb-6">Gerenciamento de PDIs</h2>
+    <h2 class="mb-6">PDIs - Plano de Desenvolvimento Individual</h2>
 
     <v-tabs
       v-model="selectedTab"

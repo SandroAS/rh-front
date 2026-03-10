@@ -59,8 +59,8 @@ export const usePdiCategoryStore = defineStore('pdiCategory', {
         this.sort_column = params.sort_column;
         this.sort_order = params.sort_order;
         this.search_term = params.search_term;
-      } catch (err: unknown) {
-        this.error = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Erro ao buscar categorias de PDI.';
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar buscar categorias de PDI.';
         throw err;
       } finally {
         this.loading = false;
@@ -80,8 +80,8 @@ export const usePdiCategoryStore = defineStore('pdiCategory', {
           this.pdi_categories.unshift(res);
           this.total += 1;
         }
-      } catch (err: unknown) {
-        this.error = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Erro ao salvar categoria de PDI.';
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao tentar salvar categoria de PDI.';
         throw err;
       } finally {
         this.loading = false;
@@ -90,13 +90,13 @@ export const usePdiCategoryStore = defineStore('pdiCategory', {
 
     async setPage(page: number) {
       this.page = page;
-      await this.getPdiCategories({ page: this.page, limit: this.limit, sort_column: this.sort_column, sort_order: this.sort_order, search_term: this.search_term });
+      await this.getPdiCategories({ page: this.page, limit: this.limit });
     },
 
     async setItemsPerPage(limit: number) {
       this.limit = limit;
       this.page = 1;
-      await this.getPdiCategories({ page: this.page, limit: this.limit, sort_column: this.sort_column, sort_order: this.sort_order, search_term: this.search_term });
+      await this.getPdiCategories({ page: this.page, limit: this.limit });
     },
   },
 });
