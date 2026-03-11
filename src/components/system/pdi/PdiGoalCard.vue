@@ -21,7 +21,10 @@ const { value: title, errorMessage: titleError } = useField(
 const { value: description } = useField(computed(() => `pdi_goals[${props.index}].description`));
 const { value: pdiCategoryUuid } = useField(computed(() => `pdi_goals[${props.index}].pdi_category_uuid`));
 const { value: startDate } = useField(computed(() => `pdi_goals[${props.index}].start_date`));
-const { value: endDate } = useField(computed(() => `pdi_goals[${props.index}].end_date`));
+const { value: endDate, errorMessage: endDateError } = useField(
+  computed(() => `pdi_goals[${props.index}].end_date`),
+  computed(() => `date_after:pdi_goals[${props.index}].start_date`)
+);
 
 const categoryOptions = computed(() => pdiCategoryStore.allPdiCategoryOptions ?? []);
 </script>
@@ -95,6 +98,8 @@ const categoryOptions = computed(() => pdiCategoryStore.allPdiCategoryOptions ??
           hide-details="auto"
           class="flex-grow-1"
           style="min-width: 140px;"
+          :error="!!endDateError"
+          :error-messages="endDateError"
         />
       </div>
     </v-card-text>

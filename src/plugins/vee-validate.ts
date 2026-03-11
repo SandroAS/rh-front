@@ -96,6 +96,30 @@ defineRule('is_true', (value: boolean) => {
   return true;
 })
 
+/** Obtém valor aninhado (ex: "start_date" ou "pdi_goals[0].start_date"). */
+function getFromPath(obj: Record<string, unknown>, path: string): unknown {
+  if (!obj || !path) return undefined
+  const parts = path.split(/\.|\[(\d+)\]/).filter(Boolean)
+  let current: unknown = obj
+  for (const key of parts) {
+    if (current == null || typeof current !== 'object') return undefined
+    current = (current as Record<string, unknown>)[key]
+  }
+  return current
+}
+
+/** Valida se a data (end_date) é posterior à data do outro campo (start_date). Parâmetro: caminho do campo start_date. */
+defineRule('date_after', (value: string, params: string | string[], ctx: { form?: Record<string, unknown> }) => {
+  const otherPath = typeof params === 'string' ? params : (Array.isArray(params) ? params[0] : '')
+  if (!value || !ctx.form) return true
+  const other = getFromPath(ctx.form as Record<string, unknown>, otherPath) as string | undefined
+  if (!other) return true
+  const end = new Date(value)
+  const start = new Date(other)
+  if (isNaN(end.getTime()) || isNaN(start.getTime())) return true
+  return end > start ? true : 'A data de fim deve ser posterior à data de início.'
+})
+
 defineRule('cnpj', (value: string | number) => {
   if (!value) {
     return true;

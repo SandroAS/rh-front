@@ -53,7 +53,7 @@ const { handleSubmit, setValues, resetForm } = useForm({
 
 const { value: userUuid, errorMessage: userUuidError } = useField<string>('user_uuid', 'required');
 const { value: startDate } = useField<string>('start_date');
-const { value: endDate } = useField<string>('end_date');
+const { value: endDate, errorMessage: endDateError } = useField<string>('end_date', 'date_after:start_date');
 
 const { fields, push, remove, replace } = useFieldArray('pdi_goals');
 
@@ -238,6 +238,8 @@ const onSubmit = handleSubmit(async (formValues) => {
             hide-details="auto"
             class="flex-grow-1"
             style="min-width: 160px;"
+            :error="!!endDateError"
+            :error-messages="endDateError"
           />
         </div>
 
