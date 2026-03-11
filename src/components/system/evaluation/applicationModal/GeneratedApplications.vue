@@ -273,7 +273,7 @@ watch([() => props.evaluatedUuids, () => props.creationType, () => props.evaluat
 </script>
 
 <template>
-  <v-card 
+  <v-card
     v-for="evaluatedApplications in applicationsGroupedByEvaluated" 
     :key="evaluatedApplications[0]?.evaluated_user?.uuid || evaluatedApplications[0]?.evaluated_user_uuid"
     variant="outlined" 

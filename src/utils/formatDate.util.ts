@@ -20,3 +20,16 @@ export function formatDate(isoDateString: string | Date | null | undefined): str
 
   return date.format('DD/MM/YYYY');
 }
+
+/**
+ * Converte data (string ISO ou Date) para string YYYY-MM-DD, útil para inputs type="date".
+ *
+ * @param val String ISO, Date, null ou undefined.
+ * @returns String no formato YYYY-MM-DD ou string vazia.
+ */
+export function toDateInputValue(val: string | Date | null | undefined): string {
+  if (val == null) return '';
+  if (typeof val === 'string') return val.slice(0, 10);
+  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  return '';
+}

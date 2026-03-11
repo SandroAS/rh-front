@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getPdiCategories, savePdiCategory } from '@/services/pdi-category.service';
+import { getAllPdiCategories, getPdiCategories, savePdiCategory } from '@/services/pdi-category.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type PdiCategory from '@/types/pdi/pdi-category.type';
 import type PdiCategoryPayload from '@/types/pdi/pdi-category-payload.type';
@@ -7,6 +7,7 @@ import type PdiCategoryResponsePagination from '@/types/pdi/pdi-category-respons
 
 interface PdiCategoryStoreState {
   pdi_categories: PdiCategory[] | null;
+  all_pdi_categories: PdiCategory[] | null;
   loading: boolean;
   error: string | null;
   total: number;
@@ -21,6 +22,7 @@ interface PdiCategoryStoreState {
 export const usePdiCategoryStore = defineStore('pdiCategory', {
   state: (): PdiCategoryStoreState => ({
     pdi_categories: null,
+    all_pdi_categories: null,
     loading: false,
     error: null,
     total: 0,
@@ -36,6 +38,10 @@ export const usePdiCategoryStore = defineStore('pdiCategory', {
     pdiCategoryOptions(): { value: string; title: string }[] {
       if (!this.pdi_categories) return [];
       return this.pdi_categories.map((c) => ({ value: c.uuid, title: c.name }));
+    },
+    allPdiCategoryOptions(): { value: string; title: string }[] {
+      if (!this.all_pdi_categories) return [];
+      return this.all_pdi_categories.map((c) => ({ value: c.uuid, title: c.name }));
     },
   },
 
@@ -64,6 +70,16 @@ export const usePdiCategoryStore = defineStore('pdiCategory', {
         throw err;
       } finally {
         this.loading = false;
+      }
+    },
+
+    async getAllPdiCategories() {
+      this.error = null;
+      try {
+        this.all_pdi_categories = await getAllPdiCategories();
+      } catch (err: any) {
+        this.error = err.response?.data?.message || 'Erro ao buscar categorias de PDI.';
+        throw err;
       }
     },
 

@@ -2,7 +2,27 @@
 import { onMounted, ref, watch } from 'vue';
 import { usePdiStore } from '@/stores/pdi.store';
 import loadItems from '@/utils/loadItems.util';
+import type Pdi from '@/types/pdi/pdi.type';
+import PdiModal from '../PdiModal.vue';
+
 const pdiStore = usePdiStore();
+
+const dialog = ref(false);
+const selectedPdi = ref<Pdi | null>(null);
+
+async function openDialog(item?: Pdi) {
+  if (item?.uuid) {
+    try {
+      const full = await pdiStore.getPdi(item.uuid);
+      selectedPdi.value = full;
+    } catch {
+      selectedPdi.value = item;
+    }
+  } else {
+    selectedPdi.value = null;
+  }
+  dialog.value = true;
+}
 
 const currentPage = ref(pdiStore.page);
 const itemsPerPage = ref(pdiStore.limit);
@@ -78,7 +98,7 @@ onMounted(() => {
         style="max-width: 300px;"
       />
 
-      <v-btn color="primary" class="w-md-auto w-100" disabled>
+      <v-btn color="primary" class="w-md-auto w-100" @click="openDialog()">
         <v-icon start>mdi-plus</v-icon>
         Adicionar PDI
       </v-btn>
@@ -116,11 +136,21 @@ onMounted(() => {
       <template #item.due_date="{ item }">
         {{ item?.due_date ? new Date(item.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—' }}
       </template>
-      <template #item.actions>
-        <v-btn icon size="small" disabled>
+      <template #item.actions="{ item }">
+        <v-btn icon size="small" @click="openDialog(item)">
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
       </template>
     </v-data-table-server>
+
+    <PdiModal
+      v-model="dialog"
+      :selected-pdi="selectedPdi"
+      @saved="loadPdis({
+        page: pdiStore.page,
+        itemsPerPage: pdiStore.limit,
+        sortBy: pdiStore.sort_column ? [{ key: pdiStore.sort_column, order: pdiStore.sort_order || 'asc' }] : [],
+      })"
+    />
   </v-container>
 </template>
