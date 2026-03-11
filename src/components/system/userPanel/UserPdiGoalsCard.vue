@@ -20,11 +20,11 @@ const PDI_STATUS_LABELS: Record<string, string> = {
 };
 
 const PDI_STATUS_COLORS: Record<string, string> = {
-  [PdiStatus.NOT_STARTED]: 'grey',
-  [PdiStatus.IN_PROGRESS]: 'warning',
-  [PdiStatus.PARTIALLY_COMPLETED]: 'info',
+  [PdiStatus.NOT_STARTED]: 'warning',
+  [PdiStatus.IN_PROGRESS]: 'amber',
+  [PdiStatus.PARTIALLY_COMPLETED]: 'lime',
   [PdiStatus.COMPLETED]: 'success',
-  [PdiStatus.CANCELLED]: 'error',
+  [PdiStatus.CANCELLED]: 'gray',
 };
 
 function getStatusLabel(status: string | null | undefined): string {
@@ -98,14 +98,14 @@ watch(() => props.user?.uuid, () => loadPdis());
           md="4"
           class="d-flex"
         >
-          <v-card variant="outlined" class="pa-4 d-flex flex-column flex-grow-1">
+          <v-card variant="elevated" class="pa-4 d-flex flex-column flex-grow-1">
             <div class="d-flex align-center justify-space-between mb-3">
               <span class="text-subtitle-2 font-weight-bold">{{ goal.title || 'Objetivo' }}</span>
               <v-chip
                 v-if="goal.status"
                 :color="getStatusColor(goal.status)"
                 size="small"
-                variant="flat"
+                variant="tonal"
               >
                 {{ getStatusLabel(goal.status) }}
               </v-chip>

@@ -24,7 +24,7 @@ const PDI_STATUS_COLORS: Record<string, string> = {
   [PdiStatus.IN_PROGRESS]: 'amber',
   [PdiStatus.PARTIALLY_COMPLETED]: 'lime',
   [PdiStatus.COMPLETED]: 'success',
-  [PdiStatus.CANCELLED]: 'error',
+  [PdiStatus.CANCELLED]: 'grey',
 };
 
 function getStatusLabel(status: string | null | undefined): string {
