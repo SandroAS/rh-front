@@ -15,5 +15,8 @@ export default interface Pdi {
   end_date?: string | null;
   user_uuid?: string | null;
   status?: PdiStatus;
+  /** Objetivos (retorno do GET /pdis/:uuid) */
+  pdi_goals?: PdiGoal[];
+  /** Objetivos (retorno do POST, por exemplo) */
   goals?: PdiGoal[];
 }

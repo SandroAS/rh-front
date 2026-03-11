@@ -74,10 +74,10 @@ watch(
         start_date: toDateInputValue(val.start_date ?? ''),
         end_date: toDateInputValue(val.end_date ?? ''),
         pdi_goals:
-          val.goals?.map((g) => ({
+          (val.pdi_goals ?? val.goals)?.map((g) => ({
             title: g.title ?? '',
             description: g.description ?? '',
-            pdi_category_uuid: g.pdi_category?.uuid ?? null,
+            pdi_category_uuid: g.pdi_category_uuid ?? g.pdi_category?.uuid ?? null,
             start_date: toDateInputValue(g.start_date ?? ''),
             end_date: toDateInputValue(g.end_date ?? ''),
           })) ?? [],
