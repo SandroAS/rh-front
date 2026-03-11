@@ -70,11 +70,11 @@ watch(
   (val) => {
     if (val?.uuid) {
       setValues({
-        user_uuid: val.user?.uuid ?? '',
-        start_date: toDateInputValue(val.start_date ?? val.due_date ?? ''),
+        user_uuid: val.user_uuid ?? '',
+        start_date: toDateInputValue(val.start_date ?? ''),
         end_date: toDateInputValue(val.end_date ?? ''),
         pdi_goals:
-          val.pdi_goals?.map((g) => ({
+          val.goals?.map((g) => ({
             title: g.title ?? '',
             description: g.description ?? '',
             pdi_category_uuid: g.pdi_category?.uuid ?? null,

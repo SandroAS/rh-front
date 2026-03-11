@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { usePdiStore } from '@/stores/pdi.store';
+import { useAccountUserStore } from '@/stores/account-user.store';
 import loadItems from '@/utils/loadItems.util';
 import type Pdi from '@/types/pdi/pdi.type';
 import PdiModal from '../PdiModal.vue';
+import { formatDate } from '@/utils/formatDate.util';
 
 const pdiStore = usePdiStore();
+const accountUserStore = useAccountUserStore();
+
+function getUserNameByUuid(userUuid: string | null | undefined): string {
+  if (!userUuid) return '—';
+  const user = accountUserStore.all_account_users?.find((u) => u.uuid === userUuid);
+  return user?.name ?? userUuid;
+}
 
 const dialog = ref(false);
 const selectedPdi = ref<Pdi | null>(null);
@@ -74,7 +83,8 @@ watch(searchTerm, (newVal) => {
   }, 300);
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await accountUserStore.getAllAccountUsersWithTeams?.().catch(() => {});
   loadPdis({
     page: pdiStore.page,
     itemsPerPage: pdiStore.limit,
@@ -106,10 +116,10 @@ onMounted(() => {
 
     <v-data-table-server
       :headers="[
-        { title: 'Nome', value: 'name', sortable: true },
-        { title: 'Categoria', value: 'pdi_category', sortable: true },
-        { title: 'Colaborador', value: 'user', sortable: true },
-        { title: 'Prazo', value: 'due_date', sortable: true },
+        { title: 'Colaborador', value: 'user_uuid', sortable: true },
+        { title: 'Início', value: 'start_date', sortable: true },
+        { title: 'Fim', value: 'end_date', sortable: true },
+        { title: 'Status', value: 'status', sortable: true },
         { title: 'Ações', value: 'actions', sortable: false, align: 'end' },
       ]"
       :items="pdiStore.pdis || []"
@@ -127,14 +137,17 @@ onMounted(() => {
       mobile-breakpoint="md"
       @update:options="loadPdis"
     >
-      <template #item.pdi_category="{ item }">
-        {{ item?.pdi_category?.name ?? '—' }}
+      <template #item.user_uuid="{ item }">
+        {{ getUserNameByUuid(item?.user_uuid) }}
       </template>
-      <template #item.user="{ item }">
-        {{ item?.user?.name ?? '—' }}
+      <template #item.start_date="{ item }">
+        {{ item?.start_date ? formatDate(item.start_date) : '—' }}
       </template>
-      <template #item.due_date="{ item }">
-        {{ item?.due_date ? new Date(item.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—' }}
+      <template #item.end_date="{ item }">
+        {{ item?.end_date ? formatDate(item.end_date) : '—' }}
+      </template>
+      <template #item.status="{ item }">
+        {{ item?.status ?? '—' }}
       </template>
       <template #item.actions="{ item }">
         <v-btn icon size="small" @click="openDialog(item)">
