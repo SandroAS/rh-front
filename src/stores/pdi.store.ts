@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getPdi, getPdis, savePdi } from '@/services/pdi.service';
+import { getPdi, getPdis, getPdisByUserUuid, savePdi } from '@/services/pdi.service';
 import type DataTableFilterParams from '@/types/dataTable/data-table-filter-params.type';
 import type Pdi from '@/types/pdi/pdi.type';
 import type PdiPayload from '@/types/pdi/pdi-payload.type';
@@ -70,6 +70,15 @@ export const usePdiStore = defineStore('pdi', {
         throw err;
       } finally {
         this.loading = false;
+      }
+    },
+
+    async getPdisByUserUuid(userUuid: string): Promise<Pdi[]> {
+      try {
+        return await getPdisByUserUuid(userUuid);
+      } catch (err: unknown) {
+        this.error = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Erro ao buscar PDIs do usuário.';
+        throw err;
       }
     },
 

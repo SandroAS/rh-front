@@ -166,6 +166,11 @@ function getPercentageByType(type: string): number {
 
 <template>
   <v-card elevation="2" class="pa-4 user-profile-card" style="height: fit-content;">
+    <v-card-title class="text-h6 font-weight-bold d-flex align-center">
+      <v-icon class="mr-2" color="primary">mdi-account</v-icon>
+      Perfil
+    </v-card-title>
+    <v-divider class="mb-4" />
     <div class="d-flex flex-column align-center mb-4">
       <v-avatar size="100" class="mb-3" color="primary">
         <v-img v-if="avatarSrc" :src="avatarSrc" :alt="user.name" cover />
@@ -185,7 +190,7 @@ function getPercentageByType(type: string): number {
       </v-chip>
     </div>
 
-    <v-divider class="mb-4"></v-divider>
+    <v-divider class="mb-4" />
 
     <div v-if="currentJobPosition?.drd" class="d-flex align-center mb-2">
       <v-icon start icon="mdi-star-outline"></v-icon>

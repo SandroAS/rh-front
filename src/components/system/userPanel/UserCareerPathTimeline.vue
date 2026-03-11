@@ -201,14 +201,12 @@ onMounted(() => {
 
 <template>
   <!-- O Template permanece o mesmo -->
-  <v-card v-if="user.careerPlan?.uuid" elevation="2">
-    <v-card-title class="text-h6 d-flex align-center pa-4">
+  <v-card v-if="user.careerPlan?.uuid" elevation="2" class="pa-4 overflow-hidden">
+    <v-card-title class="text-h6 font-weight-bold d-flex align-center">
       <v-icon class="mr-2" color="primary">mdi-chart-line</v-icon>
       Jornada de Carreira -&nbsp;<b>{{ user.careerPlan.name }}</b>
     </v-card-title>
-
-    <v-divider></v-divider>
-
+    <v-divider class="mb-4" />
     <v-card-text class="pa-0">
       <div id="career-path-container" class="career-path-container">
         <div class="d-flex align-start flex-nowrap pa-6">

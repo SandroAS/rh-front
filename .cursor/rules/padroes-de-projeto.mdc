@@ -1,0 +1,50 @@
+---
+description: Camadas de dados — services, stores Pinia e componentes
+alwaysApply: true
+---
+
+# Padrões de projeto — Camadas de dados
+
+## Regras
+
+1. **Chamadas de API** ficam **somente** na pasta `src/services/`. Cada módulo de domínio tem seu próprio service (ex.: `pdi.service.ts`, `user-panel.service.ts`).
+
+2. **Stores do Pinia** são os únicos que podem **chamar os services**. Os stores ficam em `src/stores/` e usam os services para buscar/gravar dados e expor estado e ações aos componentes.
+
+3. **Componentes e páginas** (Vue) **nunca** importam nem chamam services diretamente. Eles devem usar **apenas** os stores do Pinia (e, se existir, composables que por sua vez usem apenas stores).
+
+## Exemplos
+
+```typescript
+// ❌ Componente chamando service diretamente
+import { getPdisByUserUuid } from '@/services/pdi.service';
+const list = await getPdisByUserUuid(userUuid);
+```
+
+```typescript
+// ✅ Componente usando store
+import { usePdiStore } from '@/stores/pdi.store';
+const pdiStore = usePdiStore();
+const list = await pdiStore.fetchPdisByUserUuid(userUuid);
+```
+
+```typescript
+// ✅ Store chamando service
+// src/stores/pdi.store.ts
+import { getPdisByUserUuid } from '@/services/pdi.service';
+// ...
+async fetchPdisByUserUuid(userUuid: string) {
+  const list = await getPdisByUserUuid(userUuid);
+  // atualizar state e retornar
+}
+```
+
+## Resumo
+
+| Quem              | Pode chamar     | Não pode chamar |
+|-------------------|-----------------|-----------------|
+| **Services**      | API (axios etc) | Stores, componentes |
+| **Stores (Pinia)**| Services        | API diretamente, outros stores (evitar) |
+| **Componentes**   | Stores          | Services, API   |
+
+Quando criar ou alterar fluxos de dados, seguir sempre: **Componente → Store → Service → API**.

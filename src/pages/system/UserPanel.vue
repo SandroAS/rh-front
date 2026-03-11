@@ -5,6 +5,7 @@ import UserProfileCard from '../../components/system/userPanel/UserProfileCard.v
 import UserPerformanceMetricsCard from '../../components/system/userPanel/UserPerformanceMetricsCard.vue';
 import UserCareerPlanCard from '../../components/system/userPanel/UserCareerPlanCard.vue';
 import UserCareerPathTimeline from '../../components/system/userPanel/UserCareerPathTimeline.vue';
+import UserPdiGoalsCard from '../../components/system/userPanel/UserPdiGoalsCard.vue';
 import { useUserPanelStore } from '@/stores/user-panel.store';
 import type { UserPanel } from '@/types/user/user-panel.type';
 
@@ -54,12 +55,16 @@ const panelTitle = computed(() => {
       </v-col>
     </v-row>
 
-    <Transition name="expand">
-      <v-row ref="drdCardRef">
-        <v-col cols="12">
-          <UserCareerPlanCard :user="currentUser" />
-        </v-col>
-      </v-row>
-    </Transition>
+    <v-row ref="drdCardRef">
+      <v-col cols="12">
+        <UserCareerPlanCard :user="currentUser" />
+      </v-col>
+    </v-row>
+
+    <v-row v-if="currentUser">
+      <v-col cols="12">
+        <UserPdiGoalsCard :user="currentUser" />
+      </v-col>
+    </v-row>
   </v-container>
 </template>

@@ -233,19 +233,16 @@ watch(() => props.user?.uuid, () => loadUserMetrics());
 </script>
 
 <template>
-  <v-card v-if="user" elevation="2" class="overflow-hidden">
-    <!-- Header Minimalista -->
-    <v-toolbar color="white" flat border="bottom">
-      <v-toolbar-title class="text-subtitle-1 font-weight-black d-flex align-center">
-        <v-icon start color="primary" icon="mdi-shield-check-outline" />
-        REQUISITOS DE EVOLUÇÃO
-      </v-toolbar-title>
+  <v-card v-if="user" elevation="2" class="pa-4 overflow-hidden">
+    <v-card-title class="text-h6 font-weight-bold d-flex align-center">
+      <v-icon class="mr-2" color="primary">mdi-shield-check-outline</v-icon>
+      Requisitos de Evolução
       <v-spacer />
-      <v-chip size="small" variant="flat" color="grey-lighten-4" class="mr-4">
+      <v-chip size="small" variant="flat" color="grey-lighten-4">
         Nível Atual:&nbsp;<b>{{ user.jobPositionCurrentLevel?.name || 'Iniciante' }}</b>
       </v-chip>
-    </v-toolbar>
-
+    </v-card-title>
+    <v-divider class="mb-4" />
     <v-card-text class="pa-0">
       <template v-if="!hasAnyDrd">
         <div class="pa-12 text-center">

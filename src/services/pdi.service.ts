@@ -20,6 +20,11 @@ export const getPdis = async (
   return response.data;
 };
 
+export const getPdisByUserUuid = async (userUuid: string): Promise<Pdi[]> => {
+  const response: AxiosResponse<Pdi[]> = await api.get(`/pdis/user/${userUuid}`);
+  return response.data;
+};
+
 export const getPdi = async (uuid: string): Promise<Pdi> => {
   const response: AxiosResponse<Pdi> = await api.get(`/pdis/${uuid}`);
   return response.data;
