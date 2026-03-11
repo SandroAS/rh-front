@@ -132,25 +132,16 @@ function getMetricProgressPercent(metric: UserPanelDrdMetric): number {
   return Math.min(100, (average / min) * 100);
 }
 
-/** Min score do próximo nível (índice = currentLevelOrderForMetrics em 0-based). */
-function getNextLevelMinScore(metric: UserPanelDrdMetric): string | null {
-  const levels = metric.scoresByLevel;
-  if (!levels?.length) return null;
-  const nextIndex = currentLevelOrderForMetrics.value;
-  if (nextIndex >= levels.length) return null;
-  return levels[nextIndex]?.min_score ?? null;
-}
-
-/** True se a média já atingiu a meta do próximo nível (checklist). */
-function hasReachedNextLevelMin(metric: UserPanelDrdMetric): boolean {
+/** True se a média já atingiu a meta do nível atual (checklist). */
+function hasReachedCurrentLevelMin(metric: UserPanelDrdMetric): boolean {
   const average = getMetricAverage(metric);
-  const nextMinStr = getNextLevelMinScore(metric);
-  if (average == null || nextMinStr == null) return false;
-  const nextMin = parseFloat(nextMinStr);
-  if (isNaN(nextMin)) return false;
+  const currentMinStr = getMinScoreForCurrentLevel(metric);
+  if (average == null || currentMinStr == null) return false;
+  const currentMin = parseFloat(currentMinStr);
+  if (isNaN(currentMin)) return false;
   const isLessOrEqualBetter = metric.prefix === '<=' || metric.prefix === '<=';
-  if (isLessOrEqualBetter) return average <= nextMin;
-  return average >= nextMin;
+  if (isLessOrEqualBetter) return average <= currentMin;
+  return average >= currentMin;
 }
 
 function getTargetLevel(drd: UserPanelDrd | undefined, isCurrent: boolean) {
@@ -304,8 +295,8 @@ watch(() => props.user?.uuid, () => loadUserMetrics());
                               <div class="d-flex align-start flex-grow-1 min-width-0">
                                 <v-icon
                                   v-if="tab.isCurrent"
-                                  :icon="hasReachedNextLevelMin(metric) ? 'mdi-check-decagram' : 'mdi-circle-outline'"
-                                  :color="hasReachedNextLevelMin(metric) ? 'success' : 'grey-lighten-1'"
+                                  :icon="hasReachedCurrentLevelMin(metric) ? 'mdi-check-decagram' : 'mdi-circle-outline'"
+                                  :color="hasReachedCurrentLevelMin(metric) ? 'success' : 'grey-lighten-1'"
                                   size="small"
                                   class="mr-2 mt-1 flex-shrink-0"
                                 />
