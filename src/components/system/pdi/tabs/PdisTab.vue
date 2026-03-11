@@ -4,11 +4,38 @@ import { usePdiStore } from '@/stores/pdi.store';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import loadItems from '@/utils/loadItems.util';
 import type Pdi from '@/types/pdi/pdi.type';
+import { PdiStatus } from '@/types/pdi/pdi.type';
 import PdiModal from '../PdiModal.vue';
 import { formatDate } from '@/utils/formatDate.util';
 
 const pdiStore = usePdiStore();
 const accountUserStore = useAccountUserStore();
+
+const PDI_STATUS_LABELS: Record<string, string> = {
+  [PdiStatus.NOT_STARTED]: 'Não iniciado',
+  [PdiStatus.IN_PROGRESS]: 'Em progresso',
+  [PdiStatus.PARTIALLY_COMPLETED]: 'Parcialmente concluído',
+  [PdiStatus.COMPLETED]: 'Concluído',
+  [PdiStatus.CANCELLED]: 'Cancelado',
+};
+
+const PDI_STATUS_COLORS: Record<string, string> = {
+  [PdiStatus.NOT_STARTED]: 'warning',
+  [PdiStatus.IN_PROGRESS]: 'amber',
+  [PdiStatus.PARTIALLY_COMPLETED]: 'lime',
+  [PdiStatus.COMPLETED]: 'success',
+  [PdiStatus.CANCELLED]: 'error',
+};
+
+function getStatusLabel(status: string | null | undefined): string {
+  if (!status) return '—';
+  return PDI_STATUS_LABELS[status] ?? status;
+}
+
+function getStatusColor(status: string | null | undefined): string {
+  if (!status) return 'grey';
+  return PDI_STATUS_COLORS[status] ?? 'grey';
+}
 
 function getUserNameByUuid(userUuid: string | null | undefined): string {
   if (!userUuid) return '—';
@@ -147,7 +174,15 @@ onMounted(async () => {
         {{ item?.end_date ? formatDate(item.end_date) : '—' }}
       </template>
       <template #item.status="{ item }">
-        {{ item?.status ?? '—' }}
+        <v-chip
+          v-if="item?.status"
+          :color="getStatusColor(item.status)"
+          size="small"
+          variant="tonal"
+        >
+          {{ getStatusLabel(item.status) }}
+        </v-chip>
+        <span v-else>—</span>
       </template>
       <template #item.actions="{ item }">
         <v-btn icon size="small" @click="openDialog(item)">
