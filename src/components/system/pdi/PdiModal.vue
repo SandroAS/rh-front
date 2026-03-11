@@ -181,7 +181,7 @@ const onSubmit = handleSubmit(async (formValues) => {
         >
           <template #selection="{ item }">
             <v-chip
-              v-if="item.raw.value !== '' && item.raw.title !== undefined"
+              v-if="item.raw.value"
               pill
               size="small"
               class="mt-1 mr-1 pl-0"
