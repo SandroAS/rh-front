@@ -3,7 +3,7 @@ export interface UserRegister {
   email: string;
   cellphone: string;
   cpf: string;
-  clinicType: string;
+  moduleTypes: string[];
   password: string;
   confirmPassword: string;
   termsAccepted: boolean;

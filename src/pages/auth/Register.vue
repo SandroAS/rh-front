@@ -158,16 +158,21 @@ async function onSubmit(formValues: Record<string, any>) {
         </Field>
 
         <Field
-          name="moduleType"
+          name="moduleTypes"
           rules="required"
           v-slot="{ field, errorMessage }"
         >
           <v-select
-            v-bind="field"
+            :model-value="Array.isArray(field.value) ? field.value : []"
+            @update:model-value="field.onChange"
+            @blur="field.onBlur"
             label="Módulos do sistema para ativar"
             :items="moduleTypes"
             item-title="label"
             item-value="value"
+            multiple
+            chips
+            closable-chips
             variant="solo-filled"
             density="comfortable"
             :error="!!errorMessage"
