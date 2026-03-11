@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useUserStore } from '@/stores/auth.store';
 import { useTrialStore } from '@/stores/trial.store';
 import { useRouter } from 'vue-router';
 
 const props = defineProps<{
   modelValue: boolean;
-  hasTrialExpired?: boolean
+  hasTrialExpired?: boolean;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
@@ -16,18 +16,27 @@ const router = useRouter();
 const userStore = useUserStore();
 const trialStore = useTrialStore();
 
+/** true = trial ainda ativo após consulta (pode mostrar botão X). false = trial expirado (não pode sair do modal). */
+const canClose = ref(false);
+
 watch(
   () => props.modelValue,
   async (isOpen) => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      canClose.value = false;
+      return;
+    }
     try {
       await trialStore.fetchMyTrial();
       if (trialStore.isTrialActive) {
         await userStore.fetchUser();
-        close();
+        canClose.value = true;
+      } else {
+        canClose.value = false;
       }
-    } catch (err: any) {
-      console.error(`Erro ao carregar dados do trial: ${err}`);
+    } catch (err: unknown) {
+      console.error('Erro ao carregar dados do trial:', err);
+      canClose.value = false;
     }
   },
   { immediate: true }
@@ -109,10 +118,9 @@ const goToContactSales = () => {
     @update:model-value="emit('update:modelValue', $event)"
   >
     <v-card class="pa-4 pa-sm-8 d-flex flex-column" rounded="0" height="100vh">
-      <v-btn v-if="!hasTrialExpired"
-        icon="mdi-close"
-        @click="close"
-      ></v-btn>
+      <div v-if="canClose" class="d-flex justify-end mb-2">
+        <v-btn icon="mdi-close" variant="text" @click="close" />
+      </div>
       <v-container class="flex-grow-1 d-flex flex-column justify-center align-center py-4">
 
         <v-row>
@@ -195,7 +203,7 @@ const goToContactSales = () => {
             </v-card>
           </v-col>
 
-          <v-col cols="12" md="6" class="]">
+          <v-col cols="12" md="6" class="d-flex">
             <v-card class="pa-8 flex-grow-1 d-flex flex-column elevation-10" rounded="lg">
               <h2 class="text-h5 font-weight-bold mb-4">Plano Profissional</h2>
               <p class="text-body-1 text-medium-emphasis mb-8">
