@@ -1,16 +1,35 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useUserPanelStore } from '@/stores/user-panel.store';
+import { computed, ref, watch, onMounted } from 'vue';
 import { getMetricTypeOption } from '@/types/drd/drd-metric.type';
 import type {
   UserPanel,
   UserPanelCareerPlanJobPosition,
   UserPanelDrd,
+  UserPanelDrdMetric,
   UserPanelDrdTopicItem,
   UserPanelEvaluationReceived,
 } from '@/types/user/user-panel.type';
+import type { UserMetricResponseDto } from '@/types/user/user-metric.type';
+import { getUserMetricsByUserUuid } from '@/services/user-metric.service';
 
-const userPanel = useUserPanelStore();
+const userMetricsList = ref<UserMetricResponseDto[]>([]);
+const userMetricsLoading = ref(false);
+
+async function loadUserMetrics() {
+  const uuid = props.user?.uuid;
+  if (!uuid) {
+    userMetricsList.value = [];
+    return;
+  }
+  userMetricsLoading.value = true;
+  try {
+    userMetricsList.value = await getUserMetricsByUserUuid(uuid);
+  } catch {
+    userMetricsList.value = [];
+  } finally {
+    userMetricsLoading.value = false;
+  }
+}
 
 const EVALUATION_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   SELF: { label: 'Auto', color: 'indigo' },
@@ -52,6 +71,87 @@ function isCurrentJob(item: UserPanelCareerPlanJobPosition | null): boolean {
 }
 
 const currentLevelOrder = computed(() => props.user?.jobPositionCurrentLevel?.order ?? 0);
+
+/** Ordem do nível atual (1-based) para índices de métricas. */
+const currentLevelOrderForMetrics = computed(() => props.user?.jobPositionCurrentLevel?.order ?? 1);
+
+/** Min/max do nível atual para a métrica (scoresByLevel ordenado por nível). */
+function getMinScoreForCurrentLevel(metric: UserPanelDrdMetric): string | null {
+  const levels = metric.scoresByLevel;
+  if (!levels?.length) return null;
+  const index = Math.min(currentLevelOrderForMetrics.value - 1, levels.length - 1);
+  return levels[index]?.min_score ?? null;
+}
+
+/** Média dos valores da API para a métrica. */
+function getMetricAverage(metric: UserPanelDrdMetric): number | null {
+  const metricUuid = metric.uuid;
+  const items = userMetricsList.value.filter((m) => m.drdMetric?.uuid === metricUuid);
+  if (!items.length) return null;
+  const sum = items.reduce((acc, m) => acc + Number(m.value), 0);
+  return sum / items.length;
+}
+
+/** Cor do valor da média conforme o mínimo do nível e o prefix da métrica. */
+function getAverageColorClass(metric: UserPanelDrdMetric): string {
+  const average = getMetricAverage(metric);
+  const minStr = getMinScoreForCurrentLevel(metric);
+  if (average == null || minStr == null) return 'text-medium-emphasis';
+  const min = parseFloat(minStr);
+  if (isNaN(min) || min < 0) return 'text-medium-emphasis';
+  const isLessOrEqualBetter = metric.prefix === '<=' || metric.prefix === '<=';
+  let ratio: number;
+  if (isLessOrEqualBetter) {
+    if (average === 0) ratio = 2;
+    else if (min === 0) ratio = 0;
+    else ratio = min / average;
+  } else {
+    if (min === 0) ratio = average >= 0 ? 2 : 0;
+    else ratio = average / min;
+  }
+  if (ratio >= 1) return 'text-green-darken-2';
+  if (ratio >= 0.9) return 'text-green-lighten-1';
+  if (ratio >= 0.75) return 'text-yellow-darken-2';
+  if (ratio >= 0.5) return 'text-orange-darken-2';
+  return 'text-red-darken-2';
+}
+
+/** Percentual (0–100) para a barra de progresso. */
+function getMetricProgressPercent(metric: UserPanelDrdMetric): number {
+  const average = getMetricAverage(metric);
+  const minStr = getMinScoreForCurrentLevel(metric);
+  if (average == null || minStr == null) return 0;
+  const min = parseFloat(minStr);
+  if (isNaN(min) || min < 0) return 0;
+  const isLessOrEqualBetter = metric.prefix === '<=' || metric.prefix === '<=';
+  if (isLessOrEqualBetter) {
+    if (average === 0) return 100;
+    if (min === 0) return 0;
+    return Math.min(100, (min / average) * 100);
+  }
+  return Math.min(100, (average / min) * 100);
+}
+
+/** Min score do próximo nível (índice = currentLevelOrderForMetrics em 0-based). */
+function getNextLevelMinScore(metric: UserPanelDrdMetric): string | null {
+  const levels = metric.scoresByLevel;
+  if (!levels?.length) return null;
+  const nextIndex = currentLevelOrderForMetrics.value;
+  if (nextIndex >= levels.length) return null;
+  return levels[nextIndex]?.min_score ?? null;
+}
+
+/** True se a média já atingiu a meta do próximo nível (checklist). */
+function hasReachedNextLevelMin(metric: UserPanelDrdMetric): boolean {
+  const average = getMetricAverage(metric);
+  const nextMinStr = getNextLevelMinScore(metric);
+  if (average == null || nextMinStr == null) return false;
+  const nextMin = parseFloat(nextMinStr);
+  if (isNaN(nextMin)) return false;
+  const isLessOrEqualBetter = metric.prefix === '<=' || metric.prefix === '<=';
+  if (isLessOrEqualBetter) return average <= nextMin;
+  return average >= nextMin;
+}
 
 function getTargetLevel(drd: UserPanelDrd | undefined, isCurrent: boolean) {
   const targetOrder = isCurrent ? currentLevelOrder.value + 1 : 1;
@@ -136,6 +236,9 @@ function getProgressColor(current: number, target: number | null) {
 }
 
 const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.length || t.drd?.drdMetrics?.length));
+
+onMounted(() => loadUserMetrics());
+watch(() => props.user?.uuid, () => loadUserMetrics());
 </script>
 
 <template>
@@ -198,30 +301,50 @@ const hasAnyDrd = computed(() => tabItems.value.some((t) => t.drd?.drdTopics?.le
                             class="pa-4 transition-swing d-flex flex-column flex-grow-1"
                           >
                             <div class="d-flex justify-space-between align-start">
-                              <div>
-                                <div class="text-caption text-disabled text-uppercase font-weight-bold">{{ metric.name }}</div>
-                                <div class="text-h4 font-weight-black my-1">
-                                  {{ metric.scoresByLevel?.[0]?.min_score || '0' }}
-                                  <span class="text-subtitle-2 text-medium-emphasis">{{ getMetricTypeOption(metric.type)?.suffix }}</span>
+                              <div class="d-flex align-start flex-grow-1 min-width-0">
+                                <v-icon
+                                  v-if="tab.isCurrent"
+                                  :icon="hasReachedNextLevelMin(metric) ? 'mdi-check-decagram' : 'mdi-circle-outline'"
+                                  :color="hasReachedNextLevelMin(metric) ? 'success' : 'grey-lighten-1'"
+                                  size="small"
+                                  class="mr-2 mt-1 flex-shrink-0"
+                                />
+                                <div class="min-width-0">
+                                  <div class="text-caption text-disabled text-uppercase font-weight-bold" style="min-height: 40px;">{{ metric.name }}</div>
+                                <div class="d-flex align-baseline flex-wrap gap-1 my-1">
+                                  <span
+                                    class="text-h4 font-weight-black"
+                                    :class="tab.isCurrent ? getAverageColorClass(metric) : 'text-medium-emphasis'"
+                                  >
+                                    {{ (tab.isCurrent && getMetricAverage(metric) != null) ? getMetricAverage(metric)!.toFixed(2) : '–' }}{{ getMetricTypeOption(metric.type)?.suffix }}
+                                  </span>
+                                  <span
+                                    v-if="getMinScoreForCurrentLevel(metric)"
+                                    class="text-caption text-disabled"
+                                  >
+                                    &nbsp;{{ (metric.prefix === '<=') ? 'máx.' : 'mín.' }} {{ getMinScoreForCurrentLevel(metric) }}{{ getMetricTypeOption(metric.type)?.suffix }}
+                                  </span>
+                                </div>
                                 </div>
                               </div>
-                              <v-icon 
-                                :icon="getMetricTypeOption(metric.type)?.icon"
+                              <v-icon
+                                :icon="getMetricTypeOption(metric.type)?.icon ?? 'mdi-chart-box'"
                                 :color="getMetricTypeOption(metric.type)?.color"
                                 size="large"
                                 class="opacity-60"
                               />
                             </div>
                             <div class="flex-grow-1 mt-2">
-                              <v-progress-linear 
-                                :indeterminate="userPanel.loading"
-                                height="4" 
-                                rounded 
-                                :color="getMetricTypeOption(metric.type)?.color" 
-                                class="opacity-20"
+                              <v-progress-linear
+                                :indeterminate="userMetricsLoading"
+                                :model-value="tab.isCurrent ? getMetricProgressPercent(metric) : 0"
+                                height="4"
+                                rounded
+                                :color="getMetricTypeOption(metric.type)?.color"
+                                :class="{ 'opacity-20': userMetricsLoading }"
                               />
                             </div>
-                            <div class="text-caption mt-2 text-disabled">Meta para o nível alvo</div>
+                            <div class="text-caption mt-2 text-disabled">Manter {{ (metric.prefix === '<=') ? 'menor ou igual' : 'maior ou igual' }} a {{ getMinScoreForCurrentLevel(metric) }}{{ getMetricTypeOption(metric.type)?.suffix }} para o nível atual</div>
                           </v-card>
                         </div>
                       </v-hover>

@@ -190,7 +190,7 @@ const hasDrd = computed(() => !!currentDrd.value?.drdTopics?.length || !!current
                 />
               </div>
               <div class="d-flex align-center justify-space-between mt-2">
-                <span class="text-caption text-disabled">Mín. nível atual</span>
+                <div class="text-caption mt-2 text-disabled">Manter {{ (metric.prefix === '<=') ? 'menor ou igual' : 'maior ou igual' }} a {{ getMinScoreForCurrentLevel(metric) }}{{ getMetricTypeOption(metric.type)?.suffix }}</div>
                 <v-btn
                   size="small"
                   variant="text"
