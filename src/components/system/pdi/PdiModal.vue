@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { watch, onMounted } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { useForm, useField, useFieldArray } from 'vee-validate';
 import { usePdiStore } from '@/stores/pdi.store';
 import { usePdiCategoryStore } from '@/stores/pdi-category.store';
 import { useAccountUserStore } from '@/stores/account-user.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import type Pdi from '@/types/pdi/pdi.type';
+import { PdiStatus } from '@/types/pdi/pdi.type';
 import type PdiPayload from '@/types/pdi/pdi-payload.type';
 import type PdiGoalPayload from '@/types/pdi/pdi-goal-payload.type';
 import { getInitials } from '@/utils/getInitialsFromName.util';
@@ -29,6 +30,16 @@ const emit = defineEmits<{
 
 const close = () => emit('update:modelValue', false);
 
+const isEditMode = computed(() => !!props.selectedPdi?.uuid);
+
+const PDI_STATUS_OPTIONS = [
+  { value: PdiStatus.NOT_STARTED, title: 'Não iniciado' },
+  { value: PdiStatus.IN_PROGRESS, title: 'Em progresso' },
+  { value: PdiStatus.PARTIALLY_COMPLETED, title: 'Parcialmente concluído' },
+  { value: PdiStatus.COMPLETED, title: 'Concluído' },
+  { value: PdiStatus.CANCELLED, title: 'Cancelado' },
+];
+
 function getDefaultGoal() {
   return {
     title: '',
@@ -36,6 +47,7 @@ function getDefaultGoal() {
     pdi_category_uuid: null as string | null,
     start_date: '',
     end_date: '',
+    status: '' as string,
   };
 }
 
@@ -44,6 +56,7 @@ const { handleSubmit, setValues, resetForm } = useForm({
     user_uuid: '',
     start_date: '',
     end_date: '',
+    status: '' as string,
     pdi_goals: [] as ReturnType<typeof getDefaultGoal>[],
   },
   validationSchema: {
@@ -54,6 +67,7 @@ const { handleSubmit, setValues, resetForm } = useForm({
 const { value: userUuid, errorMessage: userUuidError } = useField<string>('user_uuid', 'required');
 const { value: startDate } = useField<string>('start_date');
 const { value: endDate, errorMessage: endDateError } = useField<string>('end_date', 'date_after:start_date');
+const { value: status } = useField<string>('status');
 
 const { fields, push, remove, replace } = useFieldArray('pdi_goals');
 
@@ -73,6 +87,7 @@ watch(
         user_uuid: val.user_uuid ?? '',
         start_date: toDateInputValue(val.start_date ?? ''),
         end_date: toDateInputValue(val.end_date ?? ''),
+        status: (val.status ?? '') as string,
         pdi_goals:
           (val.pdi_goals ?? val.goals)?.map((g) => ({
             title: g.title ?? '',
@@ -80,6 +95,7 @@ watch(
             pdi_category_uuid: g.pdi_category_uuid ?? g.pdi_category?.uuid ?? null,
             start_date: toDateInputValue(g.start_date ?? ''),
             end_date: toDateInputValue(g.end_date ?? ''),
+            status: (g.status ?? '') as string,
           })) ?? [],
       });
     } else {
@@ -88,6 +104,7 @@ watch(
           user_uuid: '',
           start_date: '',
           end_date: '',
+          status: '',
           pdi_goals: [],
         },
       });
@@ -105,6 +122,7 @@ watch(
           user_uuid: '',
           start_date: '',
           end_date: '',
+          status: '',
           pdi_goals: [],
         },
       });
@@ -129,12 +147,14 @@ const onSubmit = handleSubmit(async (formValues) => {
       start_date: (g.start_date ?? '').toString().trim() || null,
       end_date: (g.end_date ?? '').toString().trim() || null,
       pdi_category_uuid: (g.pdi_category_uuid ?? '').toString().trim() || null,
+      status: isEditMode.value ? ((g.status ?? '').toString().trim() || null) : undefined,
     }));
 
   const payload: PdiPayload = {
     user_uuid: (formValues.user_uuid ?? '').toString().trim() || undefined,
     start_date: (formValues.start_date ?? '').toString().trim() || undefined,
     end_date: (formValues.end_date ?? '').toString().trim() || undefined,
+    status: isEditMode.value ? (formValues.status ?? '').toString().trim() || undefined : undefined,
     pdi_goals: pdi_goals.length ? pdi_goals : undefined,
   };
 
@@ -243,12 +263,27 @@ const onSubmit = handleSubmit(async (formValues) => {
           />
         </div>
 
+        <v-select
+          v-if="isEditMode"
+          v-model="status"
+          :items="PDI_STATUS_OPTIONS"
+          item-title="title"
+          item-value="value"
+          label="Status do PDI"
+          variant="solo-filled"
+          density="compact"
+          hide-details="auto"
+          class="mb-4"
+        />
+
         <div class="text-subtitle-2 mb-2">Objetivos</div>
         <PdiGoalCard
           v-for="(field, index) in fields"
           :key="field.key"
           :index="index"
           :can-remove="fields.length > 0"
+          :is-edit-mode="isEditMode"
+          :status-options="PDI_STATUS_OPTIONS"
           @remove="removeGoal(index)"
         />
         <v-btn

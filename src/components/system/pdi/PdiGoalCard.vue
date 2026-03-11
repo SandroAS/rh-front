@@ -6,6 +6,8 @@ import { usePdiCategoryStore } from '@/stores/pdi-category.store';
 const props = defineProps<{
   index: number;
   canRemove: boolean;
+  isEditMode?: boolean;
+  statusOptions?: { value: string; title: string }[];
 }>();
 
 defineEmits<{
@@ -25,6 +27,7 @@ const { value: endDate, errorMessage: endDateError } = useField(
   computed(() => `pdi_goals[${props.index}].end_date`),
   computed(() => `date_after:pdi_goals[${props.index}].start_date`)
 );
+const { value: status } = useField(computed(() => `pdi_goals[${props.index}].status`));
 
 const categoryOptions = computed(() => pdiCategoryStore.allPdiCategoryOptions ?? []);
 </script>
@@ -102,6 +105,18 @@ const categoryOptions = computed(() => pdiCategoryStore.allPdiCategoryOptions ??
           :error-messages="endDateError"
         />
       </div>
+      <v-select
+        v-if="isEditMode && statusOptions?.length"
+        v-model="status"
+        :items="statusOptions"
+        item-title="title"
+        item-value="value"
+        label="Status do objetivo"
+        variant="solo-filled"
+        density="compact"
+        hide-details="auto"
+        class="mt-3"
+      />
     </v-card-text>
   </v-card>
 </template>
