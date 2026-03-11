@@ -380,7 +380,7 @@ watch(() => props.user?.uuid, () => loadUserMetrics());
                             <div class="d-flex align-center gap-4">
                               <div class="flex-grow-1">
                                 <div class="d-flex justify-space-between text-caption mb-1">
-                                  <span class="text-medium-emphasis">Sua Média: <b>{{ getPerformance(item, tab).average.toFixed(1) }}</b></span>
+                                  <span class="text-medium-emphasis">Média atual: <b>{{ getPerformance(item, tab).average.toFixed(1) }}</b></span>
                                   <span v-if="getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0)" class="font-weight-bold">
                                     Meta: {{ getMinScore(item, getTargetLevel(tab.drd, tab.isCurrent)?.order || 0) }}
                                   </span>
