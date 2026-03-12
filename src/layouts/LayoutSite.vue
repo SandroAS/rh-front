@@ -1,18 +1,12 @@
 <script lang="ts" setup>
-const logoHorizontal = '/logo-horizontal.jpeg';
+import logoHorizontal from '@/assets/logo-horizontal.jpeg';
 </script>
 
 <template>
   <v-app-bar color="white" elevation="1" style="position: fixed;">
     <div class="d-flex align-center justify-space-between w-100 px-4">
       <a href="#home" class="text-decoration-none d-flex align-center">
-        <v-img
-          :src="logoHorizontal"
-          alt="Logo"
-          contain
-          height="40"
-          max-width="160"
-        />
+        <img :src="logoHorizontal" alt="Logo" height="40" max-width="160">
       </a>
 
       <div class="d-none d-md-flex align-center">
@@ -34,11 +28,13 @@ const logoHorizontal = '/logo-horizontal.jpeg';
   </v-main>
 </template>
 
-<style>
+<style scoped>
 .v-application {
   font-family: 'Inter', sans-serif !important;
 }
+</style>
 
+<style>
 html {
   scroll-behavior: smooth;
 }

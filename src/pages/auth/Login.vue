@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-const logoHorizontal = '/logo-horizontal.jpeg';
 import { useRouter } from 'vue-router';
+import logoHorizontal from '@/assets/logo-horizontal.jpeg';
 import { useUserStore } from '@/stores/auth.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { Form, Field } from '@/plugins/vee-validate';
@@ -47,6 +47,7 @@ const loginWithGoogle = async () => {
           contain
           height="48"
           max-width="180"
+          eager
         />
       </v-card-title>
 

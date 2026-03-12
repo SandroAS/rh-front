@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-const logoVertical = '/logo-vertical.jpeg';
 import { useSnackbarStore } from '@/stores/snackbar.store';
+import logoVertical from '@/assets/logo-vertical.jpeg';
 import { useUserStore } from '@/stores/auth.store';
 import { useRouter } from 'vue-router';
 import { Form, Field } from '@/plugins/vee-validate';
@@ -81,6 +81,7 @@ async function onSubmit(formValues: Record<string, any>) {
         height="72"
         contain
         class="mb-6 mx-auto"
+        eager
       />
       <div class="text-center mb-4">
         <h5 class="text-h6 font-weight-bold">Teste gratuitamente</h5>

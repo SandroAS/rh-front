@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const logoHorizontal = '/logo-horizontal.jpeg';
+import logoHorizontal from '@/assets/logo-horizontal.jpeg';
 </script>
 
 <template>
@@ -11,6 +11,7 @@ const logoHorizontal = '/logo-horizontal.jpeg';
       height="32"
       max-width="140"
       class="d-block"
+      eager
     />
   </v-toolbar-title>
 </template>

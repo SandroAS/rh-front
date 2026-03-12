@@ -5,7 +5,7 @@ import { usePlanStore } from '@/stores/plan.store';
 import { useViaCepStore } from '@/stores/via-cep.store';
 import { Form, Field } from '@/plugins/vee-validate';
 import { BrazilianStates } from '@/services/via-cep.service';
-const logoHorizontal = '/logo-horizontal.jpeg';
+import logoHorizontal from '@/assets/logo-horizontal.jpeg';
 
 type PaymentMethod = 'pix' | 'card' | 'boleto';
 type BillingInterval = 'monthly' | 'yearly';
@@ -120,6 +120,7 @@ const paymentOptions: { value: PaymentMethod; label: string; icon: string }[] = 
           contain
           height="36"
           max-width="140"
+          eager
         />
       </router-link>
       <v-chip size="small" color="primary" variant="tonal">Checkout</v-chip>
