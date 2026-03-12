@@ -1,17 +1,18 @@
 <script lang="ts" setup>
-import logo from '@/assets/logo.png'
+const logoHorizontal = '/logo-horizontal.jpeg';
 </script>
 
 <template>
   <v-app-bar color="white" elevation="1" style="position: fixed;">
     <div class="d-flex align-center justify-space-between w-100 px-4">
-      <a href="#home" class="text-decoration-none">
-        <div class="d-flex align-center">
-          <v-img :src="logo" alt="Logo RH" contain height="40" width="120" class="mr-4" />
-
-
-          <span class="text-primary font-weight-bold text-h5">RH</span>
-        </div>
+      <a href="#home" class="text-decoration-none d-flex align-center">
+        <v-img
+          :src="logoHorizontal"
+          alt="Logo"
+          contain
+          height="40"
+          max-width="160"
+        />
       </a>
 
       <div class="d-none d-md-flex align-center">

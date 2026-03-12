@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import logo from '@/assets/logo.png';
+const logoHorizontal = '/logo-horizontal.jpeg';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/auth.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
@@ -41,8 +41,13 @@ const loginWithGoogle = async () => {
   <v-container class="fill-height d-flex justify-center align-center">
     <v-card class="pa-8" max-width="400" elevation="10" rounded="xl">
       <v-card-title class="justify-center mb-6">
-        <v-img :src="logo" alt="Logo RH" contain height="50" width="50" class="mr-2" />
-        <span class="text-h5 font-weight-bold">RH</span>
+        <v-img
+          :src="logoHorizontal"
+          alt="Logo"
+          contain
+          height="48"
+          max-width="180"
+        />
       </v-card-title>
 
       <Form @submit="onSubmit">

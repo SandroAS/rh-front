@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import logo from '@/assets/logo.png';
+const logoVertical = '/logo-vertical.jpeg';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { useUserStore } from '@/stores/auth.store';
 import { useRouter } from 'vue-router';
@@ -76,8 +76,9 @@ async function onSubmit(formValues: Record<string, any>) {
   <v-container class="fill-height d-flex justify-center align-center">
     <v-card class="pa-8" max-width="480" elevation="10">
       <v-img
-        :src="logo"
-        height="50"
+        :src="logoVertical"
+        alt="Logo"
+        height="72"
         contain
         class="mb-6 mx-auto"
       />

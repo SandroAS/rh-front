@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { useUserStore } from '@/stores/auth.store';
 import { useTrialStore } from '@/stores/trial.store';
 import { usePlanStore } from '@/stores/plan.store';
 import { useRouter } from 'vue-router';
-import type { PlanResponse } from '@/types/plan/plan-response.type';
+import { usePlanPackages } from '@/composables/usePlanPackages';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -18,198 +18,9 @@ const router = useRouter();
 const userStore = useUserStore();
 const trialStore = useTrialStore();
 const planStore = usePlanStore();
+const { packages, formatPrice } = usePlanPackages();
 
 const canClose = ref(false);
-
-/** Dados estáticos de apresentação por slug (tagline, features, icon, highlight, cta) */
-const staticBySlug: Record<
-  string,
-  { tagline: string; cta: string; highlight: boolean; icon: string; features: string[] }
-> = {
-  starter: {
-    tagline: 'Empresas em crescimento',
-    cta: 'Assinar agora',
-    highlight: false,
-    icon: 'mdi-rocket-outline',
-    features: [
-      'DRDs e Descritivos',
-      'Planos de carreira',
-      'Avaliações 360',
-      'PDIs Individuais',
-      'Painel do colaborador',
-      'Visão por time',
-    ],
-  },
-  growth: {
-    tagline: 'Empresas em expansão',
-    cta: 'Assinar agora',
-    highlight: true,
-    icon: 'mdi-trending-up',
-    features: [
-      'Tudo do plano Starter',
-      'Mais colaboradores e cargos',
-      'Múltiplos planos de carreira',
-      'Métricas avançadas',
-      'Suporte prioritário',
-    ],
-  },
-  enterprise: {
-    tagline: 'Escala e customização',
-    cta: 'Falar com consultor',
-    highlight: false,
-    icon: 'mdi-office-building-cog-outline',
-    features: [
-      'Tudo do plano Growth',
-      'Colaboradores ilimitados',
-      'Integrações sob medida',
-      'Suporte dedicado (CSM)',
-      'Treinamento de lideranças',
-    ],
-  },
-};
-
-/** Fallback estático quando a API não retorna planos (ex.: erro ou vazio) */
-const fallbackPackages = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    tagline: staticBySlug.starter.tagline,
-    limit: 'Até 15 colaboradores',
-    monthlyPrice: 199 as number | null,
-    yearlyPrice: 1990,
-    yearlyLabel: 'R$ 1.990/ano (equiv. R$ 166/mês)',
-    cta: staticBySlug.starter.cta,
-    highlight: false,
-    icon: staticBySlug.starter.icon,
-    features: staticBySlug.starter.features,
-  },
-  {
-    id: 'growth',
-    name: 'Growth',
-    tagline: staticBySlug.growth.tagline,
-    limit: 'Até 50 colaboradores',
-    monthlyPrice: 399 as number | null,
-    yearlyPrice: 3990,
-    yearlyLabel: 'R$ 3.990/ano (equiv. R$ 333/mês)',
-    cta: staticBySlug.growth.cta,
-    highlight: true,
-    icon: staticBySlug.growth.icon,
-    features: staticBySlug.growth.features,
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    tagline: staticBySlug.enterprise.tagline,
-    limit: 'Conforme seu quadro',
-    monthlyPrice: null,
-    yearlyPrice: null,
-    yearlyLabel: 'Valor sob medida para sua escala',
-    cta: staticBySlug.enterprise.cta,
-    highlight: false,
-    icon: staticBySlug.enterprise.icon,
-    features: staticBySlug.enterprise.features,
-  },
-];
-
-/** Ordem fixa dos 3 planos no modal */
-const PLAN_SLUG_ORDER = ['starter', 'growth', 'enterprise'] as const;
-
-function groupPlansBySlug(plans: PlanResponse[]): Map<string, PlanResponse[]> {
-  const bySlug = new Map<string, PlanResponse[]>();
-  for (const plan of plans) {
-    const slug = (plan.slug ?? plan.name.toLowerCase()).toLowerCase();
-    const list = bySlug.get(slug) ?? [];
-    list.push(plan);
-    bySlug.set(slug, list);
-  }
-  return bySlug;
-}
-
-function groupedPlansToPackages(bySlug: Map<string, PlanResponse[]>) {
-  const result: Array<{
-    id: string;
-    uuid: string;
-    name: string;
-    tagline: string;
-    limit: string;
-    monthlyPrice: number | null;
-    yearlyPrice: number | null;
-    yearlyLabel: string;
-    cta: string;
-    highlight: boolean;
-    icon: string;
-    features: string[];
-  }> = [];
-
-  for (const slug of PLAN_SLUG_ORDER) {
-    const plans = bySlug.get(slug);
-    if (!plans?.length) continue;
-
-    const staticData = staticBySlug[slug] ?? {
-      tagline: plans[0].description ?? plans[0].name,
-      cta: 'Assinar agora',
-      highlight: false,
-      icon: 'mdi-package-variant',
-      features: [],
-    };
-
-    const monthlyPlan = plans.find((p) => p.interval === 'monthly');
-    const yearlyPlan = plans.find((p) => p.interval === 'yearly');
-    const anyPlan = plans[0];
-    const userLimit = anyPlan.user_limit;
-
-    const limit =
-      userLimit != null
-        ? `Até ${userLimit} colaboradores`
-        : 'Conforme seu quadro';
-
-    let monthlyPrice: number | null = null;
-    let yearlyPrice: number | null = null;
-    let yearlyLabel: string;
-
-    if (slug === 'enterprise' || userLimit == null) {
-      yearlyLabel = 'Valor sob medida para sua escala';
-    } else {
-      if (monthlyPlan) monthlyPrice = monthlyPlan.base_price;
-      if (yearlyPlan) {
-        yearlyPrice = yearlyPlan.base_price;
-        const equiv = Math.round(yearlyPlan.base_price / 12);
-        yearlyLabel = `R$ ${yearlyPlan.base_price.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}/ano (equiv. R$ ${equiv.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}/mês)`;
-      } else {
-        yearlyLabel = 'Valor sob medida para sua escala';
-      }
-    }
-
-    /** Nome do plano sem "Anual" (preferir o plano mensal para exibição) */
-    const displayName = monthlyPlan?.name ?? yearlyPlan?.name ?? anyPlan.name;
-    const name = displayName.replace(/\s+anual$/i, '').trim() || anyPlan.name;
-    /** UUID usado na assinatura: preferir mensal, senão qualquer */
-    const uuid = monthlyPlan?.uuid ?? yearlyPlan?.uuid ?? anyPlan.uuid;
-
-    result.push({
-      id: slug,
-      uuid,
-      name,
-      tagline: staticData.tagline,
-      limit,
-      monthlyPrice,
-      yearlyPrice,
-      yearlyLabel,
-      cta: staticData.cta,
-      highlight: staticData.highlight,
-      icon: staticData.icon,
-      features: staticData.features,
-    });
-  }
-
-  return result;
-}
-
-const packages = computed(() => {
-  if (!planStore.plans.length) return fallbackPackages;
-  const bySlug = groupPlansBySlug(planStore.plans);
-  return groupedPlansToPackages(bySlug);
-});
 
 watch(
   () => props.modelValue,
@@ -241,11 +52,9 @@ const moduleHighlights = [
   'Plano de Carreira',
 ];
 
-const formatPrice = (price: number) =>
-  price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
 const WHATSAPP_ENTERPRISE_NUMBER = '5531998136678';
-const WHATSAPP_ENTERPRISE_MESSAGE = 'Gostaria de saber mais sobre o plano Enterprise de vocês, podemos conversar sobre?';
+const WHATSAPP_ENTERPRISE_MESSAGE =
+  'Gostaria de saber mais sobre o plano Enterprise de vocês, podemos conversar sobre?';
 
 function goToSubscription(planId: string) {
   if (planId === 'enterprise') {

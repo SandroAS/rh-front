@@ -5,7 +5,7 @@ import { usePlanStore } from '@/stores/plan.store';
 import { useViaCepStore } from '@/stores/via-cep.store';
 import { Form, Field } from '@/plugins/vee-validate';
 import { BrazilianStates } from '@/services/via-cep.service';
-import logo from '@/assets/logo.png';
+const logoHorizontal = '/logo-horizontal.jpeg';
 
 type PaymentMethod = 'pix' | 'card' | 'boleto';
 type BillingInterval = 'monthly' | 'yearly';
@@ -114,8 +114,13 @@ const paymentOptions: { value: PaymentMethod; label: string; icon: string }[] = 
   <v-container class="checkout-page py-6" fluid>
     <div class="d-flex align-center mb-6">
       <router-link to="/" class="d-flex align-center text-decoration-none text-grey-darken-3 mr-4">
-        <v-img :src="logo" alt="Logo" contain height="36" width="36" class="mr-2" />
-        <span class="text-h6 font-weight-bold">RH</span>
+        <v-img
+          :src="logoHorizontal"
+          alt="Logo"
+          contain
+          height="36"
+          max-width="140"
+        />
       </router-link>
       <v-chip size="small" color="primary" variant="tonal">Checkout</v-chip>
       <v-spacer />
@@ -376,7 +381,7 @@ const paymentOptions: { value: PaymentMethod; label: string; icon: string }[] = 
                   <v-card
                     v-for="opt in paymentOptions"
                     :key="opt.value"
-                    :variant="paymentMethod === opt.value ? 'tonal' : 'outlined'"
+                    :variant="paymentMethod === opt.value ? 'tonal' : 'elevated'"
                     :color="paymentMethod === opt.value ? 'primary' : undefined"
                     rounded="lg"
                     class="cursor-pointer flex-grow-1"
