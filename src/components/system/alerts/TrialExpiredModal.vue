@@ -244,9 +244,13 @@ const moduleHighlights = [
 const formatPrice = (price: number) =>
   price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+const WHATSAPP_ENTERPRISE_NUMBER = '5531998136678';
+const WHATSAPP_ENTERPRISE_MESSAGE = 'Gostaria de saber mais sobre o plano Enterprise de vocês, podemos conversar sobre?';
+
 function goToSubscription(planId: string) {
   if (planId === 'enterprise') {
-    router.push('/contato-vendas');
+    const url = `https://wa.me/${WHATSAPP_ENTERPRISE_NUMBER}?text=${encodeURIComponent(WHATSAPP_ENTERPRISE_MESSAGE)}`;
+    window.open(url, '_blank');
   } else {
     router.push({ path: '/assinatura', query: { plan: planId } });
   }
