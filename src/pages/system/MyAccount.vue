@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import IntegrationTab from '@/components/system/myAccount/tabs/IntegrationTab.vue'
+// import IntegrationTab from '@/components/system/myAccount/tabs/IntegrationTab.vue'
 import NotificationTab from '@/components/system/myAccount/tabs/NotificationTab.vue'
 import PersonalTab from '@/components/system/myAccount/tabs/PersonalTab.vue'
 import SubscriptionTab from '@/components/system/myAccount/tabs/SubscriptionTab.vue'
@@ -13,7 +13,7 @@ const tabs = [
   { name:'Informações Pessoais', value: 'informacoes-pessoais' },
   { name: 'Notificações', value: 'notificacao' },
   { name:'Assinatura', value: 'assinatura' },
-  { name: 'Integrações', value: 'integracoes' }
+  // { name: 'Integrações', value: 'integracoes' }
 ]
 
 const selectedTab = ref(route.query.tab || 'informacoes-pessoais')
@@ -52,9 +52,9 @@ watch(selectedTab, (newTab) => {
           <SubscriptionTab />
         </v-tabs-window-item>
 
-        <v-tabs-window-item value="integracoes" class="pr-1">
+        <!-- <v-tabs-window-item value="integracoes" class="pr-1">
           <IntegrationTab />
-        </v-tabs-window-item>
+        </v-tabs-window-item> -->
       </v-tabs-window>
     </v-container>
   </v-container>
