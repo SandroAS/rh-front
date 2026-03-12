@@ -13,6 +13,7 @@ import MyAccount from '@/pages/system/MyAccount.vue'
 import Settings from '@/pages/system/Settings.vue'
 import DRDs from '@/pages/system/DRDs.vue'
 import GoogleAuthCallback from '@/pages/auth/GoogleAuthCallback.vue'
+import Checkout from '@/pages/auth/Checkout.vue'
 import CareerPlans from '@/pages/system/CareerPlans.vue'
 import TeamPanel from '@/pages/system/TeamPanel.vue'
 import UserPanel from '@/pages/system/UserPanel.vue'
@@ -119,6 +120,12 @@ const routes: RouteRecordRaw[] = [
         name: 'pdis',
         component: PDIs,
         meta: { isPublic: false, title: 'PDIs - '+SISTEM_NAME }
+      },
+      {
+        path: 'checkout',
+        name: 'checkout',
+        component: Checkout,
+        meta: { isPublic: false, title: 'Checkout - '+SISTEM_NAME }
       }
     ]
   },

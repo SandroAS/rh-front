@@ -252,7 +252,7 @@ function goToSubscription(planId: string) {
     const url = `https://wa.me/${WHATSAPP_ENTERPRISE_NUMBER}?text=${encodeURIComponent(WHATSAPP_ENTERPRISE_MESSAGE)}`;
     window.open(url, '_blank');
   } else {
-    router.push({ path: '/assinatura', query: { plan: planId } });
+    router.push({ path: '/system/checkout', query: { plan: planId } });
   }
   emit('update:modelValue', false);
 }
