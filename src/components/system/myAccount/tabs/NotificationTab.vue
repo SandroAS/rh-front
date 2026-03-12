@@ -1,16 +1,44 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useNotificationSettingStore } from '@/stores/notification-setting.store';
+import { useSnackbarStore } from '@/stores/snackbar.store';
 
-const notificationSettings = reactive({
-  evaluationApplication: {
-    system: true,
-    email: true,
-  },
+const notificationSettingStore = useNotificationSettingStore();
+const snackbarStore = useSnackbarStore();
+
+const system = ref(true);
+const email = ref(true);
+
+function syncFromStore() {
+  system.value = notificationSettingStore.evaluationApplicationSystem;
+  email.value = notificationSettingStore.evaluationApplicationEmail;
+}
+
+onMounted(async () => {
+  try {
+    await notificationSettingStore.fetchNotificationSettings();
+    syncFromStore();
+  } catch {
+    syncFromStore();
+  }
 });
 
-function saveSettings() {
-  // TODO: integrar com API de preferências de notificação
-  console.log('Salvar preferências:', notificationSettings);
+watch(
+  () => notificationSettingStore.settings,
+  () => syncFromStore(),
+  { deep: true }
+);
+
+async function saveSettings() {
+  try {
+    await notificationSettingStore.saveEvaluationApplicationSettings(system.value, email.value);
+    snackbarStore.show('Configurações de notificação salvas.', 'success');
+  } catch {
+    snackbarStore.show(
+      notificationSettingStore.error ?? 'Não foi possível salvar as configurações.',
+      'error'
+    );
+  }
 }
 </script>
 
@@ -25,17 +53,25 @@ function saveSettings() {
 
     <v-col cols="12" md="8">
       <v-form @submit.prevent="saveSettings">
+        <v-progress-linear
+          v-if="notificationSettingStore.loading"
+          indeterminate
+          color="primary"
+          class="mb-4"
+        />
+
         <h6 class="text-subtitle-2 mb-3">Aplicação de avaliações</h6>
         <p class="text-body-2 text-medium-emphasis mb-4">
-          Quando você for incluído em uma avaliação (envio, lembrete ou quando houver conclusão), como deseja ser notificado?
+          Quando for enviada uma avaliação para ser respondida por você, como deseja ser notificado?
         </p>
         <v-row>
           <v-col cols="12" sm="6">
             <v-switch
-              v-model="notificationSettings.evaluationApplication.system"
+              v-model="system"
               label="Notificar no sistema"
               color="primary"
               hide-details
+              :disabled="notificationSettingStore.loading"
             />
             <p class="text-caption text-disabled mt-1 ml-8">
               Notificações no sino do sistema quando houver nova aplicação ou atualização.
@@ -43,17 +79,25 @@ function saveSettings() {
           </v-col>
           <v-col cols="12" sm="6">
             <v-switch
-              v-model="notificationSettings.evaluationApplication.email"
+              v-model="email"
               label="Notificar por e-mail"
               color="primary"
               hide-details
+              :disabled="notificationSettingStore.loading"
             />
             <p class="text-caption text-disabled mt-1 ml-8">
               Receber e-mails quando uma avaliação for aplicada ou concluída.
             </p>
           </v-col>
           <v-col cols="12" class="d-flex justify-end mt-4">
-            <v-btn type="submit" color="primary">Salvar configurações</v-btn>
+            <v-btn
+              type="submit"
+              color="primary"
+              :loading="notificationSettingStore.loading"
+              :disabled="notificationSettingStore.loading"
+            >
+              Salvar configurações
+            </v-btn>
           </v-col>
         </v-row>
       </v-form>
