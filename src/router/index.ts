@@ -6,6 +6,7 @@ import LayoutAuth from '@/layouts/LayoutAuth.vue'
 import LayoutSystem from '@/layouts/LayoutSystem.vue'
 
 import Home from '@/pages/site/Home.vue'
+import SiteCheckout from '@/pages/site/SiteCheckout.vue'
 import Login from '@/pages/auth/Login.vue'
 import Register from '@/pages/auth/Register.vue'
 import Dashboard from '@/pages/system/Dashboard.vue'
@@ -34,6 +35,12 @@ const routes: RouteRecordRaw[] = [
         name: 'home',
         component: Home,
         meta: { isPublic: true, title: 'Home - '+SISTEM_NAME }
+      },
+      {
+        path: 'checkout',
+        name: 'siteCheckout',
+        component: SiteCheckout,
+        meta: { isPublic: true, title: 'Checkout - '+SISTEM_NAME }
       }
     ]
   },
