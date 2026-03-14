@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { getPlans, getPlanByUuid } from '@/services/plan.service';
+import { getApiErrorMessage } from '@/utils/apiError.util';
 import type { PlanResponse } from '@/types/plan/plan-response.type';
 
 interface PlanStoreState {
@@ -30,9 +31,7 @@ export const usePlanStore = defineStore('plan', {
         this.plans = data;
         return data;
       } catch (err: unknown) {
-        this.error =
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          'Falha ao carregar planos.';
+        this.error = getApiErrorMessage(err, 'Falha ao carregar planos.');
         console.error('Erro na ação fetchPlans:', err);
         this.plans = [];
         throw err;
@@ -49,9 +48,7 @@ export const usePlanStore = defineStore('plan', {
         this.currentPlan = data;
         return data;
       } catch (err: unknown) {
-        this.error =
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          'Falha ao carregar plano.';
+        this.error = getApiErrorMessage(err, 'Falha ao carregar plano.');
         console.error('Erro na ação fetchPlanByUuid:', err);
         this.currentPlan = null;
         throw err;

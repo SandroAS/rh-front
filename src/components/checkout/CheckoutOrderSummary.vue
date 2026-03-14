@@ -5,6 +5,8 @@ defineProps<{
   priceLabel: string | null;
   planSlug: string;
   formatPrice: (value: number) => string;
+  /** Rótulos dos módulos adquiridos para exibição */
+  moduleLabels: string[];
 }>();
 </script>
 
@@ -19,6 +21,17 @@ defineProps<{
         <span class="text-body-1 font-weight-medium text-grey-darken-3">{{ planName }}</span>
         <v-icon icon="mdi-check-circle" color="success" size="20" />
       </div>
+
+      <!-- Módulos adquiridos -->
+      <div v-if="moduleLabels.length" class="mb-3">
+        <p class="text-caption font-weight-bold text-grey-darken-3 mb-2">Módulos adquiridos</p>
+        <ul class="module-list text-body-2 text-grey-darken-2 pl-4 mb-0">
+          <li v-for="(label, idx) in moduleLabels" :key="idx" class="mb-1">
+            {{ label }}
+          </li>
+        </ul>
+      </div>
+
       <template v-if="totalPrice != null && priceLabel">
         <p class="text-caption text-medium-emphasis mb-1">{{ priceLabel }}</p>
         <p class="text-h4 font-weight-black text-primary">

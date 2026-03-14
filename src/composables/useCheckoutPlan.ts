@@ -43,6 +43,18 @@ export function useCheckoutPlan(billingInterval: Ref<BillingInterval>) {
     return { monthlyPrice, yearlyPrice, userLimit };
   });
 
+  /** UUID do plano selecionado conforme recorrência (mensal ou anual) */
+  const selectedPlanUuid = computed(() => {
+    if (!planSlug.value) return '';
+    const slug = planSlug.value.toLowerCase();
+    const interval = billingInterval.value;
+    const plan = planStore.plans.find((p) => {
+      const s = (p.slug ?? p.name.toLowerCase()).toLowerCase();
+      return s === slug && p.interval === interval;
+    });
+    return plan?.uuid ?? '';
+  });
+
   const totalPrice = computed(() => {
     const plan = selectedPlan.value;
     if (!plan || plan.userLimit === null) return null;
@@ -71,6 +83,7 @@ export function useCheckoutPlan(billingInterval: Ref<BillingInterval>) {
     planSlug,
     planName,
     selectedPlan,
+    selectedPlanUuid,
     totalPrice,
     priceLabel,
     showBillingInterval,

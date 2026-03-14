@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { createTermsAcceptedInUserMetas, fetchWhoami, loginUser, signupUser } from '@/services/auth.service';
+import { getApiErrorMessage } from '@/utils/apiError.util';
 import type { AuthUser } from '@/types/auth/auth-user.type';
 import type { AuthResponse } from '@/types/auth/auth-response.type';
 import router from '@/router';
@@ -62,8 +63,8 @@ export const useUserStore = defineStore('user', {
         localStorage.setItem('user', JSON.stringify(userData));
         this.user = userData;
         return userData;
-      } catch (err: any) {
-        this.error = err.response?.data?.message || 'Falha ao carregar dados do usuário.';
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Falha ao carregar dados do usuário.');
         console.error('Erro na ação fetchUser:', err);
         this.logout();
         throw err;
@@ -98,8 +99,8 @@ export const useUserStore = defineStore('user', {
         const response: AuthResponse = await loginUser(email, password);
         await this.handleAuthSuccess(response.accessToken, response.user);
         return this.user;
-      } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao realizar login.';
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Erro ao realizar login.');
         this.user = null;
         throw err;
       } finally {
@@ -114,8 +115,8 @@ export const useUserStore = defineStore('user', {
         const response: AuthResponse = await signupUser(userRegister);
         await this.handleAuthSuccess(response.accessToken, response.user);
         return this.user;
-      } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao realizar cadastro.';
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Erro ao realizar cadastro.');
         this.user = null;
         throw err;
       } finally {
@@ -132,8 +133,8 @@ export const useUserStore = defineStore('user', {
           this.user.userMetas = response;
         }
         return response;
-      } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao realizar cadastro.';
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Erro ao realizar cadastro.');
         this.user = null;
         throw err;
       } finally {
@@ -163,8 +164,8 @@ export const useUserStore = defineStore('user', {
         }
 
         localStorage.setItem('user', JSON.stringify(this.user));
-      } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar atualizar usuário.';
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Erro ao tentar atualizar usuário.');
         throw err;
       } finally {
         this.loading = false;
@@ -187,8 +188,8 @@ export const useUserStore = defineStore('user', {
             ...company.address
           }
         }
-      } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar atualizar empresa.';
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Erro ao tentar atualizar empresa.');
         throw err;
       } finally {
         this.loading = false;
@@ -201,8 +202,8 @@ export const useUserStore = defineStore('user', {
 
       try {
         await saveUserPassword(this.user!.uuid, password);
-      } catch (err: any) {
-        this.error = err.response?.data?.message || 'Erro ao tentar atualizar senha.';
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Erro ao tentar atualizar senha.');
         throw err;
       } finally {
         this.loading = false;

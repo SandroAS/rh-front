@@ -1,0 +1,49 @@
+---
+description: Tratamento de erros de API — uso do util getApiErrorMessage
+alwaysApply: true
+---
+
+# Padrão de erros — API
+
+## Regra
+
+Ao tratar erros de chamadas à API (em stores ou em componentes/páginas que fazem `catch` após chamada a store), **sempre** usar o util `getApiErrorMessage` de `@/utils/apiError.util` para obter a mensagem a exibir (toast, snackbar ou `store.error`). Não repetir a lógica `err.response?.data?.message || '...'` em vários lugares.
+
+## Util
+
+- **Arquivo:** `src/utils/apiError.util.ts`
+- **Função:** `getApiErrorMessage(err: unknown, fallback?: string): string`
+- O backend (NestJS/axios) envia erros no formato `{ message: string, error?: string, statusCode?: number }`. O util lê `response.data.message` e, se não houver, devolve o `fallback`.
+
+## Exemplos
+
+```typescript
+// ❌ Extração manual repetida
+} catch (err: any) {
+  this.error = err.response?.data?.message || 'Falha ao carregar.';
+}
+```
+
+```typescript
+// ✅ Usar o util
+import { getApiErrorMessage } from '@/utils/apiError.util';
+// ...
+} catch (err: unknown) {
+  this.error = getApiErrorMessage(err, 'Falha ao carregar.');
+}
+```
+
+```typescript
+// ✅ Em componente/página (toast)
+import { getApiErrorMessage } from '@/utils/apiError.util';
+// ...
+} catch (err: unknown) {
+  snackbarStore.show(getApiErrorMessage(err, 'Falha ao tentar logar.'), 'error');
+}
+```
+
+## Resumo
+
+- **Stores:** em todo `catch` de ação que chama service, usar `getApiErrorMessage(err, 'Mensagem específica da ação.')` para preencher `this.error` (e tipar `err: unknown`).
+- **Componentes/páginas:** em todo `catch` após chamada a store, usar `getApiErrorMessage(err, '...')` para o texto do toast/snackbar.
+- **Fallback:** sempre informar um fallback claro e específico do contexto (ex.: "Falha ao carregar planos.", "Erro ao atualizar senha.").

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import logoHorizontal from '@/assets/logo-horizontal.jpeg';
 import { useUserStore } from '@/stores/auth.store';
 import { useSnackbarStore } from '@/stores/snackbar.store';
+import { getApiErrorMessage } from '@/utils/apiError.util';
 import { Form, Field } from '@/plugins/vee-validate';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -18,9 +19,10 @@ async function onSubmit(formValues: Record<string, any>) {
   try {
     await userStore.login(email, password);
     router.push('/system/dashboard');
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Erro no login: ', err);
-    snackbarStore.show('Falha ao tentar logar: '+err, 'error');
+    const message = getApiErrorMessage(err, 'Falha ao tentar logar. Tente novamente.');
+    snackbarStore.show(message, 'error');
   }
 };
 

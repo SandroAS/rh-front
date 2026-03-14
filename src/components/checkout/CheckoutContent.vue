@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useViaCepStore } from '@/stores/via-cep.store';
+import { useSalesStore } from '@/stores/sales.store';
 import { BrazilianStates } from '@/services/via-cep.service';
 import { Form } from '@/plugins/vee-validate';
 import { useCheckoutPlan, type BillingInterval } from '@/composables/useCheckoutPlan';
+import {
+  SystemModuleCode,
+  SYSTEM_MODULE_LABELS,
+  type SalePayload,
+} from '@/types/sale/sale-payload.type';
 import CheckoutBillingInterval from './CheckoutBillingInterval.vue';
 import CheckoutPaymentMethodSelector, {
   type PaymentMethod,
@@ -11,11 +17,15 @@ import CheckoutPaymentMethodSelector, {
 import CheckoutOrderSummary from './CheckoutOrderSummary.vue';
 import CheckoutPersonalAndAddressFields from './CheckoutPersonalAndAddressFields.vue';
 
-const emit = defineEmits<{ submit: [] }>();
+const emit = defineEmits<{ submit: [result?: unknown] }>();
 
 const billingInterval = ref<BillingInterval>('yearly');
 const paymentMethod = ref<PaymentMethod>('pix');
 const viaCepStore = useViaCepStore();
+const salesStore = useSalesStore();
+
+/** Módulos incluídos neste checkout (futuro: vir da seleção ou do plano) */
+const selectedModuleCodes = ref<SystemModuleCode[]>([SystemModuleCode.CAREER_DEVELOPMENT]);
 
 const {
   planSlug,
@@ -24,8 +34,13 @@ const {
   priceLabel,
   showBillingInterval,
   formatPrice,
+  selectedPlanUuid,
   planStore,
 } = useCheckoutPlan(billingInterval);
+
+const moduleLabels = computed(() =>
+  selectedModuleCodes.value.map((code) => SYSTEM_MODULE_LABELS[code])
+);
 
 onMounted(async () => {
   if (!planStore.plans.length) await planStore.fetchPlans();
@@ -46,8 +61,37 @@ async function searchAddress(cep: string, setFieldValue: (field: string, value: 
   if (numEl) (numEl as HTMLInputElement).focus();
 }
 
-function onSubmit() {
-  emit('submit');
+function buildPayload(values: Record<string, unknown>): SalePayload {
+  const address = values.address as Record<string, string>;
+  return {
+    name: (values.name as string) ?? '',
+    email: (values.email as string) ?? '',
+    phone: (values.phone as string) ?? '',
+    document: (values.document as string) ?? '',
+    address: {
+      cep: address?.cep ?? '',
+      street: address?.street ?? '',
+      number: address?.number ?? '',
+      complement: address?.complement,
+      neighborhood: address?.neighborhood ?? '',
+      city: address?.city ?? '',
+      state: address?.state ?? '',
+    },
+    plan_uuid: selectedPlanUuid.value,
+    billing_interval: billingInterval.value,
+    payment_method: paymentMethod.value,
+    module_codes: [...selectedModuleCodes.value],
+  };
+}
+
+async function onSubmit(values: Record<string, unknown>) {
+  const payload = buildPayload(values);
+  try {
+    const result = await salesStore.createSale(payload);
+    emit('submit', result);
+  } catch {
+    emit('submit');
+  }
 }
 </script>
 
@@ -58,7 +102,7 @@ function onSubmit() {
       <v-card class="checkout-form-card pa-5 pa-sm-6" elevation="2" rounded="xl">
         <h2 class="text-h6 font-weight-bold text-grey-darken-4 mb-4">Dados para pagamento</h2>
 
-        <Form v-slot="{ setFieldValue }" :initial-values="{}" @submit="onSubmit">
+        <Form v-slot="{ setFieldValue }" :initial-values="{}" @submit="(values: Record<string, unknown>) => onSubmit(values)">
           <CheckoutBillingInterval
             v-model="billingInterval"
             :show="showBillingInterval"
@@ -97,6 +141,7 @@ function onSubmit() {
         :price-label="priceLabel"
         :plan-slug="planSlug"
         :format-price="formatPrice"
+        :module-labels="moduleLabels"
       />
     </v-col>
   </v-row>

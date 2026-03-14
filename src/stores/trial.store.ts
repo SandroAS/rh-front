@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { getMyTrial } from '@/services/trial.service';
+import { getApiErrorMessage } from '@/utils/apiError.util';
 import type { TrialResponse } from '@/types/account/trial-response.type';
 
 interface TrialStoreState {
@@ -38,8 +39,8 @@ export const useTrialStore = defineStore('trial', {
         const data = await getMyTrial();
         this.myTrial = data;
         return data;
-      } catch (err: any) {
-        this.error = err.response?.data?.message || 'Falha ao carregar dados do trial.';
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Falha ao carregar dados do trial.');
         console.error('Erro na ação fetchMyTrial:', err);
         this.myTrial = null;
         throw err;

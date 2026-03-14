@@ -6,7 +6,7 @@ import CheckoutContent from '@/components/checkout/CheckoutContent.vue';
 const router = useRouter();
 
 function goBack() {
-  router.push({ name: 'home' });
+  router.back();
 }
 
 function onSubmit() {
@@ -17,22 +17,17 @@ function onSubmit() {
 <template>
   <v-container class="checkout-page py-6" fluid>
     <div class="d-flex align-center mb-6">
-      <router-link to="/" class="d-flex align-center text-decoration-none text-grey-darken-3 mr-4">
-        <v-img
-          :src="logoHorizontal"
-          alt="Logo"
-          contain
-          height="36"
-          max-width="140"
-          eager
-        />
-      </router-link>
-      <v-chip size="small" color="primary" variant="tonal">Checkout</v-chip>
-      <v-spacer />
-      <v-btn variant="text" color="grey-darken-2" class="text-none" @click="goBack">
+      <v-btn
+        variant="text"
+        color="grey-darken-2"
+        class="text-none"
+        @click="goBack"
+      >
         <v-icon start>mdi-arrow-left</v-icon>
         Voltar
       </v-btn>
+      <v-spacer />
+      <v-chip size="small" color="primary" variant="tonal">Checkout</v-chip>
     </div>
 
     <CheckoutContent @submit="onSubmit" />
