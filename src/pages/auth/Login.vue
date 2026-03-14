@@ -40,7 +40,7 @@ const loginWithGoogle = async () => {
 <template>
   <v-container class="fill-height d-flex justify-center align-center">
     <v-card class="pa-8" max-width="400" elevation="10" rounded="xl">
-      <v-card-title class="justify-center mb-6">
+      <v-card-title class="d-flex justify-center mb-6">
         <v-img
           :src="logoHorizontal"
           alt="Logo"

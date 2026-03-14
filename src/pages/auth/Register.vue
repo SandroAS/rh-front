@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbar.store';
-import logoVertical from '@/assets/logo-vertical.jpeg';
+import logoHorizontal from '@/assets/logo-horizontal.jpeg';
 import { useUserStore } from '@/stores/auth.store';
 import { useRouter } from 'vue-router';
 import { Form, Field } from '@/plugins/vee-validate';
@@ -75,14 +75,16 @@ async function onSubmit(formValues: Record<string, any>) {
 <template>
   <v-container class="fill-height d-flex justify-center align-center">
     <v-card class="pa-8" max-width="480" elevation="10">
-      <v-img
-        :src="logoVertical"
-        alt="Logo"
-        height="72"
-        contain
-        class="mb-6 mx-auto"
-        eager
-      />
+      <v-card-title class="d-flex justify-center">
+        <v-img
+          :src="logoHorizontal"
+          alt="Logo"
+          contain
+          height="48"
+          max-width="180"
+          eager
+        />
+      </v-card-title>
       <div class="text-center mb-4">
         <h5 class="text-h6 font-weight-bold">Teste gratuitamente</h5>
         <p class="text-body-2">sem a necessidade de inserir seu cartão de crédito</p>
@@ -102,7 +104,6 @@ async function onSubmit(formValues: Record<string, any>) {
             density="comfortable"
             :error="!!errorMessage"
             :error-messages="errorMessage"
-            class="mb-3"
           />
         </Field>
 
@@ -119,7 +120,6 @@ async function onSubmit(formValues: Record<string, any>) {
             density="comfortable"
             :error="!!errorMessage"
             :error-messages="errorMessage"
-            class="mb-3"
           />
         </Field>
 
@@ -137,7 +137,6 @@ async function onSubmit(formValues: Record<string, any>) {
             density="comfortable"
             :error="!!errorMessage"
             :error-messages="errorMessage"
-            class="mb-3"
           />
         </Field>
 
@@ -155,7 +154,6 @@ async function onSubmit(formValues: Record<string, any>) {
             density="comfortable"
             :error="!!errorMessage"
             :error-messages="errorMessage"
-            class="mb-3"
           />
         </Field>
 
@@ -179,7 +177,6 @@ async function onSubmit(formValues: Record<string, any>) {
             density="comfortable"
             :error="!!errorMessage"
             :error-messages="errorMessage"
-            class="mb-3"
           >
             <template v-slot:item="{ props: itemProps, item }">
               <v-list-item v-bind="itemProps" :disabled="item.raw.disabled"></v-list-item>
@@ -236,7 +233,6 @@ async function onSubmit(formValues: Record<string, any>) {
             :error-messages="errorMessage"
             :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
             @click:append-inner="showConfirmPassword = !showConfirmPassword"
-            class="mb-3"
           />
         </Field>
 

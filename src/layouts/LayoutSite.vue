@@ -1,13 +1,29 @@
 <script lang="ts" setup>
 import logoHorizontal from '@/assets/logo-horizontal.jpeg';
+
+function scrollToHome() {
+  const el = document.getElementById('home');
+  el?.scrollIntoView({ behavior: 'smooth' });
+}
 </script>
 
 <template>
   <v-app-bar color="white" elevation="1" style="position: fixed;">
     <div class="d-flex align-center justify-space-between w-100 px-4">
-      <a href="#home" class="text-decoration-none d-flex align-center">
-        <img :src="logoHorizontal" alt="Logo" height="40" max-width="160">
-      </a>
+      <v-img
+        :src="logoHorizontal"
+        alt="Logo"
+        contain
+        height="40"
+        max-width="160"
+        eager
+        class="cursor-pointer"
+        role="button"
+        tabindex="0"
+        @click="scrollToHome"
+        @keydown.enter="scrollToHome"
+        @keydown.space.prevent="scrollToHome"
+      />
 
       <div class="d-none d-md-flex align-center">
         <v-btn variant="text" href="#resources">Recursos</v-btn>
