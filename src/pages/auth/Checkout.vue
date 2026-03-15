@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import logoHorizontal from '@/assets/logo-horizontal.jpeg';
 import CheckoutContent from '@/components/checkout/CheckoutContent.vue';
 
 const router = useRouter();

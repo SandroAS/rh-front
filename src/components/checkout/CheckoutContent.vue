@@ -16,6 +16,7 @@ import CheckoutPaymentMethodSelector, {
 } from './CheckoutPaymentMethodSelector.vue';
 import CheckoutOrderSummary from './CheckoutOrderSummary.vue';
 import CheckoutPersonalAndAddressFields from './CheckoutPersonalAndAddressFields.vue';
+import CheckoutCreditCardForm from './CheckoutCreditCardForm.vue';
 
 const emit = defineEmits<{ submit: [result?: unknown] }>();
 
@@ -116,6 +117,10 @@ async function onSubmit(values: Record<string, unknown>) {
           <v-divider class="my-5" />
 
           <CheckoutPaymentMethodSelector v-model="paymentMethod" />
+
+          <v-expand-transition>
+            <CheckoutCreditCardForm v-if="paymentMethod === 'card'" />
+          </v-expand-transition>
 
           <v-btn
             type="submit"
